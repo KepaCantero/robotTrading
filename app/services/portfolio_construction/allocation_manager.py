@@ -201,7 +201,7 @@ class AllocationManager:
         smallest = min(weights)
 
         # Herfindahl index: sum of squared weights
-        herfindahl = sum(w * w for w in weights)
+        herfindahl = sum((w * w for w in weights), Decimal("0"))
 
         largest_asset = next(a for a, w in self.current_allocation.items() if w == largest)
         smallest_asset = next(a for a, w in self.current_allocation.items() if w == smallest)

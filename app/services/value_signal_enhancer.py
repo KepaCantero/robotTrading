@@ -200,7 +200,7 @@ class ValueSignalEnhancer:
         value_score = np.mean(list(metric_scores.values()))
 
         # Calculate cross-sectional rank
-        all_scores = []
+        all_scores: list[Any] = []
         for _idx, row in data.iterrows():
             scores = []
             for metric in self.metrics:
@@ -215,22 +215,22 @@ class ValueSignalEnhancer:
                     scores.append(z_score * self.weights.get(metric, 1.0))
 
             if scores:
-                all_scores.append(np.mean(scores))
+                all_scores.append(float(np.mean(scores)))
 
-        all_scores = np.array(all_scores)
+        all_scores_arr = np.array(all_scores)
 
         # Rank-based score (0-1)
         asset_score_idx = np.where(data.index == asset)[0]
         if len(asset_score_idx) > 0:
-            rank = (all_scores < value_score).sum()
-            value_rank = rank / len(all_scores)
+            rank = (all_scores_arr < value_score).sum()
+            value_rank = rank / len(all_scores_arr)
             value_percentile = value_rank * 100
         else:
             value_rank = 0.5
             value_percentile = 50.0
 
         # Z-score
-        z_score = (value_score - np.mean(all_scores)) / (np.std(all_scores) + 1e-8)
+        z_score = (value_score - np.mean(all_scores_arr)) / (np.std(all_scores_arr) + 1e-8)
 
         # Determine if cheap/expensive
         is_cheap = value_rank < self.cheap_threshold
@@ -277,17 +277,17 @@ class ValueSignalEnhancer:
         logger.info("Calculating cross-sectional value statistics...")
 
         # Calculate value scores for all assets
-        value_scores = []
+        value_scores: list[Any] = []
 
         for asset in data.index:
             signal = self.calculate_value_signal(data, asset)
             value_scores.append(signal.value_score)
 
-        value_scores = np.array(value_scores)
+        value_scores_arr = np.array(value_scores)
 
         # Statistics
-        mean_score = np.mean(value_scores)
-        std_score = np.std(value_scores)
+        mean_score = np.mean(value_scores_arr)
+        std_score = np.std(value_scores_arr)
 
         # Dispersion (coefficient of variation)
         dispersion = std_score / (abs(mean_score) + 1e-8)
@@ -337,9 +337,9 @@ class ValueSignalEnhancer:
             expensive_count=expensive_count,
             value_spread=value_spread,
             details={
-                "min_score": np.min(value_scores),
-                "max_score": np.max(value_scores),
-                "median_score": np.median(value_scores),
+                "min_score": np.min(value_scores_arr),
+                "max_score": np.max(value_scores_arr),
+                "median_score": np.median(value_scores_arr),
             },
         )
 

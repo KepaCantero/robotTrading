@@ -21,11 +21,21 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
+from typing import TypedDict
 
 import numpy as np
 import pandas as pd
 
 logger = logging.getLogger(__name__)
+
+
+class AdfTestResult(TypedDict):
+    """Resultado tipado del test ADF (ver `_adf_test`/`_simplified_adf_test`)."""
+
+    statistic: float
+    p_value: float
+    critical_values: dict[str, float]
+    is_stationary: bool
 
 
 @dataclass
@@ -219,7 +229,7 @@ class StationarityAnalyzer:
                 reason=f"Test error: {e}",
             )
 
-    def _adf_test(self, series: np.ndarray) -> dict[str, object]:
+    def _adf_test(self, series: np.ndarray) -> AdfTestResult:
         """
         Perform Augmented Dickey-Fuller test for stationarity.
 
@@ -242,7 +252,10 @@ class StationarityAnalyzer:
                 store=False,
             )
 
-            critical_values_dict: dict[str, float] = dict(adf_result[4])
+            # BUG FIX: la tupla de statsmodels_fallback.adfuller es
+            # (stat, p_value, usedlag, critical_values, icbest) — los valores
+            # críticos están en el índice 3, no en el 4 (convención statsmodels).
+            critical_values_dict: dict[str, float] = dict(adf_result[3])
             return {
                 "statistic": float(adf_result[0]),
                 "p_value": float(adf_result[1]),
@@ -258,7 +271,7 @@ class StationarityAnalyzer:
             logger.warning("statsmodels not available, using simplified ADF test")
             return self._simplified_adf_test(series)
 
-    def _simplified_adf_test(self, series: np.ndarray) -> dict[str, object]:
+    def _simplified_adf_test(self, series: np.ndarray) -> AdfTestResult:
         """
         Simplified ADF test implementation when statsmodels is not available.
 

@@ -19,7 +19,7 @@ import numpy as np
 from tqdm import tqdm
 
 from .base_optimizer import BaseOptimizer, OptimizationConfig, OptimizationResult
-from .models import ParameterGrid, ParameterRange, ParameterScale, ParameterType
+from .models import ParameterGrid, ParameterRange, ParameterScale, ParameterType, ParameterValue
 from .trial import TrialHistory, TrialResult, TrialStatus, create_trial_id
 
 logger = logging.getLogger(__name__)
@@ -185,14 +185,14 @@ class RandomSearchOptimizer(BaseOptimizer):
         self._end_time = datetime.now()
         self.history.finish()
 
-        result = self._create_result(best_params, best_score)
+        final_result = self._create_result(best_params, best_score)
 
         if self.config.verbose >= 1:
-            logger.info(f"Random search completed in {result.optimization_time:.2f}s")
-            logger.info(f"Best score: {result.best_score:.6f}")
-            logger.info(f"Evaluated {len(result.all_trials)} combinations")
+            logger.info(f"Random search completed in {final_result.optimization_time:.2f}s")
+            logger.info(f"Best score: {final_result.best_score:.6f}")
+            logger.info(f"Evaluated {len(final_result.all_trials)} combinations")
 
-        return result
+        return final_result
 
     def _sample_random_params(self, param_grid: ParameterGrid) -> dict[str, Any]:
         """
@@ -207,7 +207,7 @@ class RandomSearchOptimizer(BaseOptimizer):
         max_attempts = 100
 
         for attempt in range(max_attempts):
-            params = {}
+            params: dict[str, ParameterValue] = {}
 
             for param_range in param_grid.parameters:
                 params[param_range.name] = self._sample_parameter(param_range)
@@ -222,7 +222,7 @@ class RandomSearchOptimizer(BaseOptimizer):
         # If no valid sample found, return without constraint checking
         return {p.name: self._sample_parameter(p) for p in param_grid.parameters}
 
-    def _sample_parameter(self, param: ParameterRange) -> int | float | str:
+    def _sample_parameter(self, param: ParameterRange) -> ParameterValue:
         """
         Sample a single parameter value.
 
@@ -246,13 +246,13 @@ class RandomSearchOptimizer(BaseOptimizer):
 
         raise ValueError(f"Unknown parameter type: {param.parameter_type}")
 
-    def _sample_categorical(self, param: ParameterRange) -> object:
+    def _sample_categorical(self, param: ParameterRange) -> ParameterValue:
         """Sample from categorical values."""
         if param.values is None:
             raise ValueError(f"Categorical parameter '{param.name}' has no values defined")
         return random.choice(param.values)
 
-    def _sample_discrete(self, param: ParameterRange) -> object:
+    def _sample_discrete(self, param: ParameterRange) -> ParameterValue:
         """Sample from discrete values."""
         if param.values is None:
             raise ValueError(f"Discrete parameter '{param.name}' has no values defined")
@@ -493,10 +493,10 @@ class RandomSearchOptimizerCV(RandomSearchOptimizer):
                     iteration=iteration,
                     metrics={
                         "cv_scores": cv_scores,
-                        "cv_mean": np.mean(cv_scores) if cv_scores else 0.0,
-                        "cv_std": self._std(cv_scores) if len(cv_scores) > 1 else 0.0,
-                        "cv_min": min(cv_scores) if cv_scores else 0.0,
-                        "cv_max": max(cv_scores) if cv_scores else 0.0,
+                        "cv_mean": float(np.mean(cv_scores)) if cv_scores else 0.0,
+                        "cv_std": float(self._std(cv_scores)) if len(cv_scores) > 1 else 0.0,
+                        "cv_min": float(min(cv_scores)) if cv_scores else 0.0,
+                        "cv_max": float(max(cv_scores)) if cv_scores else 0.0,
                     },
                 )
 

@@ -100,10 +100,21 @@ class ExecutionEngine:
 
         results = []
         for order in orders:
+            symbol = order.get("symbol")
+            side = order.get("side")
+            quantity = order.get("quantity")
+            if symbol is None or side is None or quantity is None:
+                results.append(
+                    {
+                        "success": False,
+                        "error": "Order missing required fields (symbol, side or quantity)",
+                    }
+                )
+                continue
             result = self.execute_order(
-                symbol=order.get("symbol"),
-                side=order.get("side"),
-                quantity=order.get("quantity"),
+                symbol=symbol,
+                side=side,
+                quantity=quantity,
                 mode=ExecutionMode(order.get("mode", "market")),
                 **kwargs,
             )

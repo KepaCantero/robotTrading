@@ -38,7 +38,7 @@ class TestPaperTradingAPIEndpoints:
 
         app = FastAPI()
         app.include_router(router)
-        return TestClient(app)
+        return TestClient(app, headers={"X-API-Key": "test-integration-key-1"})
 
     @pytest.fixture
     def mock_portfolio_id(self):
@@ -57,6 +57,7 @@ class TestPaperTradingAPIEndpoints:
             id=mock_portfolio_id,
             name="Test Portfolio",
             cash_balance=Decimal("100000.00"),
+            initial_cash=Decimal("100000.00"),
             total_equity=Decimal("100000.00"),
             total_pnl=Decimal("0.00"),
             total_return=Decimal("0.00"),
@@ -73,6 +74,7 @@ class TestPaperTradingAPIEndpoints:
         return PaperTradingSession(
             id=mock_session_id,
             portfolio_id=mock_portfolio_id,
+            config_id=uuid4(),
             name="Test Session",
             description="Test session description",
             is_active=True,
@@ -374,6 +376,8 @@ class TestPaperTradingAPIEndpoints:
             symbol="AAPL",
             quantity=Decimal("100"),
             avg_price=Decimal("150.00"),
+            cost_basis=Decimal("1000.00"),
+            market_value=Decimal("1000.00"),
             market_price=Decimal("155.00"),
             unrealized_pnl=Decimal("500.00"),
             realized_pnl=Decimal("0.00"),
@@ -400,6 +404,8 @@ class TestPaperTradingAPIEndpoints:
             symbol="AAPL",
             quantity=Decimal("100"),
             avg_price=Decimal("150.00"),
+            cost_basis=Decimal("1000.00"),
+            market_value=Decimal("1000.00"),
             market_price=Decimal("155.00"),
             unrealized_pnl=Decimal("500.00"),
             realized_pnl=Decimal("0.00"),
@@ -549,7 +555,7 @@ class TestErrorHandling:
 
         app = FastAPI()
         app.include_router(router)
-        return TestClient(app)
+        return TestClient(app, headers={"X-API-Key": "test-integration-key-1"})
 
     @pytest.mark.asyncio
     async def test_execute_trade_timeout(self, client):

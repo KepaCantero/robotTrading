@@ -10,6 +10,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
+from typing import Any
 
 from requests.exceptions import HTTPError, RequestException
 
@@ -71,7 +72,7 @@ class AlphalsensAnalyzer:
         periods = periods or [1, 5, 20]
 
         try:
-            analysis = {
+            analysis: dict[str, Any] = {
                 "factor_name": "factor_001",
                 "analysis_date": datetime.now(),
                 "periods": {},
@@ -114,7 +115,7 @@ class AlphalsensAnalyzer:
             return {}
 
         try:
-            results = {
+            results: dict[str, Any] = {
                 "num_factors": len(factors),
                 "analysis_date": datetime.now(),
                 "correlation_matrix": {},
@@ -163,7 +164,7 @@ class AlphalsensAnalyzer:
         periods = periods or [1, 5, 20]
 
         try:
-            ic_stats = {
+            ic_stats: dict[str, Any] = {
                 "date": datetime.now(),
                 "periods": {},
             }
@@ -204,7 +205,7 @@ class AlphalsensAnalyzer:
             return {}
 
         try:
-            analysis = {
+            analysis: dict[str, Any] = {
                 "quantile_count": quantile_count,
                 "date": datetime.now(),
                 "quantiles": {},
@@ -212,9 +213,9 @@ class AlphalsensAnalyzer:
 
             for q in range(quantile_count):
                 analysis["quantiles"][q] = {
-                    "mean_return_pct": Decimal("0.5") * (q - quantile_count / 2),
+                    "mean_return_pct": Decimal("0.5") * Decimal(str(q - quantile_count / 2)),
                     "num_assets": 50,
-                    "sharpe_ratio": Decimal("1.5") - (q * 0.2),
+                    "sharpe_ratio": Decimal("1.5") - Decimal(str(q * 0.2)),
                 }
 
             analysis["long_short_return_pct"] = Decimal("1.0")

@@ -15,6 +15,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
@@ -32,6 +33,11 @@ except ImportError:
     STATSMODELS_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
+
+
+def _as_float(value: object) -> float:
+    """Coerce un valor de métricas numérico a float (identidad para floats)."""
+    return float(cast("int | float", value))
 
 
 class SeasonalityAnalyzer:
@@ -106,8 +112,12 @@ class SeasonalityAnalyzer:
             return {
                 "total_months_analyzed": len(monthly_returns),
                 "month_stats": month_stats,
-                "best_month": max(month_stats, key=lambda x: x["cumulative_return"], default=None),
-                "worst_month": min(month_stats, key=lambda x: x["cumulative_return"], default=None),
+                "best_month": max(
+                    month_stats, key=lambda x: _as_float(x["cumulative_return"]), default=None
+                ),
+                "worst_month": min(
+                    month_stats, key=lambda x: _as_float(x["cumulative_return"]), default=None
+                ),
                 "overall_avg_return": float(np.mean(monthly_returns)),
             }
 
@@ -175,10 +185,10 @@ class SeasonalityAnalyzer:
                 "total_quarters_analyzed": len(quarterly_returns),
                 "quarter_stats": quarter_stats,
                 "best_quarter": max(
-                    quarter_stats, key=lambda x: x["cumulative_return"], default=None
+                    quarter_stats, key=lambda x: _as_float(x["cumulative_return"]), default=None
                 ),
                 "worst_quarter": min(
-                    quarter_stats, key=lambda x: x["cumulative_return"], default=None
+                    quarter_stats, key=lambda x: _as_float(x["cumulative_return"]), default=None
                 ),
                 "overall_avg_return": float(np.mean(quarterly_returns)),
             }
@@ -328,11 +338,12 @@ class SeasonalityAnalyzer:
 
                 decomposition = fallback_decompose(monthly, model=method, period=12)
 
+                decompose_result = cast("Any", decomposition)
                 return {
                     "method": f"{method}_fallback",
-                    "trend": [float(x) for x in decomposition.trend.dropna()],
-                    "seasonal": [float(x) for x in decomposition.seasonal.dropna()],
-                    "residual": [float(x) for x in decomposition.resid.dropna()],
+                    "trend": [float(x) for x in decompose_result.trend.dropna()],
+                    "seasonal": [float(x) for x in decompose_result.seasonal.dropna()],
+                    "residual": [float(x) for x in decompose_result.resid.dropna()],
                     "periods_analyzed": len(monthly),
                 }
 

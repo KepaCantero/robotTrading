@@ -22,13 +22,30 @@ import tempfile
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
 from itertools import product
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 
 logger = logging.getLogger(__name__)
 
-from app.backtesting.core.error_handling import train_with_retry
+
+def _performance_of(backtest_result: BacktestResult) -> PerformanceMetrics:
+    """Narrowa ``BacktestResult.performance``: el engine siempre lo puebla."""
+    return cast("PerformanceMetrics", backtest_result.performance)
+
+
+def _sharpe_of(backtest_result: BacktestResult) -> float:
+    """Sharpe ratio como float (0.0 cuando el resultado no lo trae)."""
+    sharpe = _performance_of(backtest_result).sharpe_ratio
+    return float(sharpe) if sharpe else 0.0
+
+
+def _as_float(value: object) -> float:
+    """Coerce un valor de métricas numérico a float (identidad para floats)."""
+    return float(cast("int | float", value))
+
+
+from app.backtesting.core.error_handling import StrategyProtocol, train_with_retry
 from app.backtesting.core.executor import SimpleBacktestExecutor
 from app.backtesting.data_split import (
     DataSplit,
@@ -36,7 +53,7 @@ from app.backtesting.data_split import (
     TrainValTestSplitter,
     validate_out_of_sample_performance,
 )
-from app.backtesting.models import BacktestConfig
+from app.backtesting.models import BacktestConfig, BacktestResult, PerformanceMetrics
 from app.domain.strategies.momentum_modular.strategy import ModularMomentumStrategy
 
 if TYPE_CHECKING:
@@ -234,7 +251,7 @@ class BacktestOptimizer:
                     train_success = True
                     if hasattr(strategy, "learning_engine") and strategy.learning_engine:
                         train_success = train_with_retry(
-                            strategy=strategy,
+                            strategy=cast("StrategyProtocol", strategy),
                             engine_type="supervised",
                             use_subprocess=False,
                         )
@@ -251,7 +268,7 @@ class BacktestOptimizer:
                         initial_capital=initial_capital,
                     )
 
-                    val_sharpe = float(val_result.performance.sharpe_ratio or 0)
+                    val_sharpe = float(_performance_of(val_result).sharpe_ratio or 0)
                     val_return = (
                         (float(val_result.final_capital) - float(initial_capital))
                         / float(initial_capital)
@@ -265,7 +282,7 @@ class BacktestOptimizer:
                         initial_capital=initial_capital,
                     )
 
-                    train_sharpe = float(train_result.performance.sharpe_ratio or 0)
+                    train_sharpe = float(_performance_of(train_result).sharpe_ratio or 0)
 
                     return {
                         "param_idx": param_idx,
@@ -274,17 +291,19 @@ class BacktestOptimizer:
                         "val_sharpe": val_sharpe,
                         "val_return": val_return,
                         "win_rate": (
-                            float(val_result.performance.win_rate)
+                            float(_performance_of(val_result).win_rate)
                             if val_result.performance
                             else 0.0
                         ),
                         "max_drawdown": (
-                            float(val_result.performance.max_drawdown_percentage)
+                            float(_performance_of(val_result).max_drawdown_percentage)
                             if val_result.performance
                             else 0.0
                         ),
                         "total_trades": (
-                            val_result.performance.total_trades if val_result.performance else 0
+                            _performance_of(val_result).total_trades
+                            if val_result.performance
+                            else 0
                         ),
                     }
 
@@ -379,7 +398,7 @@ class BacktestOptimizer:
                 initial_capital=initial_capital,
             )
 
-            test_sharpe = float(test_result.performance.sharpe_ratio or 0)
+            test_sharpe = float(_performance_of(test_result).sharpe_ratio or 0)
             test_return = (
                 (float(test_result.final_capital) - float(initial_capital))
                 / float(initial_capital)
@@ -389,9 +408,9 @@ class BacktestOptimizer:
             logger.info("Test performance:")
             logger.info(f"  Sharpe Ratio: {test_sharpe:.3f}")
             logger.info(f"  Return:       {test_return:.2f}%")
-            logger.info(f"  Win Rate:     {float(test_result.performance.win_rate):.2%}")
+            logger.info(f"  Win Rate:     {float(_performance_of(test_result).win_rate):.2%}")
             logger.info(
-                f"  Max Drawdown: {float(test_result.performance.max_drawdown_percentage):.2f}%"
+                f"  Max Drawdown: {float(_performance_of(test_result).max_drawdown_percentage):.2f}%"
             )
 
             # Validate OOS performance
@@ -431,9 +450,9 @@ class BacktestOptimizer:
                 "val_return": best_result["val_return"],
                 "test_return": test_return,
                 "val_win_rate": best_result["win_rate"],
-                "test_win_rate": float(test_result.performance.win_rate),
+                "test_win_rate": float(_performance_of(test_result).win_rate),
                 "val_max_drawdown": best_result["max_drawdown"],
-                "test_max_drawdown": float(test_result.performance.max_drawdown_percentage),
+                "test_max_drawdown": float(_performance_of(test_result).max_drawdown_percentage),
                 "sharpe_degradation_pct": sharpe_degradation,
                 "return_degradation_pct": return_degradation,
                 "num_combinations_tested": total_combinations,
@@ -629,7 +648,7 @@ class BacktestOptimizer:
                         return float("-inf")
 
                     result = results[0] if isinstance(results[0], dict) else {}
-                    value = result.get(metric, 0) or 0
+                    value = _as_float(result.get(metric, 0) or 0)
 
                     trial_result = {
                         "trial_number": trial.number,
@@ -843,17 +862,13 @@ class BacktestOptimizer:
 
         baseline_metrics = metrics_helper(baseline_result, initial_capital)
 
-        baseline_sharpe = (
-            float(baseline_result.performance.sharpe_ratio)
-            if baseline_result.performance.sharpe_ratio
-            else 0.0
-        )
+        baseline_sharpe = _sharpe_of(baseline_result)
         baseline_return = baseline_metrics["return_pct"]
         baseline_win_rate = (
-            float(baseline_result.performance.win_rate) if baseline_result.performance else 0.0
+            float(_performance_of(baseline_result).win_rate) if baseline_result.performance else 0.0
         )
         baseline_max_dd = (
-            float(baseline_result.performance.max_drawdown_percentage)
+            float(_performance_of(baseline_result).max_drawdown_percentage)
             if baseline_result.performance
             else 0.0
         )
@@ -864,7 +879,7 @@ class BacktestOptimizer:
         logger.info(f"  Win Rate:     {baseline_win_rate:.2%}")
         logger.info(f"  Max DD:       {baseline_max_dd:.2f}%")
         logger.info(
-            f"  Total Trades: {baseline_result.performance.total_trades if baseline_result.performance else 0}"
+            f"  Total Trades: {_performance_of(baseline_result).total_trades if baseline_result.performance else 0}"
         )
 
         # Step 2: Run ablation tests for each filter
@@ -889,19 +904,15 @@ class BacktestOptimizer:
 
                 ablation_metrics = metrics_helper(ablation_result, initial_capital)
 
-                ablation_sharpe = (
-                    float(ablation_result.performance.sharpe_ratio)
-                    if ablation_result.performance.sharpe_ratio
-                    else 0.0
-                )
+                ablation_sharpe = _sharpe_of(ablation_result)
                 ablation_return = ablation_metrics["return_pct"]
                 ablation_win_rate = (
-                    float(ablation_result.performance.win_rate)
+                    float(_performance_of(ablation_result).win_rate)
                     if ablation_result.performance
                     else 0.0
                 )
                 ablation_max_dd = (
-                    float(ablation_result.performance.max_drawdown_percentage)
+                    float(_performance_of(ablation_result).max_drawdown_percentage)
                     if ablation_result.performance
                     else 0.0
                 )
@@ -936,14 +947,15 @@ class BacktestOptimizer:
                     "sharpe_ratio": ablation_sharpe,
                     "max_drawdown": ablation_max_dd,
                     "total_trades": (
-                        ablation_result.performance.total_trades
+                        _performance_of(ablation_result).total_trades
                         if ablation_result.performance
                         else 0
                     ),
                     "avg_trade_pnl": (
-                        ablation_metrics["total_pnl"] / ablation_result.performance.total_trades
+                        ablation_metrics["total_pnl"]
+                        / _performance_of(ablation_result).total_trades
                         if ablation_result.performance
-                        and ablation_result.performance.total_trades > 0
+                        and _performance_of(ablation_result).total_trades > 0
                         else 0.0
                     ),
                     "final_capital": ablation_metrics["final_capital"],
@@ -1128,7 +1140,7 @@ class BacktestOptimizer:
             strategy = ModularMomentumStrategy(config)
 
             train_success = train_with_retry(
-                strategy=strategy,
+                strategy=cast("StrategyProtocol", strategy),
                 engine_type="transformer",
                 use_subprocess=False,
             )
@@ -1139,7 +1151,7 @@ class BacktestOptimizer:
             initial_capital = self.backtest_config.initial_capital
             val_result = run_backtest_helper(strategy, val_quotes, initial_capital)
 
-            score = float(val_result.performance.sharpe_ratio or 0)
+            score = float(_performance_of(val_result).sharpe_ratio or 0)
 
             if score > best_score:
                 best_score = score

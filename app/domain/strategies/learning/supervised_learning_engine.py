@@ -86,7 +86,7 @@ class SupervisedLearningEngine(BaseLearningEngine):
         self,
         training_data: dict[str, Any] | None = None,
         validation_data: dict[str, Any] | None = None,
-    ) -> dict[str, float]:
+    ) -> dict[str, float | None | dict[str, float]]:
         """
         Entrenar modelo supervisado.
 
@@ -336,7 +336,9 @@ class SupervisedLearningEngine(BaseLearningEngine):
             )
 
         # Evaluar en validación
-        metrics = self._evaluate_model(X_val, y_val)
+        metrics: dict[str, float | None | dict[str, float]] = dict(
+            self._evaluate_model(X_val, y_val)
+        )
 
         # Log sample weight statistics in metrics
         if train_weights is not None:
@@ -573,7 +575,7 @@ class SupervisedLearningEngine(BaseLearningEngine):
             raise ValueError("SupervisedLearningEngine: no trained model available")
         return self.model
 
-    def _evaluate_model(self, X, y):
+    def _evaluate_model(self, X, y) -> dict[str, float | None]:
         """Evaluar modelo y retornar métricas."""
         # PyTorch es REQUIRED - ya importado al inicio del módulo
         if isinstance(self.model, nn.Module):
@@ -596,7 +598,7 @@ class SupervisedLearningEngine(BaseLearningEngine):
             # Obtener predicciones de clase (para métricas)
             y_pred = model.predict(X)
 
-        metrics = {
+        metrics: dict[str, float | None] = {
             "accuracy": float(accuracy_score(y, y_pred)),
             "precision": float(precision_score(y, y_pred, zero_division=0)),
             "recall": float(recall_score(y, y_pred, zero_division=0)),
@@ -624,21 +626,22 @@ class SupervisedLearningEngine(BaseLearningEngine):
         try:
             from app.backtesting.metrics import calculate_matthews_corrcoef
 
-            metrics["mcc"] = float(calculate_matthews_corrcoef(y, y_pred))
+            mcc_value = float(calculate_matthews_corrcoef(y, y_pred))
+            metrics["mcc"] = mcc_value
 
             # Use MCC for model selection - warn if below threshold
             # MCC ranges from -1 to +1, where:
             # - +1: Perfect prediction
             # - 0: Random prediction
             # - -1: Total disagreement
-            if metrics["mcc"] < 0.3:
+            if mcc_value < 0.3:
                 logger.warning(
-                    f"Model MCC {metrics['mcc']:.3f} below threshold 0.3. "
+                    f"Model MCC {mcc_value:.3f} below threshold 0.3. "
                     "Model may not be reliable for imbalanced data."
                 )
-            elif metrics["mcc"] >= 0.5:
+            elif mcc_value >= 0.5:
                 logger.info(
-                    f"Model MCC {metrics['mcc']:.3f} indicates good performance on imbalanced data."
+                    f"Model MCC {mcc_value:.3f} indicates good performance on imbalanced data."
                 )
         except Exception as e:
             logger.warning(f"Failed to calculate MCC: {e}")
@@ -784,7 +787,7 @@ class SupervisedLearningEngine(BaseLearningEngine):
 
         return extracted["feature_vector"]
 
-    def evaluate(self, test_data: dict[str, Any]) -> dict[str, float]:
+    def evaluate(self, test_data: dict[str, Any]) -> dict[str, float | None]:
         """Evaluar modelo en datos de prueba."""
         X_test = test_data["features"]
         y_test = test_data["labels"]

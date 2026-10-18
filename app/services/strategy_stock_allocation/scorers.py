@@ -209,7 +209,7 @@ class MomentumScorer:
             if sortino is not None and sortino < self.config.MIN_SORTINO_RATIO:
                 momentum_score *= 0.5
 
-            result = {
+            result: dict[str, float | str | bool | dict[str, float] | None] = {
                 "score": float(momentum_score),
                 "rsi": rsi,
                 "macd": macd,
@@ -340,7 +340,9 @@ class MeanReversionScorer:
         self.hurst_calculator = hurst_calculator
         self.half_life_calculator = half_life_calculator
 
-    def score(self, ticker: str, data: pd.DataFrame) -> dict[str, float | str | bool | None]:
+    def score(
+        self, ticker: str, data: pd.DataFrame
+    ) -> dict[str, float | str | bool | dict[str, float] | None]:
         """
         Score asset for Mean Reversion strategy.
 
@@ -442,7 +444,7 @@ class MeanReversionScorer:
                 + weights.get("Liquidity", 0.0) * liquidity_score
             )
 
-            result = {
+            result: dict[str, float | str | bool | dict[str, float] | None] = {
                 "score": float(mean_reversion_score),
                 "half_life": half_life,
                 "z_score": float(z_score),
@@ -475,8 +477,8 @@ class MeanReversionScorer:
             # Try GARCH(1,1) if available
             if ARCH_AVAILABLE:
                 try:
-                    model = arch_model(clean_returns * 100, vol="Garch", p=1, q=1, rescale=False)
-                    fitted = model.fit(disp="of")
+                    model = arch_model(clean_returns * 100, vol="GARCH", p=1, q=1, rescale=False)
+                    fitted = model.fit(disp="off")
 
                     forecast = fitted.forecast(horizon=self.config.GARCH_FORECAST_HORIZON)
                     forecast_vol = np.sqrt(forecast.variance.values[-1, -1]) / 100

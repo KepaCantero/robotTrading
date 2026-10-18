@@ -173,7 +173,7 @@ class StockFilter:
         """
         logger.info(f"Filtering stocks from {len(historical_data)} candidates")
         filtered = {}
-        rejection_log = []
+        rejection_log: list[dict[str, object]] = []
 
         min_days = self.config.LOOKBACK_MAX_DAYS
 

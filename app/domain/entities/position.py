@@ -499,7 +499,9 @@ class Position:
     def get_age_days(self) -> int:
         """Get position age in days."""
         end_date = (
-            self.exit_date if self.status == PositionStatus.CLOSED else datetime.now(timezone.utc)
+            self.exit_date
+            if self.status == PositionStatus.CLOSED and self.exit_date is not None
+            else datetime.now(timezone.utc)
         )
         return (end_date - self.entry_date).days
 

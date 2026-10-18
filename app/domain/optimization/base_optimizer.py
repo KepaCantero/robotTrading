@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -348,14 +349,14 @@ class BaseOptimizer(ABC, Generic[T]):
     @abstractmethod
     async def optimize(
         self,
-        objective: object,
+        objective: Callable[[dict[str, Any]], float | Awaitable[float]],
         search_space: T,
     ) -> OptimizationResult:
         """
         Run optimization.
 
         Args:
-            objective: Objective function or data to optimize
+            objective: Objective function to optimize
             search_space: Search space definition
 
         Returns:

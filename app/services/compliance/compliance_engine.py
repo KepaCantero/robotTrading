@@ -48,7 +48,7 @@ from dataclasses import dataclass, field as dataclass_field
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any, Callable, cast
 
 import empyrical  # Financial metrics library (annual_volatility, sharpe_ratio, etc.)
 import numpy as np
@@ -56,9 +56,13 @@ import pandas as pd
 from pydantic import BaseModel, Field, field_validator
 
 if TYPE_CHECKING:
+    from app.engines.execution_engine.microstructure.harris_integration import (
+        HarrisMicrostructureIntegrator,
+    )
     from app.infrastructure.logging.trading_decision_logger import TradingDecisionLogger
     from app.services.live_trading.alert_to_trade_mapper import TradeSignal
     from app.services.live_trading.broker_connector import BrokerConnector
+    from app.services.regime_detection_chan import MarketRegimeDetector
     from app.services.tax_efficiency.engines.spain_tax_engine_impl import SpainTaxEngineImpl
 
 
@@ -108,6 +112,7 @@ from app.domain.entities.post_trade_analysis import PostTradeAnalysis
 from app.domain.entities.pre_trade_analysis import PreTradeAnalysis
 
 # Import subsystem config factory
+from app.shared.utils.safe_parse import cfg_dict
 from app.shared.utils.subsystem_config_factory import get_subsystem_config_factory
 
 logger = logging.getLogger(__name__)
@@ -1134,13 +1139,14 @@ class SystemBus:
             alloc_config = get_strategy_stock_allocator_config()
             compliance_config = get_compliance_config()
 
-            if price_history is not None and len(price_history) >= alloc_config["SLOPE_WINDOW_MIN"]:
+            slope_window_min = cast("int", alloc_config["SLOPE_WINDOW_MIN"])
+            if price_history is not None and len(price_history) >= slope_window_min:
                 # Calculate returns
                 returns = price_history["close"].pct_change().dropna()
 
                 # Calculate momentum signal based on recent returns
-                if len(returns) >= alloc_config["SLOPE_WINDOW_MIN"]:
-                    recent_returns = returns.tail(alloc_config["SLOPE_WINDOW_MIN"])
+                if len(returns) >= slope_window_min:
+                    recent_returns = returns.tail(slope_window_min)
                     avg_return = recent_returns.mean()
 
                     # Normalize signal to 0-1 range (0=bearish, 1=bullish)
@@ -1556,7 +1562,7 @@ class SystemBus:
 
             config = get_strategy_stock_allocator_config()
             # Config is a dict from YAML, use proper dict access
-            exposure_config = config.get("exposure", {})
+            exposure_config = cfg_dict(config.get("exposure"))
             max_strategy_exposure = exposure_config.get("max_strategy_exposure", 0.50)
             exposure_config.get("max_pair_exposure", 0.15)
             max_assets_per_pair = exposure_config.get("max_assets_per_pair", 2)
@@ -1645,9 +1651,9 @@ class SystemBus:
             compliance_config = get_compliance_config()
 
             # Config is a dict from YAML, use proper dict access
-            data_validation = alloc_config.get("data_validation", {})
-            garch_config = alloc_config.get("garch", {})
-            risk_metrics = alloc_config.get("risk_metrics", {})
+            data_validation = cfg_dict(alloc_config.get("data_validation"))
+            garch_config = cfg_dict(alloc_config.get("garch"))
+            risk_metrics = cfg_dict(alloc_config.get("risk_metrics"))
 
             lookback_max_days = data_validation.get("lookback_max_days", 126)
             slope_window_min = garch_config.get("slope_window_min", 30)
@@ -2114,8 +2120,8 @@ class ComplianceEngine:
         # Use ComplianceConfig for default starting capital
         from app.shared.config.centralized_config import get_compliance_config
 
-        config = get_compliance_config()
-        self._starting_capital: float = config.DEFAULT_STARTING_CAPITAL
+        compliance_params = get_compliance_config()
+        self._starting_capital: float = compliance_params.DEFAULT_STARTING_CAPITAL
 
         self._initialized = True
 
@@ -2910,7 +2916,7 @@ class ComplianceEngine:
         ).total_seconds() * config.MILLISECONDS_MULTIPLIER
 
         # Harris analysis
-        harris = self._get_subsystem("harris")
+        harris = cast("HarrisMicrostructureIntegrator", self._get_subsystem("harris"))
         if harris and self.availability.is_available("harris"):
             try:
                 harris_analysis = harris.analyze_execution(
@@ -3004,8 +3010,9 @@ class ComplianceEngine:
 
             # Get regime
             regime = "UNKNOWN"
-            regime_detector = chan.get("regime")
-            if regime_detector and len(returns) > 0:
+            regime_obj = cast("dict[str, object]", chan).get("regime")
+            if regime_obj and len(returns) > 0:
+                regime_detector = cast("MarketRegimeDetector", regime_obj)
                 regime_result = regime_detector.detect_regimes(returns)
                 if regime_result and len(regime_result) > 0:
                     regime = regime_result[-1]
@@ -3013,7 +3020,7 @@ class ComplianceEngine:
             return PortfolioOptimization(
                 weights=weights_dict,
                 expected_return=float(result.expected_return),
-                expected_risk=float(result.risk),
+                expected_risk=float(result.volatility),
                 sharpe_ratio=float(result.sharpe_ratio),
                 regime=regime,
             )

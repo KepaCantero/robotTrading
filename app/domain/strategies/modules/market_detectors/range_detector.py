@@ -204,7 +204,7 @@ class RangeDetector(BaseMarketDetector):
             return self._detect_price_range(prices)
 
     @staticmethod
-    def _rolling_mean(data: np.ndarray, window: int) -> np.ndarray:
+    def _rolling_mean(data: np.ndarray, window: int) -> np.ndarray | None:
         """
         Calculate rolling mean - VECTORIZED with cumsum trick.
 
@@ -218,7 +218,7 @@ class RangeDetector(BaseMarketDetector):
         return (cumsum[window:] - cumsum[:-window]) / window
 
     @staticmethod
-    def _rolling_std(data: np.ndarray, window: int) -> np.ndarray:
+    def _rolling_std(data: np.ndarray, window: int) -> np.ndarray | None:
         """
         Calculate rolling standard deviation - VECTORIZED.
 

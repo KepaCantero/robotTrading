@@ -224,7 +224,8 @@ class DividendScreener:
 
         # 10. Dividend safety check
         safety = profile.dividend_data.safety
-        safety_order = {
+        # DividendSafety es un str-Enum: el dict admite la clave enum y su valor str
+        safety_order: dict[DividendSafety | str, int] = {
             DividendSafety.VERY_SAFE: 5,
             DividendSafety.SAFE: 4,
             DividendSafety.MODERATE: 3,
@@ -352,7 +353,7 @@ class DividendScreener:
         years = profile.dividend_data.years_consecutive_increases
 
         if growth is None:
-            growth = 0.0
+            growth = Decimal("0")
 
         growth_score = 0.0
 
@@ -366,7 +367,9 @@ class DividendScreener:
         elif growth >= 0:
             growth_score += 20
         else:
-            growth_score += max(0, 20 + growth * 2)  # Penalizar crecimiento negativo
+            growth_score += float(
+                max(Decimal("0"), 20 + growth * 2)
+            )  # Penalizar crecimiento negativo
 
         # Score por años consecutivos
         if years >= 25:

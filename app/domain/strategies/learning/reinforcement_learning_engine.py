@@ -29,7 +29,9 @@ if TYPE_CHECKING:
     from stable_baselines3.common.base_class import BaseAlgorithm
 
 
-class TradingEnv:
+class TradingEnv(gym.Env):
+    """Entorno de trading (API gymnasium) para stable-baselines3."""
+
     """
     Entorno de trading para Reinforcement Learning.
 
@@ -51,6 +53,7 @@ class TradingEnv:
 
         # Espacio de acciones: discreto o continuo según el algoritmo
         use_continuous = config.get("use_continuous_action", False)
+        self.action_space: gym.spaces.Box | gym.spaces.Discrete
         if use_continuous:
             # Action space continuo: [position_size, stop_loss_adjust, take_profit_adjust]
             # position_size: -1 a 1 (short a long)
@@ -95,12 +98,14 @@ class TradingEnv:
         self.peak_equity = 100000.0
 
         observation = self._get_observation()
-        info = {}
+        info: dict[str, Any] = {}
 
         # Gymnasium API: return (observation, info)
         return observation, info
 
-    def step(self, action, market_data: dict) -> tuple[np.ndarray, float, bool, bool, dict]:
+    def step(
+        self, action: object, market_data: dict | None = None
+    ) -> tuple[np.ndarray, float, bool, bool, dict]:
         """
         Ejecutar acción en el entorno.
 
@@ -113,7 +118,8 @@ class TradingEnv:
         Returns:
             observation, reward, terminated, truncated, info (Gymnasium API)
         """
-        price = market_data.get("price", 0)
+        market = market_data if market_data is not None else {}
+        price = market.get("price", 0)
         prev_equity = self.equity[-1]
 
         # Manejar acción discreta o continua
@@ -121,34 +127,38 @@ class TradingEnv:
             # Acción discreta
             if action == 1:  # BUY
                 if self.position == 0:  # Solo comprar si no hay posición
-                    self._execute_buy(price, market_data)
+                    self._execute_buy(price, market)
             elif action == 2:  # SELL
                 if self.position != 0:  # Solo vender si hay posición
-                    self._execute_sell(price, market_data)
+                    self._execute_sell(price, market)
             elif action == 3:  # Ajustar stop-loss
-                self._adjust_stop_loss(market_data)
+                self._adjust_stop_loss(market)
             elif action == 4:  # Ajustar take-profit
-                self._adjust_take_profit(market_data)
+                self._adjust_take_profit(market)
             # action == 0 (HOLD) no hace nada
         else:
             # Acción continua: [position_size, stop_loss_adjust, take_profit_adjust]
-            action = np.clip(action, self.action_space.low, self.action_space.high)
-            position_size = action[0]
-            stop_loss_adjust = action[1]
-            take_profit_adjust = action[2]
+            continuous = np.clip(
+                np.asarray(action, dtype=np.float64),
+                self.action_space.low,
+                self.action_space.high,
+            )
+            position_size = continuous[0]
+            stop_loss_adjust = continuous[1]
+            take_profit_adjust = continuous[2]
 
             # Convertir position_size a acción discreta
             if position_size > 0.3 and self.position == 0:  # Threshold para comprar
-                self._execute_buy(price, market_data)
+                self._execute_buy(price, market)
             elif position_size < -0.3 and self.position != 0:  # Threshold para vender
-                self._execute_sell(price, market_data)
+                self._execute_sell(price, market)
             # Si está entre -0.3 y 0.3, mantener posición actual
 
             # Aplicar ajustes de stop-loss y take-profit
             if abs(stop_loss_adjust) > 0.01:
-                self._adjust_stop_loss(market_data, adjustment=stop_loss_adjust)
+                self._adjust_stop_loss(market, adjustment=stop_loss_adjust)
             if abs(take_profit_adjust) > 0.01:
-                self._adjust_take_profit(market_data, adjustment=take_profit_adjust)
+                self._adjust_take_profit(market, adjustment=take_profit_adjust)
 
         # Actualizar equity
         if self.position != 0:

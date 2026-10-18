@@ -463,7 +463,7 @@ class FIFOIntegrator:
         """
         try:
             lots = await self.get_open_lots(symbol)
-            return sum(lot.cost_basis_open for lot in lots)
+            return sum((lot.cost_basis_open for lot in lots), Decimal("0"))
 
         except (asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error calculating cost basis for {symbol}: {e}")
@@ -481,7 +481,7 @@ class FIFOIntegrator:
         """
         try:
             lots = await self.get_open_lots(symbol)
-            return sum(lot.quantity_remaining for lot in lots)
+            return sum((lot.quantity_remaining for lot in lots), Decimal("0"))
 
         except (asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error getting total quantity for {symbol}: {e}")

@@ -18,6 +18,9 @@ import logging
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Callable
 
+if TYPE_CHECKING:
+    from websockets.asyncio.client import ClientConnection
+
 import websockets
 from requests.exceptions import HTTPError
 
@@ -73,7 +76,7 @@ class AlpacaClient:
         self._timeouts = get_timeouts()
 
         # WebSocket streaming
-        self.stream_socket: websockets.WebSocketClientProtocol | None = None
+        self.stream_socket: ClientConnection | None = None
         self.stream_task: asyncio.Task | None = None
         self.is_streaming = False
         self.subscribed_symbols: list[str] = []
@@ -131,6 +134,8 @@ class AlpacaClient:
             )
 
             # Test connectivity by getting account with timeout
+            if self.api is None:
+                raise AlpacaClientError("Not authenticated")
             account = await asyncio.wait_for(
                 loop.run_in_executor(None, self.api.get_account), timeout=self._timeouts.alpaca_read
             )
@@ -229,6 +234,7 @@ class AlpacaClient:
         """
         if not self.api:
             raise AlpacaClientError("Not authenticated")
+        api = self.api
 
         try:
             loop = asyncio.get_event_loop()
@@ -250,7 +256,7 @@ class AlpacaClient:
                 if client_order_id is not None:
                     kwargs["client_order_id"] = client_order_id
 
-                return self.api.submit_order(**kwargs)
+                return api.submit_order(**kwargs)
 
             order = await asyncio.wait_for(
                 loop.run_in_executor(None, submit), timeout=self._timeouts.alpaca_write
@@ -408,11 +414,12 @@ class AlpacaClient:
         """
         if not self.api:
             raise AlpacaClientError("Not authenticated")
+        api = self.api
 
         try:
             loop = asyncio.get_event_loop()
             orders = await asyncio.wait_for(
-                loop.run_in_executor(None, lambda: self.api.get_orders(status=status, limit=limit)),
+                loop.run_in_executor(None, lambda: api.get_orders(status=status, limit=limit)),
                 timeout=self._timeouts.alpaca_read,
             )
 
@@ -553,6 +560,8 @@ class AlpacaClient:
                         message = await asyncio.wait_for(
                             websocket.recv(), timeout=self._timeouts.websocket_idle_timeout
                         )
+                        if isinstance(message, bytes):
+                            message = message.decode("utf-8")
                         await self._process_stream_message(message)
                     except asyncio.TimeoutError:
                         # Send ping to keep connection alive
@@ -577,7 +586,7 @@ class AlpacaClient:
         else:
             return "wss://data.alpaca.markets/stream"
 
-    async def _subscribe_to_symbols(self, websocket: websockets.WebSocketClientProtocol) -> None:
+    async def _subscribe_to_symbols(self, websocket: ClientConnection) -> None:
         """
         Subscribe to quote and trade updates for symbols.
 

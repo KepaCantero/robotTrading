@@ -22,7 +22,7 @@ class TestPortfolioAPIIntegration:
     @pytest.fixture(scope="class")
     def client(self):
         """FastAPI test client."""
-        return TestClient(app)
+        return TestClient(app, headers={"X-API-Key": "test-integration-key-1"})
 
     def test_get_portfolio_summary_success(self, client):
         """Test GET /portfolio/ endpoint success."""
@@ -227,7 +227,7 @@ class TestSignalsAPIIntegration:
     @pytest.fixture(scope="class")
     def client(self):
         """FastAPI test client."""
-        return TestClient(app)
+        return TestClient(app, headers={"X-API-Key": "test-integration-key-1"})
 
     def test_evaluate_signal_success(self, client):
         """Test POST /signals/evaluate endpoint success."""
@@ -557,7 +557,7 @@ class TestMainAPIIntegration:
     @pytest.fixture(scope="class")
     def client(self):
         """FastAPI test client."""
-        return TestClient(app)
+        return TestClient(app, headers={"X-API-Key": "test-integration-key-1"})
 
     def test_root_endpoint_success(self, client):
         """Test GET / endpoint success."""

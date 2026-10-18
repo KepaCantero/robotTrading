@@ -461,6 +461,7 @@ class EmergencyCloser:
         """
         try:
             # Determine order side (opposite of position side)
+            symbol = str(getattr(position, "symbol", "UNKNOWN"))
             side = getattr(position, "side", "LONG")
             order_side = "SELL" if side == "LONG" else "BUY"
 
@@ -471,7 +472,7 @@ class EmergencyCloser:
             timeout = tt.emergency_position_close_timeout
             order = await asyncio.wait_for(
                 self.broker.place_order(
-                    symbol=position.symbol,
+                    symbol=symbol,
                     side=order_side,
                     quantity=quantity,
                     order_type="MARKET",
@@ -480,7 +481,7 @@ class EmergencyCloser:
             )
 
             if order:
-                logger.critical(f"Closed position: {position.symbol} ({quantity} shares)")
+                logger.critical(f"Closed position: {symbol} ({quantity} shares)")
                 return {
                     "success": True,
                     "value": quantity * getattr(position, "current_price", Decimal("0")),
@@ -488,13 +489,13 @@ class EmergencyCloser:
             else:
                 return {
                     "success": False,
-                    "error": f"Broker returned no order for {position.symbol}",
+                    "error": f"Broker returned no order for {symbol}",
                 }
 
         except (asyncio.TimeoutError, OSError) as e:
             return {
                 "success": False,
-                "error": f"Error closing {position.symbol}: {e!s}",
+                "error": f"Error closing {symbol}: {e!s}",
             }
 
     async def _wait_for_confirmation(self) -> bool:
@@ -526,7 +527,19 @@ class EmergencyCloser:
 
     def get_audit_log(
         self, limit: int = 100
-    ) -> list[dict[str, str | int | float | bool | Decimal | list[str] | datetime]]:
+    ) -> list[
+        dict[
+            str,
+            str
+            | int
+            | float
+            | bool
+            | Decimal
+            | list[str]
+            | datetime
+            | dict[str, str | int | float | bool | Decimal | list[str] | datetime],
+        ]
+    ]:
         """Get audit log entries."""
         return self._audit_log[-limit:]
 

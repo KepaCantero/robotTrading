@@ -174,6 +174,8 @@ class TrendDetector(BaseMarketDetector):
             atr = self._wilder_smooth(tr, period)
             smooth_plus_dm = self._wilder_smooth(plus_dm, period)
             smooth_minus_dm = self._wilder_smooth(minus_dm, period)
+            if smooth_plus_dm is None or smooth_minus_dm is None:
+                return {"type": "no_trend", "strength": 0.0, "confidence": 0.0, "method": "adx"}
 
             if atr is None or len(atr) == 0:
                 return {"type": "no_trend", "strength": 0.0, "confidence": 0.0, "method": "adx"}

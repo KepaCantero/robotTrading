@@ -6,6 +6,7 @@ requires-python = ">=3.9"
 license = {text = "MIT"}
 
 dependencies = [
+    "pyjwt>=2.8.0",
     # Web framework
     "fastapi>=0.100.0",
     "uvicorn[standard]>=0.23.0",

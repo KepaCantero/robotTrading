@@ -101,6 +101,7 @@ class CallOption:
     underlying_price: Decimal | None = None
     moneyness: Moneyness = Moneyness.ATM
     expiry_date: date | None = None  # Alias for expiry
+    metadata: dict[str, str] = field(default_factory=dict)  # Extra info (greeks, etc.)
 
     def __post_init__(self):
         """Set expiry_date alias if not provided."""
@@ -198,6 +199,22 @@ class CoveredCallPosition:
     def break_even_price(self) -> Decimal:
         """Calculate break-even price."""
         return self.average_cost - self.premium_received
+
+    @property
+    def return_if_called(self) -> Decimal:
+        """Retorno si la opción se ejerce (strike + premio vs coste)."""
+        if self.average_cost == Decimal("0"):
+            return Decimal("0")
+        return (
+            self.call_option.strike - self.average_cost + self.premium_received
+        ) / self.average_cost
+
+    @property
+    def downside_protection(self) -> Decimal:
+        """Protección a la baja aportada por el premio (% del coste)."""
+        if self.average_cost == Decimal("0"):
+            return Decimal("0")
+        return (self.premium_received / self.average_cost) * Decimal("100")
 
     @property
     def return_if_unchanged(self) -> Decimal:

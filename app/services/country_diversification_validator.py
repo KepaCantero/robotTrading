@@ -33,7 +33,7 @@ class CountryDiversificationValidator:
         Returns:
             List of violation dicts for breaches
         """
-        violations = []
+        violations: list[dict[str, object]] = []
         self.checks_performed += 1
 
         # Calculate country exposures
@@ -118,7 +118,7 @@ class CountryDiversificationValidator:
         Returns:
             List of suggestion dicts with country, exposure, and action
         """
-        suggestions = []
+        suggestions: list[dict[str, object]] = []
         country_exposure = self._calculate_country_exposure(portfolio)
         total_value = portfolio.total_equity
 

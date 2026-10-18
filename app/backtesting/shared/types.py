@@ -10,7 +10,7 @@ from typing import Any, Union
 
 # Type aliases for better type safety and consistency
 ConfigDict = dict[str, Any]
-MetricsDict = dict[str, Union[float, int, str, bool, None]]
+MetricsDict = dict[str, Union[float, int, str, bool, list, dict, None]]
 ParameterDict = dict[str, Any]
 OptimizationHistoryEntry = dict[str, Any]
 ValidationResultDict = dict[str, Any]

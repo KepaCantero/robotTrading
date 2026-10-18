@@ -22,7 +22,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 
@@ -149,11 +149,13 @@ class LearningEngineUpdater:
         self._drift_enabled = self._drift_config.get("enabled", True)
 
         if self._drift_enabled:
-            self._drift_detector = ComprehensiveDriftDetector(self._drift_config)
-            self._overfitting_detector = OverfittingDetector(
+            self._drift_detector: ComprehensiveDriftDetector | None = ComprehensiveDriftDetector(
+                self._drift_config
+            )
+            self._overfitting_detector: OverfittingDetector | None = OverfittingDetector(
                 self._drift_config.get("overfitting", {})
             )
-            self._retrain_trigger = AutoRetrainingTrigger(
+            self._retrain_trigger: AutoRetrainingTrigger | None = AutoRetrainingTrigger(
                 self._drift_config.get("auto_retrain", {})
             )
             self._reference_features: np.ndarray | None = None
@@ -171,7 +173,9 @@ class LearningEngineUpdater:
         self._feature_importance_enabled = self._feature_importance_config.get("enabled", True)
 
         if self._feature_importance_enabled:
-            self._feature_analyzer = ComprehensiveFeatureAnalyzer(self._feature_importance_config)
+            self._feature_analyzer: ComprehensiveFeatureAnalyzer | None = (
+                ComprehensiveFeatureAnalyzer(self._feature_importance_config)
+            )
             self._feature_importance_history: list[dict[str, Any]] = []
             self._last_feature_analysis: dict[str, Any] | None = None
             logger.info("Feature importance analysis enabled for LearningEngineUpdater")
@@ -192,7 +196,9 @@ class LearningEngineUpdater:
                         "registry_path", "models/registry"
                     )
                 }
-                self._transfer_manager = TransferLearningManager(config=tl_config)
+                self._transfer_manager: TransferLearningManager | None = TransferLearningManager(
+                    config=tl_config
+                )
                 self._transfer_history: list[dict[str, Any]] = []
                 self._last_transfer_operation: dict[str, Any] | None = None
                 logger.info("Transfer Learning enabled for LearningEngineUpdater")
@@ -534,7 +540,7 @@ class LearningEngineUpdater:
 
             # Fine-tune the pre-trained model
             # load_and_finetune expects model_id and training_data dict
-            training_data_dict = {
+            training_data_dict: dict[str, object] = {
                 "sequences": features if len(features.shape) == 3 else None,
                 "labels": targets,
                 "features": features if len(features.shape) == 2 else None,
@@ -844,7 +850,8 @@ class LearningEngineUpdater:
                 timestamp=market_record.get("timestamp", datetime.now()),
                 bid=Decimal(str(market_record.get("price", 0))),
                 ask=Decimal(str(market_record.get("price", 0))),
-                volume=int(market_record.get("volume", 0)),
+                last=Decimal(str(market_record.get("price", 0))),
+                volume=Decimal(str(market_record.get("volume", 0))),
             )
             quotes.append(quote)
 
@@ -906,31 +913,32 @@ class LearningEngineUpdater:
                 feature_names=training_data.get("feature_names"),
             )
 
+            analysis_dict: dict[str, Any] | None
             if analysis_result and not hasattr(analysis_result, "get"):
-                # Convert ComprehensiveImportanceReport to dict if needed
-                analysis_result = (
-                    analysis_result.to_dict()
+                # Convert ComprehensiveImportanceReport to dict if needed.
+                # to_dict() declara dict[str, object]; se unifica a Any para
+                # lecturas heterogéneas (.get) sin casts puntuales.
+                analysis_dict = (
+                    cast("dict[str, Any]", analysis_result.to_dict())
                     if hasattr(analysis_result, "to_dict")
-                    else analysis_result
+                    else None
                 )
+            else:
+                analysis_dict = analysis_result if isinstance(analysis_result, dict) else None
 
-            if (
-                analysis_result
-                and isinstance(analysis_result, dict)
-                and "error" not in analysis_result
-            ):
+            if analysis_dict and "error" not in analysis_dict:
                 # Store analysis result
                 self._last_feature_analysis = {
                     "timestamp": current_date,
-                    "analysis": analysis_result,
+                    "analysis": analysis_dict,
                     "n_features": len(features[0]) if len(features) > 0 else 0,
                     "n_samples": len(features),
                 }
                 self._feature_importance_history.append(self._last_feature_analysis)
 
                 # Log top/low importance features
-                if isinstance(analysis_result, dict) and "top_features" in analysis_result:
-                    top_features = analysis_result.get("top_features", {})
+                if isinstance(analysis_dict, dict) and "top_features" in analysis_dict:
+                    top_features = analysis_dict.get("top_features", {})
                     if top_features:
                         logger.info(
                             "🌟 Top 5 features por importancia: "
@@ -938,15 +946,15 @@ class LearningEngineUpdater:
                         )
 
                 # Check for critical warnings
-                if isinstance(analysis_result, dict) and "warnings" in analysis_result:
-                    warnings = analysis_result.get("warnings", [])
+                if isinstance(analysis_dict, dict) and "warnings" in analysis_dict:
+                    warnings = analysis_dict.get("warnings", [])
                     if warnings:
                         for warning in warnings:
                             logger.warning(f"⚠️ Feature Importance Warning: {warning}")
 
                 # Recommendations
-                if isinstance(analysis_result, dict) and "recommendations" in analysis_result:
-                    recommendations = analysis_result.get("recommendations", [])
+                if isinstance(analysis_dict, dict) and "recommendations" in analysis_dict:
+                    recommendations = analysis_dict.get("recommendations", [])
                     if recommendations:
                         logger.info(
                             "💡 Feature Engineering Recommendations: "
@@ -955,12 +963,12 @@ class LearningEngineUpdater:
 
                 logger.info(
                     "✅ Feature importance analysis completado "
-                    f"({len(analysis_result.get('top_features', {}))} features analizados)"
+                    f"({len(analysis_dict.get('top_features', {}))} features analizados)"
                 )
             else:
                 logger.debug(
                     "⚠️ Feature importance analysis no disponible: "
-                    f"{analysis_result.get('error', 'Unknown error') if analysis_result else 'No result'}"
+                    f"{analysis_dict.get('error', 'Unknown error') if analysis_dict else 'No result'}"
                 )
 
         except (RuntimeError, ValueError, TypeError, KeyError) as e:

@@ -32,7 +32,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
 from decimal import Decimal
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypedDict
 from uuid import UUID
 
 from sqlalchemy import extract, select
@@ -62,6 +62,16 @@ if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
+
+
+class _BalanceEntry(TypedDict):
+    """Saldo agregado por moneda para el snapshot del 31-D."""
+
+    quantity: Decimal
+    balance_eur: Decimal
+    exchange_rate_eur: Decimal
+    exchanges: list[str]
+    captured_at: datetime
 
 
 @dataclass
@@ -289,7 +299,7 @@ class Modelo721Generator:
         Returns:
             List of CryptoBalance objects
         """
-        balances = {}
+        balances: dict[str, _BalanceEntry] = {}
 
         # Get last snapshot of the year for each account
         for account in accounts:

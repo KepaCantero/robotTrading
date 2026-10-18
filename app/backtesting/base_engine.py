@@ -16,10 +16,12 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from dataclasses import dataclass, field
+from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import TYPE_CHECKING, Generic, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Generic, Protocol, TypeVar, cast
 
 from pydantic import BaseModel
 
@@ -30,6 +32,7 @@ if TYPE_CHECKING:
     from datetime import date, datetime
 
     from app.backtesting.models import Trade
+    from app.backtesting.signal_diagnostic_logger import SignalDiagnosticLogger
 
 logger = logging.getLogger(__name__)
 
@@ -43,8 +46,20 @@ def _get_backtesting_config():
 # GENERIC TYPES
 # ============================================================================
 
-ConfigType = TypeVar("ConfigType", bound=BaseModel)
-ResultType = TypeVar("ResultType", bound=BaseModel)
+# El engine base solo transporta config/result; los subtipos pueden ser
+# BaseModel (standard) u otros contenedores (robust/multi-strategy).
+ConfigType = TypeVar("ConfigType")
+ResultType = TypeVar("ResultType")
+
+
+class _HasTimestamp(Protocol):
+    """Cualquier objeto con timestamp (Quote, MarketData, Signal...)."""
+
+    timestamp: datetime
+
+
+_Timestamped = TypeVar("_Timestamped", bound=_HasTimestamp)
+_TimestampedSecond = TypeVar("_TimestampedSecond", bound=_HasTimestamp)
 
 
 # ============================================================================
@@ -124,7 +139,7 @@ class EngineInitParams:
 
     config: BaseModel
     strategy: object | None = None
-    diagnostic_logger: object | None = None
+    diagnostic_logger: SignalDiagnosticLogger | None = None
     strategy_name: str = "unknown"
     enable_risk_envelope: bool = True
 
@@ -199,7 +214,7 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
         self,
         config: ConfigType,
         strategy: object | None = None,
-        diagnostic_logger: object | None = None,
+        diagnostic_logger: SignalDiagnosticLogger | None = None,
         strategy_name: str = "unknown",
         enable_risk_envelope: bool = True,
     ):
@@ -245,7 +260,7 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
     def run_backtest(
         self,
         market_data: list[object] | object,
-        signals: list[object] | None = None,
+        signals: list[Any] | None = None,
         start_date: datetime | None = None,
         end_date: datetime | None = None,
         **kwargs,
@@ -317,7 +332,7 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
         if commission is not None and commission < 0:
             raise ValueError("Commission cannot be negative")
 
-    def _validate_market_data(self, market_data: list[object]) -> None:
+    def _validate_market_data(self, market_data: Sequence[object]) -> None:
         """
         Validate market data before processing.
 
@@ -330,7 +345,7 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
         if not market_data:
             raise ValueError("No market data available for backtest")
 
-    def _validate_signals(self, signals: list[object]) -> None:
+    def _validate_signals(self, signals: Sequence[object]) -> None:
         """
         Validate signals before processing.
 
@@ -470,7 +485,7 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
                 f"MarketData object has no 'close' or 'close_price' attribute: {type(md)}"
             )
 
-    def _build_price_map(self, market_data: list[object]) -> dict[str, Decimal]:
+    def _build_price_map(self, market_data: Sequence[object]) -> dict[str, Decimal]:
         """
         Build a price map from market data for accurate position closing.
 
@@ -489,9 +504,9 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
 
     def _sort_data_by_timestamp(
         self,
-        market_data: list[object],
-        signals: list[object] | None = None,
-    ) -> tuple[list[object], list[object]]:
+        market_data: Sequence[_Timestamped],
+        signals: Sequence[_TimestampedSecond] | None = None,
+    ) -> tuple[list[_Timestamped], list[_TimestampedSecond]]:
         """
         Sort market data and signals by timestamp.
 
@@ -502,12 +517,14 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
         Returns:
             Tuple of (sorted_market_data, sorted_signals)
         """
-        market_data = sorted(market_data, key=lambda x: x.timestamp)
+        sorted_market_data = sorted(market_data, key=lambda x: x.timestamp)
 
         if signals:
-            signals = sorted(signals, key=lambda x: x.timestamp)
+            sorted_signals: list[_TimestampedSecond] = sorted(signals, key=lambda x: x.timestamp)
+        else:
+            sorted_signals = []
 
-        return market_data, signals or []
+        return sorted_market_data, sorted_signals
 
     def _filter_by_date_range(
         self,
@@ -559,7 +576,7 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
         Subclasses should override and call super().__setstate__()
         to restore their own state.
         """
-        self.config = cast("BaseModel", state["config"])
+        self.config = cast("ConfigType", state["config"])
         self.strategy_name = cast("str", state["strategy_name"])
         self.enable_risk_envelope = bool(state.get("enable_risk_envelope", True))
 

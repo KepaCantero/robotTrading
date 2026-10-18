@@ -102,7 +102,7 @@ class VolatilityCalculator:
         if historical == 0:
             return 50.0
         tt = get_config().trading_thresholds
-        return float((current / historical) * tt.percentage_multiplier)
+        return float((current / historical) * Decimal(str(tt.percentage_multiplier)))
 
     def _calculate_trend(self, returns: np.ndarray) -> str:
         """Calcular tendencia de volatilidad - use config thresholds."""

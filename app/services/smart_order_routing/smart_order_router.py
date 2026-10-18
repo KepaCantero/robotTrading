@@ -315,7 +315,7 @@ class SmartOrderRouter:
         """
 
         # Check basic consistency
-        is_valid, message = execution_plan.validate()
+        is_valid, message = execution_plan.validate_consistency()
         if not is_valid:
             return False, f"Execution plan validation failed: {message}"
 

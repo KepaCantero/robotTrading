@@ -491,7 +491,7 @@ class PortfolioService:
             "rebalancing_actions_taken": self.rebalancing_actions,
         }
 
-    def suggest_rebalancing(self, portfolio: Portfolio) -> dict[str, list]:
+    def suggest_rebalancing(self, portfolio: Portfolio) -> dict[str, list[Any] | int]:
         """Get sector and country rebalancing suggestions [TASK-5.6]."""
         sector_suggestions = self.sector_validator.get_sector_rebalancing_suggestions(portfolio)
         country_suggestions = self.country_validator.get_country_rebalancing_suggestions(portfolio)

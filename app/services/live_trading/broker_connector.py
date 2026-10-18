@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 from app.infrastructure.resilience.reconnection_manager import (
     ReconnectionConfig,
@@ -133,7 +133,7 @@ class BrokerAdapter(Protocol):
         api_key: str | None = None,
         api_secret: str | None = None,
         account_id: str | None = None,
-        **kwargs: object,
+        **kwargs: Any,
     ) -> bool: ...
 
     async def disconnect(self) -> bool: ...

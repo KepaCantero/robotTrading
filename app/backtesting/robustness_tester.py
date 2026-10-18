@@ -13,15 +13,20 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Callable, Union
+from typing import Callable, Union, cast
 
 import numpy as np
 from scipy.interpolate import griddata
 
-from app.backtesting.models import BacktestConfig, BacktestResult
+from app.backtesting.models import BacktestConfig, BacktestResult, PerformanceMetrics
 from app.domain.models.market_data import Quote
 
 logger = logging.getLogger(__name__)
+
+
+def _performance_of(backtest_result: BacktestResult) -> PerformanceMetrics:
+    """Narrowa ``BacktestResult.performance``: el engine siempre lo puebla."""
+    return cast("PerformanceMetrics", backtest_result.performance)
 
 
 @dataclass
@@ -209,8 +214,8 @@ class RobustnessTester:
 
                 if isinstance(result, BacktestResult):
                     total_return = float(result.total_return)
-                    sharpe = float(result.performance.sharpe_ratio or 0)
-                    dd = float(result.performance.max_drawdown_percentage or 0)
+                    sharpe = float(_performance_of(result).sharpe_ratio or 0)
+                    dd = float(_performance_of(result).max_drawdown_percentage or 0)
                 else:
                     # Assume dict-like result
                     total_return = float(result.get("total_return", 0))
@@ -294,8 +299,8 @@ class RobustnessTester:
 
                     if isinstance(result, BacktestResult):
                         total_return = float(result.total_return)
-                        sharpe = float(result.performance.sharpe_ratio or 0)
-                        dd = float(result.performance.max_drawdown_percentage or 0)
+                        sharpe = float(_performance_of(result).sharpe_ratio or 0)
+                        dd = float(_performance_of(result).max_drawdown_percentage or 0)
                     else:
                         total_return = float(result.get("total_return", 0))
                         sharpe = float(result.get("sharpe_ratio", 0))
@@ -425,8 +430,8 @@ class RobustnessTester:
 
                 if isinstance(result, BacktestResult):
                     total_return = float(result.total_return)
-                    sharpe = float(result.performance.sharpe_ratio or 0)
-                    dd = float(result.performance.max_drawdown_percentage or 0)
+                    sharpe = float(_performance_of(result).sharpe_ratio or 0)
+                    dd = float(_performance_of(result).max_drawdown_percentage or 0)
                 else:
                     total_return = float(result.get("total_return", 0))
                     sharpe = float(result.get("sharpe_ratio", 0))

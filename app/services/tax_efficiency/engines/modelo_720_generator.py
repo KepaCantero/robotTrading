@@ -13,6 +13,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from decimal import Decimal
 
+from app.shared.utils.safe_parse import cfg_dict
+
 logger = logging.getLogger(__name__)
 
 
@@ -139,7 +141,11 @@ class Modelo720Generator:
         )
 
         total_value = sum(
-            sum(item["value"] for item in category.values()) for category in self.assets.values()
+            (
+                sum((item["value"] for item in cfg_dict(category).values()), 0)
+                for category in self.assets.values()
+            ),
+            0,
         )
 
         above_threshold = total_value > 50000

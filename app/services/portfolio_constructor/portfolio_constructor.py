@@ -561,7 +561,7 @@ class PortfolioConstructor:
                 if p.success and p.expected_portfolio_sharpe > Decimal("0")
             ]
             if sharpes:
-                avg_sharpe = np.mean(sharpes)
+                avg_sharpe = sum(sharpes, Decimal("0")) / len(sharpes)
 
         return {
             "total_constructions": total,

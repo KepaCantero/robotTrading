@@ -96,19 +96,22 @@ class SignalGenerator:
         Returns:
             MomentumSignal or None if conditions not met
         """
-        if not all([indicators.rsi, indicators.ema_9, indicators.ema_21]):
+        rsi = indicators.rsi
+        ema_9 = indicators.ema_9
+        ema_21 = indicators.ema_21
+        if not (rsi and ema_9 and ema_21):
             return None
 
         # BUY when RSI is oversold (< threshold), SELL when overbought (> threshold)
         direction = None
-        strength = 0
-        confidence = 0
+        strength = 0.0
+        confidence = 0.0
 
-        if indicators.rsi < 45:  # Oversold - BUY signal
+        if rsi < 45:  # Oversold - BUY signal
             direction = "BUY"
             strength = 75.0
             confidence = 80.0
-        elif indicators.rsi > 55:  # Overbought - SELL signal
+        elif rsi > 55:  # Overbought - SELL signal
             direction = "SELL"
             strength = 70.0
             confidence = 75.0

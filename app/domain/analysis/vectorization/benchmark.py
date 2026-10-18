@@ -298,7 +298,8 @@ class VectorizationBenchmark:
 
         # Vectorized implementation
         def corr_vectorized() -> np.ndarray:
-            return np.corrcoef(data, rowvar=False)
+            # np.corrcoef puede devolver un escalar con una sola variable
+            return np.asarray(np.corrcoef(data, rowvar=False))
 
         # Time both implementations
         non_vectorized_time = self._time_function(corr_non_vectorized)

@@ -22,7 +22,7 @@ from collections import deque
 from dataclasses import dataclass
 from datetime import date, timedelta
 from decimal import Decimal
-from typing import ClassVar
+from typing import Any, ClassVar
 
 from app.services.compliance.pdt_tracker import Country
 
@@ -311,7 +311,7 @@ class WashSaleTracker:
 
         total_disallowed = sum(ws.disallowed_loss for ws in self._wash_sales)
 
-        by_symbol = {}
+        by_symbol: dict[str, dict[str, Any]] = {}
         for ws in self._wash_sales:
             if ws.symbol not in by_symbol:
                 by_symbol[ws.symbol] = {

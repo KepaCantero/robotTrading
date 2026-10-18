@@ -17,7 +17,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Union, cast
 
 import numpy as np
 import pandas as pd
@@ -40,6 +40,11 @@ JsonDict = Union[
 ]
 
 logger = logging.getLogger(__name__)
+
+
+def _num(value: object) -> float:
+    """Coerce un valor de métricas numérico a float (identidad para floats)."""
+    return float(cast("int | float", value))
 
 
 class ReportGenerator:
@@ -162,9 +167,9 @@ class ReportGenerator:
                     if existing is None:
                         grouped[key] = r
                     else:
-                        if r.optimization_results.get(
-                            "sharpe_ratio", 0
-                        ) > existing.optimization_results.get("sharpe_ratio", 0):
+                        if _num(r.optimization_results.get("sharpe_ratio", 0)) > _num(
+                            existing.optimization_results.get("sharpe_ratio", 0)
+                        ):
                             grouped[key] = r
 
                 best_by_objective.append(
@@ -218,7 +223,7 @@ class ReportGenerator:
             "best_overall": (
                 max(
                     results.items(),
-                    key=lambda x: x[1].optimization_results.get("sharpe_ratio", 0),
+                    key=lambda x: _num(x[1].optimization_results.get("sharpe_ratio", 0)),
                 )
                 if results
                 else (None, None)

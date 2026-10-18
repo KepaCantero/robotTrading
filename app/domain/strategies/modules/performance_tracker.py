@@ -169,7 +169,7 @@ class FilterPerformanceTracker:
         Returns:
             Dict con sugerencias de ajustes
         """
-        recommendations = {
+        recommendations: dict[str, object] = {
             "should_enable": True,
             "should_disable": False,
             "adjust_confidence_threshold": None,
@@ -194,6 +194,7 @@ class FilterPerformanceTracker:
             recommendations["adjust_confidence_threshold"] = "decrease"
 
         # Ajustes por contexto
+        context_adjustments: dict[str, dict[str, str]] = {}
         for context, metrics in self.context_performance.items():
             if metrics["trades"] >= 10:
                 ctx_win_rate = (
@@ -206,16 +207,17 @@ class FilterPerformanceTracker:
                 )
 
                 if ctx_win_rate < 0.35 or ctx_avg_pnl < -0.02:
-                    recommendations["context_specific_adjustments"][context] = {
+                    context_adjustments[context] = {
                         "action": "be_more_strict",
                         "reason": f"Low performance: win_rate={ctx_win_rate:.2f}, avg_pnl={ctx_avg_pnl:.4f}",
                     }
                 elif ctx_win_rate > 0.65 and ctx_avg_pnl > 0.02:
-                    recommendations["context_specific_adjustments"][context] = {
+                    context_adjustments[context] = {
                         "action": "be_more_permissive",
                         "reason": f"High performance: win_rate={ctx_win_rate:.2f}, avg_pnl={ctx_avg_pnl:.4f}",
                     }
 
+        recommendations["context_specific_adjustments"] = context_adjustments
         return recommendations
 
 

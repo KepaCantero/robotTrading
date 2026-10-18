@@ -81,7 +81,7 @@ class FinRLIntegrator:
         """
         self.env_config = env_config or RLEnvironmentConfig()
         self.training_config = training_config or RLTrainingConfig()
-        self.trained_model = None
+        self.trained_model: dict[str, object] | None = None
         self.training_history: list[dict] = []
         self.connected = False
         logger.info(f"✅ FinRLIntegrator initialized (algorithm={self.training_config.algorithm})")
@@ -299,8 +299,8 @@ class FinRLIntegrator:
 
         return {
             "algorithm": self.trained_model["algorithm"],
-            "trained_at": self.trained_model["trained_at"].isoformat(),
-            "training_timesteps": self.trained_model["config"].total_timesteps,
+            "trained_at": str(self.trained_model["trained_at"]),
+            "training_timesteps": getattr(self.trained_model["config"], "total_timesteps", 0),
         }
 
     def get_integrator_status(self) -> dict:

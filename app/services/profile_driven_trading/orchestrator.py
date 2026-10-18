@@ -13,9 +13,18 @@ import logging
 import random
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any
+from typing import TYPE_CHECKING, Any, Callable
 
 import pandas as pd
+
+if TYPE_CHECKING:
+    from app.services._strategy_stock_allocator import StrategyStockAllocator
+    from app.services.backtest_orchestration.backtest_orchestrator import BacktestOrchestrator
+    from app.services.live_trading.risk_gates import RiskGates
+    from app.services.live_trading.trading_bridge_orchestrator import TradingBridgeOrchestrator
+    from app.services.market_universe_orchestrator import MarketUniverseOrchestrator
+    from app.services.profile_generator.profile_generator import ProfileGenerator
+    from app.services.tax_efficiency.tax_optimized_builder import TaxOptimizedPortfolioBuilder
 
 from .models import (
     ExecutionResult,
@@ -83,14 +92,14 @@ class ProfileDrivenTradingOrchestrator:
         self.signal_integrator = SignalIntegrator()
 
         # Lazy-loaded components
-        self._profile_generator = None
-        self._market_universe_orchestrator = None
-        self._stock_allocator = None
+        self._profile_generator: ProfileGenerator | None = None
+        self._market_universe_orchestrator: MarketUniverseOrchestrator | None = None
+        self._stock_allocator: StrategyStockAllocator | None = None
         self._rl_engine: object | None = None
-        self._tax_optimizer = None
-        self._risk_gates = None
-        self._backtest_orchestrator = None
-        self._trading_bridge = None
+        self._tax_optimizer: TaxOptimizedPortfolioBuilder | None = None
+        self._risk_gates: RiskGates | None = None
+        self._backtest_orchestrator: BacktestOrchestrator | None = None
+        self._trading_bridge: TradingBridgeOrchestrator | None = None
 
         # Execution tracking
         self.execution_count = 0
@@ -250,7 +259,7 @@ class ProfileDrivenTradingOrchestrator:
 
         try:
             # Execute all 8 stages
-            stages = [
+            stages: list[tuple[StageType, Callable[..., Any], dict[str, Any]]] = [
                 (
                     StageType.PROFILE_GENERATION,
                     self.stage_1_generate_profile,
@@ -319,8 +328,7 @@ class ProfileDrivenTradingOrchestrator:
             ]
 
             result.success = all(
-                pipeline_result.get_stage_by_type(s)
-                and pipeline_result.get_stage_by_type(s).success
+                (stage := pipeline_result.get_stage_by_type(s)) is not None and stage.success
                 for s in critical_stages
             )
 
@@ -809,9 +817,9 @@ class ProfileDrivenTradingOrchestrator:
         try:
             self._get_risk_gates()
 
-            violations = []
-            warnings = []
-            metrics = {}
+            violations: list[str] = []
+            warnings: list[str] = []
+            metrics: dict[str, Any] = {}
 
             # Check position sizes
             max_position_weight = 0.0

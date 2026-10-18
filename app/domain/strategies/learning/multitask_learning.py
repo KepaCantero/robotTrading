@@ -26,9 +26,8 @@ try:
 
     PYTORCH_AVAILABLE = True
 except ImportError:  # B014: ModuleNotFoundError is a subclass of ImportError
-    torch = None
-    nn = None
-    optim = None
+    # Sin bindings nulos: las clases de este módulo heredan de nn.Module, por
+    # lo que torch ausente ya es incompatible con la importación del módulo.
     PYTORCH_AVAILABLE = False
 
 
@@ -58,7 +57,7 @@ class SharedBackbone(nn.Module):
         if not PYTORCH_AVAILABLE:
             raise ImportError("PyTorch requerido para SharedBackbone")
 
-        layers = []
+        layers: list[nn.Module] = []
         prev_dim = input_dim
 
         for hidden_dim in hidden_dims:
@@ -104,7 +103,7 @@ class TaskHead(nn.Module):
         if not PYTORCH_AVAILABLE:
             raise ImportError("PyTorch requerido para TaskHead")
 
-        layers = []
+        layers: list[nn.Module] = []
         prev_dim = input_dim
 
         for hidden_dim in hidden_dims:
@@ -361,6 +360,7 @@ class MultiTaskLearningEngine:
 
         # Features
         features = training_data.get("features")
+        features_tensor: torch.Tensor
         if isinstance(features, np.ndarray):
             features_tensor = torch.FloatTensor(features)
         elif isinstance(features, pd.DataFrame):
@@ -369,7 +369,7 @@ class MultiTaskLearningEngine:
             raise ValueError("Features deben ser numpy array o DataFrame")
 
         # Targets por tarea
-        targets_dict = {}
+        targets_dict: dict[str, torch.Tensor] = {}
         for task_name in self.task_configs:
             task_targets = training_data.get(f"targets_{task_name}")
             if task_targets is not None:
@@ -418,7 +418,7 @@ class MultiTaskLearningEngine:
             optimizer = self.optimizer  # Local reference for type narrowing
 
             # Loss functions por tarea
-            loss_functions = {}
+            loss_functions: dict[str, nn.Module] = {}
             for task_name, task_config in self.task_configs.items():
                 task_type = task_config.get("type", "regression")
                 if task_type == "regression":
@@ -544,6 +544,7 @@ class MultiTaskLearningEngine:
 
         try:
             # Preparar features
+            features_tensor: torch.Tensor
             if isinstance(features, np.ndarray):
                 features_tensor = torch.FloatTensor(features)
             elif isinstance(features, pd.DataFrame):

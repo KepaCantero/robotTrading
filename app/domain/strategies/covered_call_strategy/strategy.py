@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.strategies.base import BaseStrategy
@@ -199,7 +199,9 @@ class CoveredCallStrategy(BaseStrategy):
                 ):
                     merged[key] = Decimal(str(merged[key]))
 
-            return CoveredCallConfig(**merged)
+            # Los valores ya están normalizados arriba (Decimal/int/bool/Enum);
+            # un dataclass no admite verificación estática de **kwargs dinámicos.
+            return CoveredCallConfig(**cast("dict[str, Any]", merged))
 
         except Exception as e:
             logger.error(f"Error parseando config: {e}")
@@ -243,7 +245,7 @@ class CoveredCallStrategy(BaseStrategy):
             # Actualizar posición con precio actual
             self.position_manager.update_position(
                 symbol=symbol,
-                expiry_date=position.call_option.expiry_date,
+                expiry_date=position.call_option.expiry,
                 strike=position.call_option.strike,
                 current_price=current_price,
             )
@@ -251,7 +253,7 @@ class CoveredCallStrategy(BaseStrategy):
             # Evaluar roll
             roll_decision = self.position_manager.should_roll_position(
                 symbol=symbol,
-                expiry_date=position.call_option.expiry_date,
+                expiry_date=position.call_option.expiry,
                 strike=position.call_option.strike,
                 current_price=current_price,
             )
@@ -322,7 +324,7 @@ class CoveredCallStrategy(BaseStrategy):
                 "reason": "covered_call_opportunity",
                 "strategy": "covered_calls",
                 "target_strike": str(best_option.strike),
-                "expiry_date": best_option.expiry_date.isoformat(),
+                "expiry_date": best_option.expiry.isoformat(),
                 "days_to_expiry": best_option.days_to_expiry,
                 "option_bid": str(best_option.bid) if best_option.bid else None,
                 "premium_pct": (
@@ -385,7 +387,7 @@ class CoveredCallStrategy(BaseStrategy):
                 "strategy": "covered_calls",
                 "roll_type": roll_decision.roll_type.value if roll_decision.roll_type else None,
                 "current_strike": str(position.call_option.strike),
-                "current_expiry": position.call_option.expiry_date.isoformat(),
+                "current_expiry": position.call_option.expiry.isoformat(),
                 "new_strike": str(roll_decision.new_strike) if roll_decision.new_strike else None,
                 "new_expiry": (
                     roll_decision.new_expiry.isoformat() if roll_decision.new_expiry else None
@@ -435,7 +437,7 @@ class CoveredCallStrategy(BaseStrategy):
                 "reason": reason,
                 "strategy": "covered_calls",
                 "strike": str(position.call_option.strike),
-                "expiry": position.call_option.expiry_date.isoformat(),
+                "expiry": position.call_option.expiry.isoformat(),
                 "assignment_probability": position.assignment_probability.value,
             },
         )
@@ -465,7 +467,7 @@ class CoveredCallStrategy(BaseStrategy):
         current_exposure = Decimal("0")
         for pos in portfolio.positions:
             if pos.symbol in [p.symbol for p in self.position_manager.get_all_positions()]:
-                current_exposure += pos.value / portfolio.total_value
+                current_exposure += pos.market_value / portfolio.total_value
 
         # Verificar si nueva señal excedería
         if signal.signal_type == SignalType.BUY:
@@ -671,7 +673,7 @@ class CoveredCallStrategy(BaseStrategy):
             logger.error(f"Error creando posición: {e}")
             return None
 
-    def get_position_summary(self) -> dict[str, int | float | list[str] | dict[str, float]]:
+    def get_position_summary(self) -> dict[str, Decimal | int | float | list[str]]:
         """
         Obtener resumen de posiciones.
 
@@ -694,7 +696,7 @@ class CoveredCallStrategy(BaseStrategy):
         self,
         symbol: str,
         current_price: Decimal,
-    ) -> list[dict[str, str | int | bool | list[dict[str, str | float | int | None]] | None]]:
+    ) -> list[dict[str, object]]:
         """
         Analizar oportunidades de rolling para un símbolo.
 
@@ -730,7 +732,7 @@ class CoveredCallStrategy(BaseStrategy):
                     {
                         "position_symbol": position.symbol,
                         "current_strike": str(position.call_option.strike),
-                        "current_expiry": position.call_option.expiry_date.isoformat(),
+                        "current_expiry": position.call_option.expiry.isoformat(),
                         "should_roll": should_roll,
                         "opportunities_count": len(rolls),
                         "best_roll": (
@@ -740,9 +742,7 @@ class CoveredCallStrategy(BaseStrategy):
                                     str(best_roll.new_option.strike) if best_roll else None
                                 ),
                                 "new_expiry": (
-                                    best_roll.new_option.expiry_date.isoformat()
-                                    if best_roll
-                                    else None
+                                    best_roll.new_option.expiry.isoformat() if best_roll else None
                                 ),
                                 "additional_premium": (
                                     str(best_roll.additional_premium) if best_roll else None

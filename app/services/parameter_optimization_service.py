@@ -10,7 +10,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import random
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from typing import Any
 
@@ -37,13 +37,9 @@ class OptimizationState:
 
     current_iteration: int = 0
     best_score: float = float("-inf")
-    best_parameters: dict[str, float | int] = None
-    optimization_history: list[dict[str, Any]] = None
+    best_parameters: dict[str, float | int] | None = None
+    optimization_history: list[dict[str, Any]] = field(default_factory=list)
     convergence_count: int = 0
-
-    def __post_init__(self):
-        if self.optimization_history is None:
-            self.optimization_history = []
 
 
 class ParameterOptimizationService:
@@ -214,6 +210,8 @@ class ParameterOptimizationService:
             "Starting walk-forward optimization", extra={"strategy_name": request.strategy_name}
         )
         config = request.optimization_config.walk_forward_config
+        if config is None:
+            raise ValueError("walk_forward_config is required for walk-forward optimization")
         current_date = request.data_start_date + timedelta(days=config.initial_train_period)
 
         while current_date + timedelta(days=config.test_period) <= request.data_end_date:
@@ -287,6 +285,8 @@ class ParameterOptimizationService:
             "Starting purged K-fold optimization", extra={"strategy_name": request.strategy_name}
         )
         config = request.optimization_config.purged_k_fold_config
+        if config is None:
+            raise ValueError("purged_k_fold_config is required for purged K-fold optimization")
 
         # Generate K-fold splits with purging
         splits = await self._generate_purged_splits(
@@ -693,7 +693,7 @@ class ParameterOptimizationService:
                 max_drawdown=test_results["max_drawdown"],
                 win_rate=test_results["win_rate"],
                 profit_factor=test_results["profit_factor"],
-                total_trades=test_results["total_trades"],
+                total_trades=int(test_results["total_trades"]),
                 avg_trade_duration=test_results["avg_trade_duration"],
                 volatility=test_results["volatility"],
                 calmar_ratio=test_results["calmar_ratio"],

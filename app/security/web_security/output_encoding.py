@@ -223,8 +223,9 @@ class OutputEncoder:
         for char in text:
             codepoint = ord(char)
 
-            # Encode all non-alphanumeric characters except space
-            if char.isalnum() or char == " ":
+            # Encode all non-alphanumeric characters except space, dash and
+            # underscore (seguros en valores CSS)
+            if char.isalnum() or char in " -_":
                 encoded.append(char)
             elif codepoint <= 255:
                 # Encode as \XX hex

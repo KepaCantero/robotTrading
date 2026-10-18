@@ -11,7 +11,7 @@ import logging
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Protocol, TypeVar
+from typing import TYPE_CHECKING, Callable, Protocol, TypeVar, cast
 
 import pandas as pd
 
@@ -21,6 +21,8 @@ from app.backtesting.core.orchestrator import BoundedResults
 
 if TYPE_CHECKING:
     from app.backtesting.models import BacktestResult
+    from app.domain.strategies.base import BaseStrategy
+    from app.services.portfolio_builder import DataLoader
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +75,7 @@ class BacktestRunnerFacade:
 
         # Output directory
         output_dir_config = self.config_loader.get_reporting_config()
-        self.output_dir = Path(output_dir_config.get("output_directory", "reports"))
+        self.output_dir = Path(str(output_dir_config.get("output_directory", "reports")))
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
         # Data loading (delegated)
@@ -103,11 +105,11 @@ class BacktestRunnerFacade:
         input_config = self.config_loader.get_input_config()
 
         if start_date is None:
-            start_date = datetime.strptime(input_config["start_date"], "%Y-%m-%d")
+            start_date = datetime.strptime(str(input_config["start_date"]), "%Y-%m-%d")
         if end_date is None:
-            end_date = datetime.strptime(input_config["end_date"], "%Y-%m-%d")
+            end_date = datetime.strptime(str(input_config["end_date"]), "%Y-%m-%d")
 
-        self.data_loader = DataLoader()
+        self.data_loader = cast("DataLoaderProtocol", DataLoader())
         self.quotes = await self._load_portfolio_market_data(start_date, end_date)
 
         logger.info(
@@ -129,7 +131,8 @@ class BacktestRunnerFacade:
 
         portfolio_config = get_portfolio_config_manager()
         portfolio_builder = PortfolioBuilder(
-            portfolio_config=portfolio_config, data_loader=self.data_loader
+            portfolio_config=portfolio_config,
+            data_loader=cast("DataLoader | None", self.data_loader),
         )
 
         quotes: list[pd.DataFrame] = await portfolio_builder.build_portfolio_quotes(
@@ -161,7 +164,9 @@ class BacktestRunnerFacade:
         self._log_backtest_start(timestamp, "baseline", strategy_name, strategy_class)
 
         executor = BacktestExecutorFactory.create(self.backtest_config)
-        result = executor.execute(self.quotes, strategy, strategy_name=strategy_name)
+        result = executor.execute(
+            self.quotes, cast("BaseStrategy", strategy), strategy_name=strategy_name
+        )
 
         result_dict = self._result_to_dict(result, "baseline", strategy_name)
         self._store_result(result_dict, result)
@@ -263,7 +268,9 @@ class BacktestRunnerFacade:
         )
 
         executor = BacktestExecutorFactory.create(self.backtest_config)
-        result = executor.execute(self.quotes, strategy, strategy_name=test_name)
+        result = executor.execute(
+            self.quotes, cast("BaseStrategy", strategy), strategy_name=test_name
+        )
 
         result_dict = self._result_to_dict(result, test_type, test_name)
         result_dict.update(metadata)
@@ -415,7 +422,7 @@ class BacktestRunnerFacade:
         self, result: dict[str, float | int | str]
     ) -> dict[str, float | int | str | dict[str, float | int | str]]:
         """Get summary of best result for logging."""
-        params_raw = result.get("parameters", {})
+        params_raw: object = result.get("parameters", {})
         parameters: dict[str, float | int | str] = (
             params_raw if isinstance(params_raw, dict) else {}
         )
@@ -455,7 +462,7 @@ class BacktestRunnerFacade:
         """
         if output_formats is None:
             reporting_config = self.config_loader.get_reporting_config()
-            output_formats = reporting_config.get("output_format", ["csv"])
+            output_formats = cast("list[str]", reporting_config.get("output_format", ["csv"]))
 
         df = self.get_results()
         if df.empty:

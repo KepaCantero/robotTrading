@@ -464,6 +464,22 @@ class PortfolioProvider(Protocol):
         """Get market regime data for a symbol."""
         ...
 
+    async def add_position(self, position: Position) -> bool:
+        """Add a position to the portfolio."""
+        ...
+
+    async def update_position(self, position: Position) -> bool:
+        """Update an existing position."""
+        ...
+
+    async def remove_position(self, symbol: str) -> bool:
+        """Remove a position by symbol."""
+        ...
+
+    async def simulate_trade(self, symbol: str, quantity: Decimal, price: Decimal) -> bool:
+        """Simulate a trade on a position."""
+        ...
+
 
 class TradingClientInterface(Protocol):
     """Common interface for all trading clients."""

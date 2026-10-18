@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Callable, Generic, TypeVar
+from typing import TYPE_CHECKING, Callable, Generic, TypeVar, cast
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
@@ -425,7 +425,8 @@ class CachedRepository(AbstractRepository[T, K]):
 
     def _get_entity_id(self, entity: T) -> K:
         """Extract ID from entity."""
-        return getattr(entity, "id", None) or getattr(entity, "entity_id", None)
+        entity_id = getattr(entity, "id", None) or getattr(entity, "entity_id", None)
+        return cast("K", entity_id)
 
     def _is_cache_valid(self, cache_key: str) -> bool:
         """Check if cache entry is still valid."""

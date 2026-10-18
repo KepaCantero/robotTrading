@@ -236,10 +236,12 @@ class CryptoDataFetcher:
                     """Internal fetch function."""
                     return self._fetch_price_from_api(trading_pair)
 
-                price = asyncio.run(self.reconnection_manager.connect_with_backoff(_fetch_price))
-                if price:
-                    self.price_cache[pair] = (price, utc_now())
-                    prices[symbol] = price
+                fetched_price: Decimal | None = asyncio.run(
+                    self.reconnection_manager.connect_with_backoff(_fetch_price)
+                )
+                if fetched_price:
+                    self.price_cache[pair] = (fetched_price, utc_now())
+                    prices[symbol] = fetched_price
                     continue
             except NotImplementedError:
                 logger.debug(f"API price fetching not implemented for {pair}, using fallback")
@@ -271,9 +273,9 @@ class CryptoDataFetcher:
         # Check cache
         cache_key = f"{pair}_{interval}"
         if cache_key in self.ohlcv_cache:
-            ohlcv, cached_at = self.ohlcv_cache[cache_key]
+            cached_ohlcv, cached_at = self.ohlcv_cache[cache_key]
             if utc_now() - cached_at < self.ohlcv_cache_duration:
-                return ohlcv
+                return cached_ohlcv
 
         # Try to fetch from API with reconnection manager
         try:
@@ -282,7 +284,9 @@ class CryptoDataFetcher:
                 """Internal fetch function."""
                 return self._fetch_ohlcv_from_api(pair, interval, limit)
 
-            ohlcv = asyncio.run(self.reconnection_manager.connect_with_backoff(_fetch_ohlcv))
+            ohlcv: list[dict] | None = asyncio.run(
+                self.reconnection_manager.connect_with_backoff(_fetch_ohlcv)
+            )
             if ohlcv:
                 self.ohlcv_cache[cache_key] = (ohlcv, utc_now())
                 return ohlcv
@@ -374,6 +378,7 @@ class CryptoDataFetcher:
         # 2. Rate limiting and error handling
         # 3. WebSocket for real-time updates
         # For now, implicitly return None to trigger fallback pricing
+        return None
 
     def _fetch_ohlcv_from_api(self, pair: str, interval: str, limit: int) -> list[dict] | None:
         """
@@ -396,6 +401,7 @@ class CryptoDataFetcher:
         # 2. Rate limiting and error handling
         # 3. Historical data endpoints (klines/candles)
         # For now, implicitly return None to trigger synthetic data generation
+        return None
 
     def _get_fallback_price(self, symbol: str) -> Decimal:
         """

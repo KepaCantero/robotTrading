@@ -68,7 +68,7 @@ class MomentumSignal(BaseModel):
     macd_signal: float | None = Field(default=None, description="MACD signal line")
     macd_histogram: float | None = Field(default=None, description="MACD histogram")
     macd_divergence: str | None = Field(
-        None, description="TASK-IND-3: MACD divergence detected (bullish/bearish)"
+        default=None, description="TASK-IND-3: MACD divergence detected (bullish/bearish)"
     )
 
     # Price and volume data
@@ -362,9 +362,13 @@ class TechnicalIndicators(BaseModel):
         if not all([self.ema_9, self.ema_21, self.ema_50]):
             return None
 
-        if self.ema_9 > self.ema_21 > self.ema_50:
+        ema_9, ema_21, ema_50 = self.ema_9, self.ema_21, self.ema_50
+        if ema_9 is None or ema_21 is None or ema_50 is None:
+            return None
+
+        if ema_9 > ema_21 > ema_50:
             return "BULLISH"
-        elif self.ema_9 < self.ema_21 < self.ema_50:
+        elif ema_9 < ema_21 < ema_50:
             return "BEARISH"
         else:
             return "NEUTRAL"

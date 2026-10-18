@@ -305,7 +305,7 @@ class AlertingRulesEngine:
     def _evaluate_condition(self, rule: AlertRule, value: float) -> bool:
         """Evaluate if alert condition is met."""
         if rule.condition_type == AlertConditionType.THRESHOLD:
-            return self._evaluate_threshold(value, rule.threshold_value, rule.comparison_op)
+            return self._evaluate_threshold(value, rule.threshold_value or 0.0, rule.comparison_op)
 
         elif rule.condition_type == AlertConditionType.CHANGE:
             return self._evaluate_change(rule)
@@ -374,7 +374,7 @@ class AlertingRulesEngine:
         if rule.webhook_enabled and rule.webhook_url:
             await self._send_webhook(rule, metric_value)
 
-    async def _send_webhook(self, rule: AlertRule, metric_value: float) -> None:
+    async def _send_webhook(self, rule: AlertRule, metric_value: float) -> bool:
         """Send webhook notification."""
         if not self.session:
             try:
@@ -393,8 +393,12 @@ class AlertingRulesEngine:
                 "timestamp": datetime.now().isoformat(),
             }
 
+            webhook_url = rule.webhook_url or ""
+            if not webhook_url:
+                logger.warning("Alert rule has no webhook URL configured")
+                return False
             async with self.session.post(
-                rule.webhook_url, json=payload, timeout=aiohttp.ClientTimeout(total=5)
+                webhook_url, json=payload, timeout=aiohttp.ClientTimeout(total=5)
             ) as resp:
                 if resp.status == 200:
                     logger.info(f"✅ Webhook delivered: {rule.name}")

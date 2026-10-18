@@ -243,9 +243,9 @@ class MonitoredPosition:
             position_id=data["position_id"],
             symbol=data["symbol"],
             side=data["side"],
-            entry_price=to_decimal(data["entry_price"]),
-            quantity=to_decimal(data["quantity"]),
-            current_price=to_decimal(data["current_price"]),
+            entry_price=to_decimal(data["entry_price"]) or Decimal("0"),
+            quantity=to_decimal(data["quantity"]) or Decimal("0"),
+            current_price=to_decimal(data["current_price"]) or Decimal("0"),
             stop_loss_price=(
                 to_decimal(data["stop_loss_price"]) if data.get("stop_loss_price") else None
             ),
@@ -599,9 +599,10 @@ class PositionMonitor:
                     side=side,
                     entry_price=to_decimal(
                         getattr(pos, "avg_cost", getattr(pos, "avg_entry_price", 0))
-                    ),
-                    quantity=to_decimal(abs(quantity)),
-                    current_price=to_decimal(getattr(pos, "current_price", 0)),
+                    )
+                    or Decimal("0"),
+                    quantity=to_decimal(abs(quantity)) or Decimal("0"),
+                    current_price=to_decimal(getattr(pos, "current_price", 0)) or Decimal("0"),
                 )
 
                 await self.add_position(monitored)
@@ -719,7 +720,7 @@ class PositionMonitor:
         Returns:
             Dictionary mapping symbol to price
         """
-        prices = {}
+        prices: dict[str, Decimal] = {}
 
         for symbol in symbols:
             try:
@@ -731,7 +732,9 @@ class PositionMonitor:
                     )
 
                     if quote and hasattr(quote, "last_price"):
-                        prices[symbol] = to_decimal(quote.last_price)
+                        quote_price = to_decimal(quote.last_price)
+                        if quote_price is not None:
+                            prices[symbol] = quote_price
 
                 elif hasattr(self.broker, "get_market_data"):
                     market_data = await asyncio.wait_for(
@@ -740,7 +743,9 @@ class PositionMonitor:
                     )
 
                     if market_data and "last" in market_data:
-                        prices[symbol] = to_decimal(market_data["last"])
+                        last_price = to_decimal(market_data["last"])
+                        if last_price is not None:
+                            prices[symbol] = last_price
 
             except asyncio.TimeoutError:
                 logger.warning(f"Timeout fetching price for {symbol}")

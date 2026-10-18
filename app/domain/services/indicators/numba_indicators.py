@@ -53,14 +53,16 @@ except ImportError:
         "Install with: pip install numba"
     )
 
-    # Create a no-op decorator for fallback
-    def jit(*args, **kwargs):
+    # No-op decorator equivalent for the numba fallback
+    def _no_op_jit(*args, **kwargs):
         def decorator(func):
             return func
 
         if args and callable(args[0]):
             return args[0]
         return decorator
+
+    jit = _no_op_jit
 
 
 # ============================================================================

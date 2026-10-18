@@ -15,7 +15,7 @@ import asyncio
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, Protocol, cast
 
 from app.shared.utils.timezone_utils import utc_now
 
@@ -24,6 +24,26 @@ if TYPE_CHECKING:
     from decimal import Decimal
 
     from app.services.live_trading.broker_connector import BrokerPosition
+
+
+class BrokerAdapterProtocol(Protocol):
+    """Interfaz estructural minima de un adapter de broker."""
+
+    async def place_order(
+        self,
+        symbol: str,
+        side: object,
+        quantity: Decimal,
+        order_type: object,
+        price: Decimal | None = None,
+    ) -> object: ...
+
+    async def get_positions(self) -> list[BrokerPosition]: ...
+
+    async def get_account_info(
+        self,
+    ) -> dict[str, str | int | float | bool | Decimal] | None: ...
+
 
 logger = logging.getLogger(__name__)
 
@@ -206,7 +226,7 @@ class BrokerFailoverManager:
                 order_type_enum = order_type_map.get(order_type.upper(), OrderType.MARKET)
 
                 execution = await asyncio.wait_for(
-                    broker_config.broker.place_order(
+                    cast("BrokerAdapterProtocol", broker_config.broker).place_order(
                         symbol=symbol,
                         side=order_side,
                         quantity=quantity,
@@ -235,14 +255,16 @@ class BrokerFailoverManager:
         Returns:
             Dictionary with broker name as key and positions as value
         """
-        positions_by_broker = {}
+        positions_by_broker: dict[str, dict[str, object]] = {}
 
         for broker_config in self.brokers:
             if not broker_config.enabled:
                 continue
 
             try:
-                positions: list[BrokerPosition] = await broker_config.broker.get_positions()
+                positions: list[BrokerPosition] = await cast(
+                    "BrokerAdapterProtocol", broker_config.broker
+                ).get_positions()
                 positions_by_broker[broker_config.name] = {pos.symbol: pos for pos in positions}
 
                 logger.debug(f"Synced {len(positions)} positions from {broker_config.name}")
@@ -262,21 +284,26 @@ class BrokerFailoverManager:
         # Try active broker first
         if self._active_broker:
             try:
-                account = await self._active_broker.broker.get_account_info()
+                account = await cast(
+                    "BrokerAdapterProtocol", self._active_broker.broker
+                ).get_account_info()
                 if account:
                     return account
             except (asyncio.TimeoutError, OSError) as e:
                 logger.warning(f"Failed to get account info from {self._active_broker.name}: {e}")
 
         # Try other brokers
+        active_name = self._active_broker.name if self._active_broker else None
         for broker_config in self.brokers:
-            if broker_config.name == self._active_broker.name:
+            if broker_config.name == active_name:
                 continue
             if not broker_config.enabled:
                 continue
 
             try:
-                account = await broker_config.broker.get_account_info()
+                account = await cast(
+                    "BrokerAdapterProtocol", broker_config.broker
+                ).get_account_info()
                 if account:
                     logger.info(f"Got account info from backup broker {broker_config.name}")
                     return account
@@ -349,7 +376,7 @@ class BrokerFailoverManager:
         try:
             # Try to get account info
             account = await asyncio.wait_for(
-                broker.broker.get_account_info(),
+                cast("BrokerAdapterProtocol", broker.broker).get_account_info(),
                 timeout=10.0,
             )
 
@@ -435,15 +462,16 @@ class BrokerFailoverManager:
         Returns:
             Dictionary with health status of all brokers
         """
-        report = {
+        brokers_report: dict[str, dict[str, str | int | float | bool | datetime | None]] = {}
+        for broker_name, state in self._broker_states.items():
+            brokers_report[broker_name] = state.to_dict()
+
+        report: dict[str, str | int | bool | None | dict | list] = {
             "timestamp": utc_now().isoformat(),
             "active_broker": self._active_broker.name if self._active_broker else None,
             "monitoring_active": self._is_monitoring,
-            "brokers": {},
+            "brokers": brokers_report,
         }
-
-        for broker_name, state in self._broker_states.items():
-            report["brokers"][broker_name] = state.to_dict()
 
         return report
 

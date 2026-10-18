@@ -20,7 +20,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from app.shared.config.params.backtest_config import BacktestingConfig as BacktestConfig
+    from app.backtesting.models import BacktestConfig
 
 from app.shared.config.centralized_config import get_config
 

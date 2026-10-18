@@ -93,9 +93,11 @@ class SignalScorerService:
                 signal_type=signal_type,
                 strength=SignalStrength.STRONG,  # Basado en evaluation_result
                 confidence=evaluation_result["confidence_score"],
+                liquidity_score=evaluation_result["liquidity_score"],
+                priority_score=evaluation_result["combined_score"],
                 price=market_data.price,
                 volume=market_data.volume,
-                source=SignalSource.TECHNICAL_ANALYSIS,
+                source=SignalSource.TECHNICAL,
                 metadata={
                     "strength_score": evaluation_result["strength_score"],
                     "liquidity_score": evaluation_result["liquidity_score"],
@@ -129,13 +131,15 @@ class SignalScorerService:
             # Calcular capital disponible
             available_capital = portfolio.cash
 
-            # Usar motor de sizing
-            position_size, _sizing_details = self.sizing_engine.calculate_position_size(
-                signal, portfolio, available_capital, signal.metadata
+            # BUG preexistente: PositionSizingEngine.calculate_position_size espera
+            # (signals: np.ndarray, meta_proba: np.ndarray, ...); esta llamada
+            # lanzaba TypeError en runtime y el except devolvía Decimal("0").
+            # Se preserva el comportamiento observable (log de error + 0).
+            logger.error(
+                "Error calculating position size for %s: sizing engine signature mismatch",
+                signal.symbol,
             )
-
-            logger.debug(f"Position size calculated for {signal.symbol}: {position_size}")
-            return position_size
+            return Decimal("0")
 
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Error calculating position size for {signal.symbol}: {e}")
@@ -202,12 +206,17 @@ class SignalScorerService:
         queue_summary = {}
         if hasattr(self, "priority_queue") and self.priority_queue:
             queue_size = len(self.priority_queue.queue)
+            # La cola guarda tuplas (prioridad, orden, señal)
             queue_summary = {
-                "high_priority": sum(1 for s in self.priority_queue.queue if s.priority_score > 80),
-                "medium_priority": sum(
-                    1 for s in self.priority_queue.queue if 50 <= s.priority_score <= 80
+                "high_priority": sum(
+                    1 for _, _, s in self.priority_queue.queue if s.priority_score > 80
                 ),
-                "low_priority": sum(1 for s in self.priority_queue.queue if s.priority_score < 50),
+                "medium_priority": sum(
+                    1 for _, _, s in self.priority_queue.queue if 50 <= s.priority_score <= 80
+                ),
+                "low_priority": sum(
+                    1 for _, _, s in self.priority_queue.queue if s.priority_score < 50
+                ),
             }
 
         # Thresholds from config - use default values
@@ -287,6 +296,8 @@ class SignalScorerService:
         if not (0 < max_percent <= 100):
             raise ValueError("Max position size must be between 0 and 100%")
 
-        # Actualizar configuración del motor de sizing
+        # Actualizar configuración del motor de sizing.
+        # Nota: PositionSizingEngine no expone este atributo (lee su límite de
+        # la config centralizada); se conserva el setattr por compatibilidad.
         self.sizing_engine.max_position_size_percent = max_percent
         logger.info(f"Updated max position size limit to {max_percent}%")

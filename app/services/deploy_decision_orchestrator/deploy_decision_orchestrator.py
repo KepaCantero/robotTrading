@@ -17,8 +17,6 @@ from datetime import datetime
 from decimal import Decimal
 from typing import ClassVar
 
-import numpy as np
-
 from app.services.capacity_fade_validation import (
     CapacityFadeRequest,
     CapacityFadeValidator,
@@ -290,7 +288,7 @@ class DeployDecisionOrchestrator:
         else:
             scores.append(Decimal("30"))
 
-        return np.mean(scores)
+        return sum(scores, Decimal("0")) / len(scores)
 
     async def _assess_capacity_fade(self, deployment_input: DeploymentInput) -> tuple:
         """
@@ -724,7 +722,7 @@ class DeployDecisionOrchestrator:
 
         avg_score = Decimal("0")
         if total > 0:
-            avg_score = sum(d.overall_score for d in self.decision_history) / total
+            avg_score = sum((d.overall_score for d in self.decision_history), Decimal("0")) / total
 
         return {
             "total_decisions": total,

@@ -74,12 +74,12 @@ class CurrencyExposure:
         """Create from dictionary."""
         return cls(
             currency=data["currency"],
-            exposure_eur=to_decimal(data["exposure_eur"]),
-            hedge_eur=to_decimal(data["hedge_eur"]),
-            net_exposure_eur=to_decimal(data["net_exposure_eur"]),
-            hedge_ratio=to_decimal(data["hedge_ratio"]),
-            unrealized_pnl_eur=to_decimal(data["unrealized_pnl_eur"]),
-            unrealized_pnl_pct=to_decimal(data["unrealized_pnl_pct"]),
+            exposure_eur=to_decimal(data["exposure_eur"]) or Decimal("0"),
+            hedge_eur=to_decimal(data["hedge_eur"]) or Decimal("0"),
+            net_exposure_eur=to_decimal(data["net_exposure_eur"]) or Decimal("0"),
+            hedge_ratio=to_decimal(data["hedge_ratio"]) or Decimal("0"),
+            unrealized_pnl_eur=to_decimal(data["unrealized_pnl_eur"]) or Decimal("0"),
+            unrealized_pnl_pct=to_decimal(data["unrealized_pnl_pct"]) or Decimal("0"),
             position_count=data["position_count"],
         )
 
@@ -306,7 +306,7 @@ class ForexRiskTracker:
             exposure_eur = data["exposure_eur"]
             hedge_eur = data["hedge_eur"]
             net_exposure_eur = exposure_eur - hedge_eur
-            hedge_ratio = safe_decimal_divide(hedge_eur, exposure_eur, Decimal("0"))
+            hedge_ratio = safe_decimal_divide(hedge_eur, exposure_eur) or Decimal("0")
             unrealized_pnl_eur = data["unrealized_pnl_eur"]
             unrealized_pnl_pct = calculate_percentage(unrealized_pnl_eur, exposure_eur) or Decimal(
                 "0"
@@ -648,7 +648,7 @@ class ForexRiskTracker:
         if total_portfolio_eur == 0:
             return "low"
 
-        ratio = safe_decimal_divide(unhedged_eur, total_portfolio_eur, Decimal("0"))
+        ratio = safe_decimal_divide(unhedged_eur, total_portfolio_eur) or Decimal("0")
 
         if ratio < self.RISK_THRESHOLDS["low"]:
             return "low"

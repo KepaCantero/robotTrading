@@ -64,6 +64,18 @@ class EMAFilter(BaseFilter):
                 "metadata": {},
             }
 
+        if not (
+            isinstance(ema_fast, (int, float))
+            and isinstance(ema_slow, (int, float))
+            and isinstance(current_price, (int, float))
+        ):
+            return {
+                "passed": False,
+                "confidence": 0.0,
+                "reason": "EMA indicators missing",
+                "metadata": {},
+            }
+
         # DEBUG: Log EMA values to understand why SELL passes but BUY doesn't
         logger.debug(
             f"EMA_FILTER: price={current_price:.2f}, fast={ema_fast:.2f}, slow={ema_slow:.2f}, "

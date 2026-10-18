@@ -234,7 +234,11 @@ class StrategyStockAllocator:
         )
 
         # Convert pair metrics list to PairMetrics objects
-        self.pair_metrics = [PairMetrics(**pm) for pm in pair_metrics_list]
+        pair_metrics_objects: list[PairMetrics] = []
+        for pm in pair_metrics_list:
+            pm_data: dict[str, Any] = dict(pm)
+            pair_metrics_objects.append(PairMetrics(**pm_data))
+        self.pair_metrics = pair_metrics_objects
 
         # Step 3: Resolve conflicts and assign strategies
         strategy_assignments = self._assign_strategies(all_scores)
@@ -382,7 +386,7 @@ class StrategyStockAllocator:
             Dictionary mapping ticker to assigned strategy
         """
         strategy_assignments: dict[str, str] = {}
-        asset_pair_count: dict[str, int] = defaultdict(int)
+        asset_pair_count: defaultdict[str, int] = defaultdict(int)
 
         # Step 1: Prioritize Pairs Trading first
         pairs_assigned = self._assign_pairs_trading(strategy_assignments, asset_pair_count)
@@ -484,8 +488,8 @@ class StrategyStockAllocator:
                 sps_score = cfg_dict(all_scores.get(ticker)).get(strategy, 0.0)
 
                 # Get metrics from scorer results
-                momentum_metrics = {}
-                mean_rev_metrics = {}
+                momentum_metrics: dict[str, Any] = {}
+                mean_rev_metrics: dict[str, Any] = {}
 
                 if strategy == "momentum":
                     momentum_result = self.momentum_scorer.score(

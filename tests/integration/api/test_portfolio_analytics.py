@@ -38,7 +38,7 @@ class TestPortfolioAnalyticsAPIEndpoints:
 
         app = FastAPI()
         app.include_router(router)
-        return TestClient(app)
+        return TestClient(app, headers={"X-API-Key": "test-integration-key-1"})
 
     @pytest.fixture
     def mock_portfolio_id(self):
@@ -364,7 +364,7 @@ class TestErrorHandling:
 
         app = FastAPI()
         app.include_router(router)
-        return TestClient(app)
+        return TestClient(app, headers={"X-API-Key": "test-integration-key-1"})
 
     @pytest.mark.asyncio
     async def test_calculate_performance_metrics_timeout(self, client):

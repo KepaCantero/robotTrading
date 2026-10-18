@@ -126,6 +126,7 @@ class AbstractEntityFactory(ABC):
         **kwargs,
     ) -> Order:
         """Create an Order entity."""
+        ...
 
     @abstractmethod
     def create_portfolio(
@@ -138,10 +139,7 @@ class AbstractEntityFactory(ABC):
         **kwargs,
     ) -> Portfolio:
         """Create a Portfolio entity."""
-        if max_position_size_pct is None:
-            max_position_size_pct = Decimal("0.2")
-        if max_portfolio_exposure_pct is None:
-            max_portfolio_exposure_pct = Decimal("0.8")
+        ...
 
     @abstractmethod
     def create_position(
@@ -550,7 +548,7 @@ class OrderBuilder:
         self._portfolio_id: str | None = None
         self._time_in_force: str = "GTC"
         self._expiry_time: datetime | None = None
-        self._entity_factory = TradingEntityFactory()
+        self._entity_factory: AbstractEntityFactory = TradingEntityFactory()
 
     def for_symbol(self, symbol: str) -> OrderBuilder:
         """Set the trading symbol."""

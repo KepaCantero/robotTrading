@@ -46,6 +46,7 @@ from app.backtesting.shared.types import (
     MetricKeys,
     MetricsDict,
     ParameterDict,
+    PerStrategyResultsDict,
 )
 
 __all__ = [
@@ -54,6 +55,7 @@ __all__ = [
     "ConfigKeys",
     "MetricKeys",
     "MetricsDict",
+    "PerStrategyResultsDict",
     # Metrics
     "MetricsFactory",
     "ParameterDict",

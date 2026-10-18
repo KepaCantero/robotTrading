@@ -62,9 +62,9 @@ class FactorAnalysis:
             "analysis_date": self.analysis_date.isoformat(),
             "num_periods": self.num_periods,
             "factors": [f.to_dict() for f in self.factors],
-            "residual_return_pct": float(self.residual_return_pct),
-            "residual_volatility_pct": float(self.residual_volatility_pct),
-            "model_r_squared": float(self.model_r_squared),
+            "residual_return_pct": float(self.residual_return_pct or 0),
+            "residual_volatility_pct": float(self.residual_volatility_pct or 0),
+            "model_r_squared": float(self.model_r_squared or 0),
             "factor_contribution_pct": {
                 k: float(v) for k, v in self.factor_contribution_pct.items()
             },
@@ -197,8 +197,8 @@ class Tearsheet:
             "factor_analysis": (self.factor_analysis.to_dict() if self.factor_analysis else None),
             "capacity_fade": (self.capacity_fade.to_dict() if self.capacity_fade else None),
             "monthly_returns": {k: float(v) for k, v in self.monthly_returns.items()},
-            "best_day_pct": float(self.best_day_pct),
-            "worst_day_pct": float(self.worst_day_pct),
+            "best_day_pct": float(self.best_day_pct or 0),
+            "worst_day_pct": float(self.worst_day_pct or 0),
         }
 
 

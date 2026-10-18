@@ -10,7 +10,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable
 
 from app.domain.models.order import Order, OrderSide, OrderStatus, OrderType
 from app.domain.models.signal import Signal, SignalType
@@ -64,7 +64,7 @@ class SignalExecutionEngine:
         signal: Signal,
         position_size: Decimal,
         portfolio: Portfolio,
-        execution_callback: callable | None = None,
+        execution_callback: Callable | None = None,
     ) -> tuple[bool, dict[str, Any]]:
         """
         Ejecutar una señal de trading.
@@ -196,7 +196,7 @@ class SignalExecutionEngine:
         self,
         order: Order,
         portfolio: Portfolio,
-        execution_callback: callable | None = None,
+        execution_callback: Callable | None = None,
     ) -> dict[str, Any]:
         """Ejecutar orden."""
         try:

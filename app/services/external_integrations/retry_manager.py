@@ -87,7 +87,7 @@ class RetryManager:
         Raises:
             Exception: If all retries exhausted
         """
-        last_exception = None
+        last_exception: BaseException | None = None
 
         for attempt in range(self.config.max_retries + 1):
             try:
@@ -120,8 +120,9 @@ class RetryManager:
                 raise
 
         # Should not reach here, but just in case
-        if last_exception:
+        if last_exception is not None:
             raise last_exception
+        raise RuntimeError(f"{operation_name}: retry loop exited without a result")
 
     async def _calculate_delay(self, attempt: int) -> int:
         """

@@ -104,7 +104,7 @@ class SharpeRatioMonitor:
         window_returns = daily_returns[-window_days:]
 
         # Calculate mean return
-        mean_return = sum(window_returns) / Decimal(len(window_returns))
+        mean_return = sum(window_returns, Decimal("0")) / Decimal(len(window_returns))
 
         # Calculate standard deviation
         if len(window_returns) < 2:
@@ -125,7 +125,7 @@ class SharpeRatioMonitor:
         # Annualize: multiply by sqrt(annual_trading_days)
         tt = get_config().trading_thresholds
         annual_trading_days = tt.annual_trading_days_const
-        annualized_sharpe = daily_sharpe * Decimal(str(math.sqrt(annual_trading_days)))
+        annualized_sharpe = daily_sharpe * Decimal(str(math.sqrt(int(annual_trading_days))))
 
         return annualized_sharpe.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 

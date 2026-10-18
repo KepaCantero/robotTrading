@@ -20,7 +20,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Protocol, Union, runtime_checkable
 from uuid import uuid4
 
-from sqlalchemy import JSON, Boolean, Column, DateTime, Float, Integer, String, create_engine
+from sqlalchemy import JSON, Boolean, DateTime, Float, Integer, String, create_engine
 from sqlalchemy.exc import (
     DatabaseError,
     DataError,
@@ -28,7 +28,7 @@ from sqlalchemy.exc import (
     OperationalError,
     ProgrammingError,
 )
-from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
 if TYPE_CHECKING:
     from app.domain.models.input_profile import InputProfile
@@ -68,46 +68,48 @@ class ProfileResultDB(Base):
 
     __tablename__ = "profile_results"
 
-    id = Column(String, primary_key=True)
-    profile_id = Column(String, unique=True, index=True)
-    objective = Column(String, index=True)
-    risk_tolerance = Column(String, index=True)
-    capital_tier = Column(String, index=True)
-    investment_horizon = Column(Integer)
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    profile_id: Mapped[str | None] = mapped_column(String, unique=True, index=True)
+    objective: Mapped[str | None] = mapped_column(String, index=True)
+    risk_tolerance: Mapped[str | None] = mapped_column(String, index=True)
+    capital_tier: Mapped[str | None] = mapped_column(String, index=True)
+    investment_horizon: Mapped[int | None] = mapped_column(Integer)
 
     # Baseline results
-    baseline_sharpe = Column(Float)
-    baseline_return = Column(Float)
-    baseline_max_dd = Column(Float)
-    baseline_win_rate = Column(Float)
+    baseline_sharpe: Mapped[float | None] = mapped_column(Float)
+    baseline_return: Mapped[float | None] = mapped_column(Float)
+    baseline_max_dd: Mapped[float | None] = mapped_column(Float)
+    baseline_win_rate: Mapped[float | None] = mapped_column(Float)
 
     # Optimization results
-    optimized_sharpe = Column(Float)
-    optimized_return = Column(Float)
-    optimized_max_dd = Column(Float)
-    optimized_win_rate = Column(Float)
+    optimized_sharpe: Mapped[float | None] = mapped_column(Float)
+    optimized_return: Mapped[float | None] = mapped_column(Float)
+    optimized_max_dd: Mapped[float | None] = mapped_column(Float)
+    optimized_win_rate: Mapped[float | None] = mapped_column(Float)
 
     # Improvement metrics
-    sharpe_improvement = Column(Float)
-    return_improvement = Column(Float)
-    max_dd_improvement = Column(Float)
-    win_rate_improvement = Column(Float)
+    sharpe_improvement: Mapped[float | None] = mapped_column(Float)
+    return_improvement: Mapped[float | None] = mapped_column(Float)
+    max_dd_improvement: Mapped[float | None] = mapped_column(Float)
+    win_rate_improvement: Mapped[float | None] = mapped_column(Float)
 
     # Best parameters
-    best_parameters = Column(JSON)
+    best_parameters: Mapped[JsonDict | None] = mapped_column(JSON)
 
     # Validation results
-    walk_forward_passed = Column(Boolean)
-    monte_carlo_passed = Column(Boolean)
-    out_of_sample_passed = Column(Boolean)
+    walk_forward_passed: Mapped[bool | None] = mapped_column(Boolean)
+    monte_carlo_passed: Mapped[bool | None] = mapped_column(Boolean)
+    out_of_sample_passed: Mapped[bool | None] = mapped_column(Boolean)
 
     # Final recommendation
-    ready_for_paper_trading = Column(Boolean)
-    recommendation = Column(String)
+    ready_for_paper_trading: Mapped[bool | None] = mapped_column(Boolean)
+    recommendation: Mapped[str | None] = mapped_column(String)
 
     # Metadata
-    created_at = Column(DateTime, default=datetime.now)
-    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    created_at: Mapped[datetime | None] = mapped_column(DateTime, default=datetime.now)
+    updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime, default=datetime.now, onupdate=datetime.now
+    )
 
     def to_dict(self) -> JsonDict:
         """Convert to dictionary."""

@@ -34,6 +34,7 @@ from app.services.multi_strategy_allocation import (
     StrategyCapitalAllocation,
 )
 from app.shared.config.centralized_config import get_config
+from app.shared.utils.safe_parse import cfg_dict
 from app.shared.utils.tier_mapper import TierMapper
 
 logger = logging.getLogger(__name__)
@@ -309,7 +310,7 @@ class ProfileStrategyMapper:
 
         return strategy_config
 
-    def _get_profile_config(self, objective: str, capital_tier: str) -> dict[str, Any] | None:
+    def _get_profile_config(self, objective: str, capital_tier: str) -> dict[str, Any]:
         """
         Get profile configuration from investment_profiles.yaml.
 
@@ -320,16 +321,17 @@ class ProfileStrategyMapper:
         Returns:
             Configuration dictionary or None if not found
         """
-        profiles = self.investment_profiles.get("profiles", {})
-        objective_config = profiles.get(objective, {})
+        profiles = cfg_dict(self.investment_profiles.get("profiles"))
+        objective_config = cfg_dict(profiles.get(objective))
 
         if not objective_config:
             # Try defaults
-            defaults = self.investment_profiles.get("defaults", {})
+            defaults = cfg_dict(self.investment_profiles.get("defaults"))
             if defaults:
                 logger.warning(f"Objective '{objective}' not found, using defaults")
                 return defaults
-            return None
+            # Default tipado: config vacia en lugar de None (consumidores esperan dict)
+            return {}
 
         tier_config = objective_config.get(capital_tier)
         if not tier_config:
@@ -342,12 +344,13 @@ class ProfileStrategyMapper:
                     return objective_config[fallback_tier]
 
             # Use defaults
-            defaults = self.investment_profiles.get("defaults", {})
+            defaults = cfg_dict(self.investment_profiles.get("defaults"))
             if defaults:
                 logger.warning(f"Using default configuration for {objective}")
                 return defaults
 
-            return None
+            # Default tipado: config vacia en lugar de None (consumidores esperan dict)
+            return {}
 
         return tier_config
 
@@ -563,7 +566,7 @@ class ProfileStrategyMapper:
 
         # Get ensemble-specific configuration from YAML
         ensemble_mode = ensemble_base["mode"]
-        ensemble_yaml_config = self.ensemble_configs.get(ensemble_mode, {})
+        ensemble_yaml_config = cfg_dict(self.ensemble_configs.get(str(ensemble_mode)))
 
         # Merge configurations
         ensemble_config = {

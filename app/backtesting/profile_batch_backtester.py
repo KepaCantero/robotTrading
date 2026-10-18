@@ -50,7 +50,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, TypedDict, cast
 from uuid import uuid4
 
 import numpy as np
@@ -88,6 +88,7 @@ from app.backtesting.shared import (
     get_empty_metrics,
 )
 from app.services.profile_driven_trading.profile_strategy_mapper import (
+    ProfileStrategyMapper,
     StrategyMapping,
     create_profile_mapper,
 )
@@ -97,6 +98,22 @@ if TYPE_CHECKING:
     from app.domain.models.input_profile import InputProfile
 
 logger = logging.getLogger(__name__)
+
+
+class _OptunaResults(TypedDict):
+    """Resultado heterogéneo de la optimización bayesiana (Optuna)."""
+
+    best_params: ParameterDict
+    best_metrics: MetricsDict
+    best_value: float
+    history: list[dict[str, Any]]
+    n_trials: int
+
+
+def _num(value: object) -> float:
+    """Coerce un valor de métricas numérico a float (identidad para floats)."""
+    return float(cast("int | float", value))
+
 
 # Additional type aliases (not in shared module)
 OptimizationHistoryEntry = dict[str, Any]
@@ -176,6 +193,7 @@ class ProfileBatchBacktester:
         self.validation_config = self.config_service.get_validation_config()
 
         # Initialize ProfileConfigLoader for parameter ranges and validation configs
+        self.profile_config_loader: ProfileConfigLoader | None
         try:
             self.profile_config_loader = ProfileConfigLoader()
             logger.info("ProfileConfigLoader initialized successfully")
@@ -186,6 +204,7 @@ class ProfileBatchBacktester:
             self.fallback_tracker.increment_fallback_counter("profile_config_loader")
 
         # Initialize ProfileStrategyMapper
+        self.profile_mapper: ProfileStrategyMapper | None
         try:
             self.profile_mapper = create_profile_mapper()
             logger.info("ProfileStrategyMapper initialized successfully")
@@ -351,8 +370,9 @@ class ProfileBatchBacktester:
 
         # Add multi-strategy specific fields if applicable
         if multi_strategy and "per_strategy_results" in optimized.optimized_metrics:
-            result.per_strategy_results = optimized.optimized_metrics.get(
-                "per_strategy_results", {}
+            result.per_strategy_results = cast(
+                "PerStrategyResultsDict",
+                optimized.optimized_metrics.get("per_strategy_results", {}),
             )
 
         # Store result in database
@@ -582,11 +602,11 @@ class ProfileBatchBacktester:
             baseline_metrics = self._run_baseline(profile, config, multi_strategy=multi_strategy)
 
         # Extract combined metrics for multi-strategy
-        baseline_for_comparison = (
-            baseline_metrics.get("combined", baseline_metrics)
-            if multi_strategy and "combined" in baseline_metrics
-            else baseline_metrics
-        )
+        baseline_for_comparison: MetricsDict = baseline_metrics
+        if multi_strategy and "combined" in baseline_metrics:
+            combined_metrics = baseline_metrics.get("combined")
+            if isinstance(combined_metrics, dict):
+                baseline_for_comparison = cast("MetricsDict", combined_metrics)
 
         # FASE 2: Bayesian Optimization
         optuna_results = self._run_bayesian_optimization(
@@ -647,7 +667,7 @@ class ProfileBatchBacktester:
 
     def _run_bayesian_optimization(
         self, profile: InputProfile, config: ConfigDict, multi_strategy: bool = False
-    ) -> MetricsDict:
+    ) -> _OptunaResults:
         """
         Run Bayesian optimization using Optuna.
 
@@ -674,13 +694,13 @@ class ProfileBatchBacktester:
                     self.profile_config_loader.get_threshold_config("rsi").get("buy_threshold", {})
                 )
                 # profile_optimization.yaml: rsi.buy_threshold
-                rsi_buy_min = rsi_buy_config.get("min", 10)
-                rsi_buy_max = rsi_buy_config.get("max", 45)
+                rsi_buy_min = cast("int", rsi_buy_config.get("min", 10))
+                rsi_buy_max = cast("int", rsi_buy_config.get("max", 45))
 
                 # profile_optimization.yaml: volume_ratio
                 vol_config = self.profile_config_loader.get_threshold_config("volume_ratio")
-                vol_min = vol_config.get("min", 0.5)
-                vol_max = vol_config.get("max", 1.5)
+                vol_min = cast("float", vol_config.get("min", 0.5))
+                vol_max = cast("float", vol_config.get("max", 1.5))
 
                 logger.debug("Loaded parameter ranges from ProfileConfigLoader")
             except Exception as e:
@@ -723,11 +743,11 @@ class ProfileBatchBacktester:
                 if multi_strategy and "combined" in metrics:
                     combined = metrics["combined"]
                     return (
-                        float(combined.get("sharpe_ratio", -1.0))
+                        _num(combined.get("sharpe_ratio", -1.0))
                         if isinstance(combined, dict)
                         else -1.0
                     )
-                return float(metrics.get("sharpe_ratio", -1.0))
+                return _num(metrics.get("sharpe_ratio", -1.0))
             except Exception as e:
                 logger.warning(f"Trial failed: {e}")
                 return -1.0
@@ -853,9 +873,9 @@ class ProfileBatchBacktester:
                 if not wf_config:
                     raise ValueError("Empty walk-forward configuration")
 
-                train_years = wf_config.get("train_years", 2)
-                test_years = wf_config.get("test_years", 0.5)
-                step_years = wf_config.get("step_years", 0.5)
+                train_years = cast("int | float", wf_config.get("train_years", 2))
+                test_years = cast("int | float", wf_config.get("test_years", 0.5))
+                step_years = cast("int | float", wf_config.get("step_years", 0.5))
 
                 if train_years <= 0 or test_years <= 0 or step_years <= 0:
                     raise ValueError(
@@ -881,7 +901,7 @@ class ProfileBatchBacktester:
 
                 total_window_years = train_years + test_years
                 train_pct = train_years / total_window_years
-                min_test_periods = wf_config.get("min_train_samples", 500)
+                min_test_periods = cast("int", wf_config.get("min_train_samples", 500))
 
                 logger.info(
                     f"Loaded walk-forward config from ProfileConfigLoader: "
@@ -931,7 +951,7 @@ class ProfileBatchBacktester:
             }
 
         # Run walk-forward windows
-        window_results = []
+        window_results: list[dict[str, float | int]] = []
         for i in range(n_windows):
             window_start = start_date + pd.Timedelta(days=int(i * window_size))
             train_end = window_start + pd.Timedelta(days=train_size)
@@ -959,10 +979,10 @@ class ProfileBatchBacktester:
                 test_config["input"]["end_date"] = test_end.strftime("%Y-%m-%d")
                 test_results = self._run_backtest_with_params(profile, test_config, params)
 
-                train_sharpe = train_results.get("sharpe_ratio", 0)
-                test_sharpe = test_results.get("sharpe_ratio", 0)
-                train_return = train_results.get("return_pct", 0)
-                test_return = test_results.get("return_pct", 0)
+                train_sharpe = _num(train_results.get("sharpe_ratio", 0))
+                test_sharpe = _num(test_results.get("sharpe_ratio", 0))
+                train_return = _num(train_results.get("return_pct", 0))
+                test_return = _num(test_results.get("return_pct", 0))
 
                 window_results.append(
                     {
@@ -1003,9 +1023,9 @@ class ProfileBatchBacktester:
         success_rate = np.mean([1 for s in test_sharpes if s > 0])
 
         # Determine if passed
-        min_avg_sharpe = wf_config.get("min_avg_sharpe", 0.5)
-        min_success_rate = wf_config.get("min_success_rate", 0.6)
-        max_decay = wf_config.get("max_sharpe_decay", 1.0)
+        min_avg_sharpe = cast("float", wf_config.get("min_avg_sharpe", 0.5))
+        min_success_rate = cast("float", wf_config.get("min_success_rate", 0.6))
+        max_decay = cast("float", wf_config.get("max_sharpe_decay", 1.0))
 
         passed = (
             avg_sharpe >= min_avg_sharpe
@@ -1054,8 +1074,8 @@ class ProfileBatchBacktester:
         if self.profile_config_loader is not None:
             try:
                 mc_config = self.profile_config_loader.get_monte_carlo_config()
-                n_simulations = mc_config.get("n_simulations", 1000)
-                min_profitable_pct = mc_config.get("confidence_level", 0.95)
+                n_simulations = cast("int", mc_config.get("n_simulations", 1000))
+                min_profitable_pct = cast("float", mc_config.get("confidence_level", 0.95))
                 logger.debug("Loaded Monte Carlo config from ProfileConfigLoader")
             except Exception as e:
                 logger.warning(f"Failed to load Monte Carlo config: {e}")
@@ -1075,9 +1095,9 @@ class ProfileBatchBacktester:
             )
 
             # Extract returns (simplified - in real implementation, extract from trades)
-            total_return = backtest_results.get("return_pct", 0)
+            total_return = _num(backtest_results.get("return_pct", 0))
             backtest_results.get("sharpe_ratio", 0)
-            max_drawdown = backtest_results.get("max_drawdown", 0)
+            max_drawdown = _num(backtest_results.get("max_drawdown", 0))
 
             # Simplified Monte Carlo simulation
             # In real implementation, bootstrap from actual trade returns
@@ -1149,14 +1169,14 @@ class ProfileBatchBacktester:
                 profile, oos_config_dict, params, multi_strategy=multi_strategy
             )
 
-            oos_sharpe = oos_results.get("sharpe_ratio", 0)
-            oos_return = oos_results.get("return_pct", 0)
-            oos_max_dd = oos_results.get("max_drawdown", 0)
+            oos_sharpe = _num(oos_results.get("sharpe_ratio", 0))
+            oos_return = _num(oos_results.get("return_pct", 0))
+            oos_max_dd = _num(oos_results.get("max_drawdown", 0))
 
             # Pass criteria
-            min_sharpe = oos_config.get("min_sharpe", 0.5)
-            min_return = oos_config.get("min_return", 0.05)
-            max_dd = oos_config.get("max_drawdown", -0.20)
+            min_sharpe = cast("float", oos_config.get("min_sharpe", 0.5))
+            min_return = cast("float", oos_config.get("min_return", 0.05))
+            max_dd = cast("float", oos_config.get("max_drawdown", -0.20))
 
             passed = oos_sharpe >= min_sharpe and oos_return >= min_return and oos_max_dd >= max_dd
 
@@ -1167,9 +1187,9 @@ class ProfileBatchBacktester:
 
             return {
                 "passed": passed,
-                "sharpe_ratio": float(oos_sharpe),
-                "return_pct": float(oos_return),
-                "max_drawdown": float(oos_max_dd),
+                "sharpe_ratio": oos_sharpe,
+                "return_pct": oos_return,
+                "max_drawdown": oos_max_dd,
             }
 
         except Exception as e:
@@ -1204,20 +1224,20 @@ class ProfileBatchBacktester:
             return combined
 
         # Otherwise, aggregate manually
-        total_pnl = sum(r.get("total_pnl", 0) for r in results)
-        total_trades = sum(r.get("total_trades", 0) for r in results)
-        winning_trades = sum(r.get("winning_trades", 0) for r in results)
+        total_pnl = sum(_num(r.get("total_pnl", 0)) for r in results)
+        total_trades = sum(int(_num(r.get("total_trades", 0))) for r in results)
+        winning_trades = sum(int(_num(r.get("winning_trades", 0))) for r in results)
 
         weighted_return = sum(
-            r.get("return_pct", 0) * r.get("total_trades", 1) for r in results
-        ) / max(sum(r.get("total_trades", 1) for r in results), 1)
+            _num(r.get("return_pct", 0)) * int(_num(r.get("total_trades", 1))) for r in results
+        ) / max(sum(int(_num(r.get("total_trades", 1))) for r in results), 1)
 
         return {
             "strategy_name": "combined",
             "total_pnl": float(total_pnl),
             "return_pct": float(weighted_return),
-            "sharpe_ratio": float(np.mean([r.get("sharpe_ratio", 0) for r in results])),
-            "max_drawdown": float(min(r.get("max_drawdown", 0) for r in results)),
+            "sharpe_ratio": float(np.mean([_num(r.get("sharpe_ratio", 0)) for r in results])),
+            "max_drawdown": float(min(_num(r.get("max_drawdown", 0)) for r in results)),
             "win_rate": float(winning_trades / max(total_trades, 1)),
             "total_trades": int(total_trades),
             "winning_trades": int(winning_trades),
@@ -1255,7 +1275,7 @@ class ProfileBatchBacktester:
         sell_signals = sum(1 for s in per_strategy_signals.values() if s.get("action") == "sell")
         hold_signals = len(per_strategy_signals) - buy_signals - sell_signals
 
-        voting_breakdown = {
+        voting_breakdown: MetricsDict = {
             "buy": buy_signals,
             "sell": sell_signals,
             "hold": hold_signals,
@@ -1321,7 +1341,7 @@ class ProfileBatchBacktester:
                 action = "hold"
                 confidence = 0.0
 
-        result = {
+        result: MetricsDict = {
             "action": action,
             "confidence": confidence,
             "meets_threshold": confidence >= min_confidence,
@@ -1477,7 +1497,7 @@ class ProfileBatchBacktester:
 
             # Update strategy config if momentum_modular exists
             if "momentum_modular" in config.strategies:
-                updates = {
+                updates: dict[str, object] = {
                     "modules": {
                         "rsi_filter": {
                             "adaptive_thresholds": {

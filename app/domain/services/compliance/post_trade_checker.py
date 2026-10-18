@@ -17,14 +17,44 @@ Date: 2026-02-03
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from app.domain.services.compliance.results import PostTradeCheckResult
 from app.domain.services.compliance.service_registry import get_service_registry
 
 if TYPE_CHECKING:
+    from typing import Protocol
+
+    class GoldenSignalsService(Protocol):
+        """Superficie de golden_signals usada por este checker."""
+
+        def record_latency(self, latency_ms: float) -> None: ...
+
+        def record_request(self, success: bool = True, error_type: str | None = None) -> None: ...
+
+    class HarrisAnalysisService(Protocol):
+        """Superficie de harris_integrator usada por este checker."""
+
+        def analyze_execution(
+            self,
+            order_id: str,
+            symbol: str,
+            side: str,
+            quantity: Decimal,
+            execution_price: Decimal,
+            signal_price: Decimal | None,
+            signal_time: datetime | None,
+            submission_time: datetime | None,
+            execution_time: datetime | None,
+            arrival_price: Decimal | None = None,
+            decision_price: Decimal | None = None,
+            nbbo_at_execution: object = None,
+        ) -> "PostTradeAnalysis": ...
+
     from datetime import datetime
     from decimal import Decimal
+
+    from app.engines.execution_engine.microstructure.harris_integration import PostTradeAnalysis
 
 logger = logging.getLogger(__name__)
 
@@ -150,7 +180,7 @@ class PostTradeComplianceChecker:
         result: PostTradeCheckResult,
     ) -> None:
         """Analyze Harris execution quality."""
-        harris = self._registry.get_service("harris_integrator")
+        harris = cast("HarrisAnalysisService", self._registry.get_service("harris_integrator"))
         if harris is None:
             logger.warning("Harris integrator not available for post-trade analysis")
             return
@@ -204,18 +234,15 @@ class PostTradeComplianceChecker:
 
         slo_status = "OK" if (latency_ok and fill_ok and not error_occurred) else "VIOLATED"
 
-        golden_signals = self._registry.get_service("golden_signals")
-        trading_metrics = self._registry.get_service("trading_metrics")
+        golden_signals = cast("GoldenSignalsService", self._registry.get_service("golden_signals"))
 
         try:
-            if trading_metrics:
-                trading_metrics.record_execution_latency(latency_ms)
-                trading_metrics.record_fill_rate(fill_rate)
-
             if golden_signals:
                 golden_signals.record_latency(latency_ms)
                 if error_occurred:
-                    golden_signals.record_error()
+                    # GoldenSignalsMonitor expone record_request(success, error_type);
+                    # record_error() no existe en el servicio real.
+                    golden_signals.record_request(success=False, error_type="execution_error")
         except Exception as e:
             logger.warning("SLO recording error: %s", e)
 

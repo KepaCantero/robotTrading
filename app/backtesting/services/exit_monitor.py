@@ -9,14 +9,16 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, cast
 
 from app.backtesting.models import BacktestConfig, Trade, TradeStatus
 
 if TYPE_CHECKING:
     from datetime import datetime
 
+    from app.backtesting.base_engine import SlippageParams
     from app.backtesting.services.position_manager import PositionManager
+    from app.domain.models.market_data import Quote
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +42,7 @@ class ExitConditionMonitor:
         self,
         config: BacktestConfig,
         position_manager: PositionManager,
-        apply_slippage_func: Callable[[Decimal, bool, Decimal | None], Decimal],
+        apply_slippage_func: Callable[[SlippageParams], Decimal],
     ):
         """
         Initialize the Exit Condition Monitor.
@@ -56,7 +58,7 @@ class ExitConditionMonitor:
 
     def check_exit_conditions(
         self,
-        market_data: object,
+        market_data: Quote,
         trades: list[Trade],
         close_position_func: Callable[[str, datetime, str, Decimal], None],
     ) -> bool:
@@ -147,7 +149,7 @@ class ExitConditionMonitor:
             # Gap-through: if the bar opens below the stop, the order fills at the
             # (worse) open price, not at the stop level.
             exit_price = (
-                stop_loss_price
+                cast("Decimal", stop_loss_price)
                 if hasattr(market_data, "low") and market_data.low is not None
                 else close_price
             )
@@ -163,7 +165,7 @@ class ExitConditionMonitor:
             # Only take-profit hit. Gap-through on a limit sell: if the bar
             # opens above the target, the limit fills at the (better) open.
             exit_price = (
-                take_profit_price
+                cast("Decimal", take_profit_price)
                 if hasattr(market_data, "high") and market_data.high is not None
                 else close_price
             )
@@ -182,7 +184,7 @@ class ExitConditionMonitor:
 
     def check_all_symbols_exit_conditions(
         self,
-        market_data: object,
+        market_data: Quote,
         trades: list[Trade],
         close_position_func: Callable[[str, datetime, str, Decimal], None],
     ) -> int:
@@ -232,7 +234,7 @@ class ExitConditionMonitor:
         return entry_price * (Decimal("1") + self.config.take_profit_percentage / Decimal("100"))
 
     def is_stop_loss_hit(
-        self, market_data: object, stop_loss_price: Decimal
+        self, market_data: Quote, stop_loss_price: Decimal
     ) -> tuple[bool, Decimal | None]:
         """
         Check if stop-loss is hit based on market data.
@@ -259,7 +261,7 @@ class ExitConditionMonitor:
         return False, None
 
     def is_take_profit_hit(
-        self, market_data: object, take_profit_price: Decimal
+        self, market_data: Quote, take_profit_price: Decimal
     ) -> tuple[bool, Decimal | None]:
         """
         Check if take-profit is hit based on market data.

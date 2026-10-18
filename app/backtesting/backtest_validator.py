@@ -20,20 +20,26 @@ from __future__ import annotations
 
 import logging
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 import pandas as pd
 
 logger = logging.getLogger(__name__)
 
+
+def _performance_of(backtest_result: BacktestResult) -> PerformanceMetrics:
+    """Narrowa ``BacktestResult.performance``: el engine siempre lo puebla."""
+    return cast("PerformanceMetrics", backtest_result.performance)
+
+
 from app.backtesting.backtesting_compliance import (
     BacktestingComplianceResult,
     create_backtesting_compliance,
 )
-from app.backtesting.core.error_handling import train_with_retry
+from app.backtesting.core.error_handling import StrategyProtocol, train_with_retry
 from app.backtesting.core.executor import SimpleBacktestExecutor
-from app.backtesting.models import BacktestConfig
+from app.backtesting.models import BacktestConfig, BacktestResult, PerformanceMetrics
 from app.domain.strategies.momentum_modular.strategy import ModularMomentumStrategy
 
 if TYPE_CHECKING:
@@ -316,7 +322,9 @@ class BacktestValidator:
         if hasattr(strategy, "learning_engine") and strategy.learning_engine:
             try:
                 training_success = train_with_retry(
-                    strategy=strategy, engine_type="supervised", use_subprocess=False
+                    strategy=cast("StrategyProtocol", strategy),
+                    engine_type="supervised",
+                    use_subprocess=False,
                 )
                 if training_success:
                     learning_engine_used = "supervised"
@@ -350,12 +358,14 @@ class BacktestValidator:
 
         logger.info("In-Sample Results:")
         logger.info(f"  Return:       {in_sample_metrics['return_pct']:.2f}%")
-        logger.info(f"  Sharpe:       {float(in_sample_result.performance.sharpe_ratio or 0):.3f}")
-        logger.info(f"  Win Rate:     {float(in_sample_result.performance.win_rate):.2%}")
         logger.info(
-            f"  Max DD:       {float(in_sample_result.performance.max_drawdown_percentage):.2%}"
+            f"  Sharpe:       {float(_performance_of(in_sample_result).sharpe_ratio or 0):.3f}"
         )
-        logger.info(f"  Total Trades: {in_sample_result.performance.total_trades}")
+        logger.info(f"  Win Rate:     {float(_performance_of(in_sample_result).win_rate):.2%}")
+        logger.info(
+            f"  Max DD:       {float(_performance_of(in_sample_result).max_drawdown_percentage):.2%}"
+        )
+        logger.info(f"  Total Trades: {_performance_of(in_sample_result).total_trades}")
 
         return in_sample_result, in_sample_metrics
 
@@ -385,10 +395,12 @@ class BacktestValidator:
 
         logger.info("Out-of-Sample Results:")
         logger.info(f"  Return:       {oos_metrics['return_pct']:.2f}%")
-        logger.info(f"  Sharpe:       {float(oos_result.performance.sharpe_ratio or 0):.3f}")
-        logger.info(f"  Win Rate:     {float(oos_result.performance.win_rate):.2%}")
-        logger.info(f"  Max DD:       {float(oos_result.performance.max_drawdown_percentage):.2%}")
-        logger.info(f"  Total Trades: {oos_result.performance.total_trades}")
+        logger.info(f"  Sharpe:       {float(_performance_of(oos_result).sharpe_ratio or 0):.3f}")
+        logger.info(f"  Win Rate:     {float(_performance_of(oos_result).win_rate):.2%}")
+        logger.info(
+            f"  Max DD:       {float(_performance_of(oos_result).max_drawdown_percentage):.2%}"
+        )
+        logger.info(f"  Total Trades: {_performance_of(oos_result).total_trades}")
 
         return oos_result, oos_metrics
 
@@ -426,12 +438,12 @@ class BacktestValidator:
 
         is_return = in_sample_metrics["return_pct"]
         oos_return = oos_metrics["return_pct"]
-        is_sharpe = float(in_sample_result.performance.sharpe_ratio or 0)
-        oos_sharpe = float(oos_result.performance.sharpe_ratio or 0)
-        is_win_rate = float(in_sample_result.performance.win_rate)
-        oos_win_rate = float(oos_result.performance.win_rate)
-        is_max_dd = float(in_sample_result.performance.max_drawdown_percentage)
-        oos_max_dd = float(oos_result.performance.max_drawdown_percentage)
+        is_sharpe = float(_performance_of(in_sample_result).sharpe_ratio or 0)
+        oos_sharpe = float(_performance_of(oos_result).sharpe_ratio or 0)
+        is_win_rate = float(_performance_of(in_sample_result).win_rate)
+        oos_win_rate = float(_performance_of(oos_result).win_rate)
+        is_max_dd = float(_performance_of(in_sample_result).max_drawdown_percentage)
+        oos_max_dd = float(_performance_of(oos_result).max_drawdown_percentage)
 
         return_drop = self._calculate_percentage_drop(is_return, oos_return)
         sharpe_drop = self._calculate_percentage_drop(is_sharpe, oos_sharpe)
@@ -605,7 +617,7 @@ class BacktestValidator:
                 "sharpe": degradation_analysis["is_sharpe"],
                 "win_rate": degradation_analysis["is_win_rate"],
                 "max_dd": degradation_analysis["is_max_dd"],
-                "total_trades": in_sample_result.performance.total_trades,
+                "total_trades": _performance_of(in_sample_result).total_trades,
                 "total_pnl": float(in_sample_metrics["total_pnl"]),
                 "final_capital": float(in_sample_metrics["final_capital"]),
             },
@@ -614,7 +626,7 @@ class BacktestValidator:
                 "sharpe": degradation_analysis["oos_sharpe"],
                 "win_rate": degradation_analysis["oos_win_rate"],
                 "max_dd": degradation_analysis["oos_max_dd"],
-                "total_trades": oos_result.performance.total_trades,
+                "total_trades": _performance_of(oos_result).total_trades,
                 "total_pnl": float(oos_metrics["total_pnl"]),
                 "final_capital": float(oos_metrics["final_capital"]),
             },

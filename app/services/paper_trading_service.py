@@ -202,8 +202,14 @@ class PaperTradingService:
             logger.error("No market data available for symbol", extra={"symbol": symbol})
             raise ValueError(f"No market data available for {symbol}")
 
-        # Determine execution price
-        execution_price = price if order_type == OrderType.LIMIT else current_price
+        # Determine execution price (los límites exigen precio explícito;
+        # PaperTrade.price es obligatorio y pydantic rechazaría None)
+        if order_type == OrderType.LIMIT:
+            if price is None:
+                raise ValueError(f"Limit order for {symbol} requires a price")
+            execution_price = price
+        else:
+            execution_price = current_price
 
         # Create trade
         trade = PaperTrade(
@@ -329,6 +335,9 @@ class PaperTradingService:
             trade.slippage = Decimal("0")
             trade.commission = Decimal("0")
             trade.market_impact = Decimal("0")
+            # BUG FIX: en modo simple nunca se asignaba filled_price y
+            # `_execute_trade` fallaba con TypeError (Decimal * None).
+            trade.filled_price = trade.price
         else:
             # Realistic mode: calculate costs
 
@@ -380,8 +389,12 @@ class PaperTradingService:
 
         trade.filled_at = datetime.utcnow()
 
+        # Narrowing: filled_price debe estar asignado tras _calculate_execution_costs;
+        # por dominio se usa el precio de la orden como default.
+        filled_price = trade.filled_price if trade.filled_price is not None else trade.price
+
         # Update portfolio cash
-        trade_cost = trade.filled_quantity * trade.filled_price + trade.commission
+        trade_cost = trade.filled_quantity * filled_price + trade.commission
         if trade.side == OrderSide.BUY:
             portfolio.cash_balance -= trade_cost
         else:
@@ -397,6 +410,9 @@ class PaperTradingService:
         """Update portfolio position after trade execution."""
         symbol = trade.symbol
 
+        # Narrowing del precio de fill (default de dominio: precio de la orden)
+        fill_price = trade.filled_price if trade.filled_price is not None else trade.price
+
         # Initialize positions dict for symbol if needed
         if symbol not in self.positions:
             self.positions[symbol] = {}
@@ -411,8 +427,7 @@ class PaperTradingService:
                 # Add to position
                 new_quantity = position.quantity + trade.filled_quantity
                 new_cost_basis = (
-                    position.quantity * position.avg_price
-                    + trade.filled_quantity * trade.filled_price
+                    position.quantity * position.avg_price + trade.filled_quantity * fill_price
                 )
                 position.avg_price = new_cost_basis / new_quantity
                 position.quantity = new_quantity
@@ -421,7 +436,7 @@ class PaperTradingService:
                 position.quantity -= trade.filled_quantity
 
                 # Calculate realized P&L
-                realized_pnl = trade.filled_quantity * (trade.filled_price - position.avg_price)
+                realized_pnl = trade.filled_quantity * (fill_price - position.avg_price)
                 position.realized_pnl += realized_pnl
         else:
             # Create new position
@@ -430,10 +445,10 @@ class PaperTradingService:
                 quantity=(
                     trade.filled_quantity if trade.side == OrderSide.BUY else -trade.filled_quantity
                 ),
-                avg_price=trade.filled_price,
-                current_price=trade.filled_price,
-                market_value=trade.filled_quantity * trade.filled_price,
-                cost_basis=trade.filled_quantity * trade.filled_price,
+                avg_price=fill_price,
+                current_price=fill_price,
+                market_value=trade.filled_quantity * fill_price,
+                cost_basis=trade.filled_quantity * fill_price,
             )
 
             self.positions[symbol][portfolio_id] = position
@@ -678,12 +693,13 @@ class PaperTradingService:
                     extra={"portfolio_id": str(portfolio_id)},
                 )
 
-            # Execute the trade using the existing execute_trade method
+            # Execute the trade using the existing execute_trade method.
+            # Conversión explícita entre enums homónimas (order vs paper_trading).
             trade = await self.execute_trade(
                 portfolio_id=portfolio_id,
                 symbol=order.symbol,
-                side=order.side,
-                order_type=order.order_type,
+                side=OrderSide(order.side.value),
+                order_type=OrderType(order.order_type.value),
                 quantity=order.quantity,
                 price=order.price,
             )

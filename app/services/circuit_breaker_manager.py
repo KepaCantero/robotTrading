@@ -375,7 +375,7 @@ class CircuitBreakerManager:
 
                     # Check for halt indicators
                     is_halted = getattr(quote, "is_halted", False)
-                    change_pct = to_decimal(getattr(quote, "change_percent", 0))
+                    change_pct = to_decimal(getattr(quote, "change_percent", 0)) or Decimal("0")
 
                     if is_halted:
                         await self._on_symbol_halted(symbol, "Trading halt detected")
@@ -384,7 +384,7 @@ class CircuitBreakerManager:
                     self._market_states[symbol] = MarketState(
                         symbol=symbol,
                         status=TradingStatus.HALTED if is_halted else TradingStatus.TRADING,
-                        current_price=to_decimal(getattr(quote, "last_price", 0)),
+                        current_price=to_decimal(getattr(quote, "last_price", 0)) or Decimal("0"),
                         change_pct=change_pct,
                         last_update=utc_now(),
                     )
@@ -404,7 +404,7 @@ class CircuitBreakerManager:
             if not vix_data:
                 return
 
-            vix = to_decimal(getattr(vix_data, "last_price", 0))
+            vix = to_decimal(getattr(vix_data, "last_price", 0)) or Decimal("0")
 
             if vix >= self.config.VIX_EXTREME:
                 await self.pause_all_trading(f"VIX at panic level: {vix}")

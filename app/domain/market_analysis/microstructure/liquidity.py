@@ -429,7 +429,7 @@ class LiquidityAnalyzer:
             SpreadComponent.INVENTORY_HOLDING: inventory_holding,
             SpreadComponent.ADVERSE_SELECTION: adverse_selection,
         }
-        dominant = max(components, key=components.get)
+        dominant = max(components, key=lambda component: components[component])
 
         return SpreadDecomposition(
             timestamp=datetime.now(),

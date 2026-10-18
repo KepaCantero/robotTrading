@@ -482,7 +482,7 @@ class LargePositionBuilder:
 
 
 # Global singleton
-_large_position_builder: LargePositionBuilder = None
+_large_position_builder: LargePositionBuilder | None = None
 
 
 def get_large_position_builder() -> LargePositionBuilder:

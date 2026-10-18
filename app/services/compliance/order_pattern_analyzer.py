@@ -453,7 +453,7 @@ class OrderPatternAnalyzer:
             True if rapid ordering detected
         """
         now = utc_now()
-        symbol_orders = self._orders_by_symbol.get(symbol, [])
+        symbol_orders: list[OrderRecord] = list(self._orders_by_symbol.get(symbol, []))
 
         # Count orders in last 60 seconds
         if not symbol_orders:

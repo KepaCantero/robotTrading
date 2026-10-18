@@ -22,8 +22,6 @@ from datetime import datetime
 from decimal import Decimal
 from typing import ClassVar
 
-import numpy as np
-
 from .models import (
     ObjectiveWeights,
     RecommendationSuggestion,
@@ -412,7 +410,7 @@ class StrategyRecommender:
                 if r.success and r.overall_score > Decimal("0")
             ]
             if scores:
-                avg_score = Decimal(str(np.mean(scores)))
+                avg_score = sum(scores, Decimal("0")) / len(scores)
 
         return {
             "total_recommendations": total,

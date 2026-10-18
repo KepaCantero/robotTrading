@@ -53,7 +53,7 @@ class MeanReversionStrategy(BaseStrategy):
         if strategy_config:
             params = strategy_config.parameters
             self.z_score_threshold = Decimal(str(params.get("z_score_threshold")))
-            self.lookback_period = params.get("lookback_period")
+            self.lookback_period = int(params.get("lookback_period", 20))
             self.volatility_threshold = Decimal(str(params.get("volatility_threshold")))
             self.mean_reversion_speed = Decimal(str(params.get("mean_reversion_speed")))
             # FIX: Load atr_floor and price_range_multiplier from config
@@ -73,7 +73,7 @@ class MeanReversionStrategy(BaseStrategy):
         else:
             # Fallback to config or defaults
             self.z_score_threshold = Decimal(str(config.get("z_score_threshold")))
-            self.lookback_period = config.get("lookback_period")
+            self.lookback_period = int(config.get("lookback_period", 20))
             self.stop_loss = Decimal(
                 str(config.get("stop_loss", get_trading_threshold("stop_loss_pct")))
             )

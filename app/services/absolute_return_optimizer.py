@@ -35,7 +35,7 @@ from decimal import Decimal
 from typing import ClassVar
 
 from app.services.account_configuration import AccountConfiguration, AccountTier
-from app.services.capital_tier_strategy_selector import RiskProfile
+from app.services.capital_tier_strategy_selector import PositionSizingStrategy, RiskProfile
 from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
@@ -359,7 +359,7 @@ class CapacityFadeAnalyzer:
     def estimate_capacity_fade(
         capital: Decimal,
         base_monthly_alpha: Decimal,
-        tier: AccountTier = None,
+        tier: AccountTier | None = None,
         current_capital_reference: Decimal | None = None,
     ) -> CapacityFadeEstimate:
         """
@@ -487,8 +487,8 @@ class ParameterScaler:
         max_position = capital * risk_profile.max_position_size
 
         # Constraints
-        constraints = []
-        recommendations = []
+        constraints: list[str] = []
+        recommendations: list[str] = []
 
         # Check leverage
         if risk_profile.leverage_allowed < Decimal("1.5"):
@@ -733,7 +733,7 @@ class AbsoluteReturnOptimizer:
                 leverage_allowed=Decimal("1.5"),
                 learning_enabled=config.get("learning_enabled", False),
                 modules_enabled={},
-                position_sizing_strategy="fixed_pct",
+                position_sizing_strategy=PositionSizingStrategy.FIXED_PCT,
             )
 
         # Step 1: Calculate required alpha
@@ -848,7 +848,7 @@ class AbsoluteReturnOptimizer:
             gap=gap,
             tier=self.tier.value,
             constraints=[] if gap >= Decimal("0") else [f"Alpha shortfall: €{abs(gap):,.0f}"],
-            recommendations=["Increase alpha" if gap < Decimal("0") else ["Goal achievable"]],
+            recommendations=["Increase alpha"] if gap < Decimal("0") else ["Goal achievable"],
             deployment_status="APPROVED" if gap >= Decimal("0") else "REJECTED",
         )
 

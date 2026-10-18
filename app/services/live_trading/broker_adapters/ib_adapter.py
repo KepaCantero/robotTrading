@@ -40,7 +40,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Callable
 
-from ib_insync import IB, LimitOrder, MarketOrder, StopOrder, util
+from ib_insync import IB, LimitOrder, MarketOrder, Order, StopOrder, util
 from ib_insync.contract import Contract as IBContract
 
 from app.domain.services.trading_validators import TradingValidator
@@ -311,8 +311,8 @@ class IBConnection:
                     self.ib.cancelMktData(contract)
                 self._subscribed_contracts.clear()
 
-                # Disconnect
-                await self.ib.disconnectAsync()
+                # Disconnect (ib_insync expone disconnect síncrono; no existe disconnectAsync)
+                self.ib.disconnect()
                 self.connected = False
                 logger.info("Disconnected from Interactive Brokers")
         except (asyncio.TimeoutError, OSError) as e:
@@ -515,6 +515,7 @@ class IBConnection:
             contract = self._get_contract(symbol, **contract_kwargs)
 
             # Create order
+            order: Order
             if order_type == "MKT":
                 order = MarketOrder(side, quantity)
             elif order_type == "LMT":
@@ -570,9 +571,15 @@ class IBConnection:
             return False
 
         try:
-            self.ib.cancelOrder(order_id)
-            logger.info(f"Order {order_id} cancelled")
-            return True
+            # BUG FIX: IB.cancelOrder espera un Order, no un int; se busca
+            # la orden abierta por orderId.
+            for open_order in self.ib.openOrders():
+                if open_order.orderId == order_id:
+                    self.ib.cancelOrder(open_order)
+                    logger.info(f"Order {order_id} cancelled")
+                    return True
+            logger.warning(f"Order {order_id} not found among open orders")
+            return False
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error cancelling order {order_id}: {e}")
             return False
@@ -596,9 +603,10 @@ class IBConnection:
                         "symbol": pos.contract.symbol,
                         "position": float(pos.position),
                         "avg_cost": float(pos.avgCost) if pos.avgCost else 0.0,
-                        "market_value": float(pos.marketValue) if pos.marketValue else 0.0,
-                        "unrealized_pnl": float(pos.unrealizedPNL) if pos.unrealizedPNL else 0.0,
-                        "realized_pnl": float(pos.realizedPNL) if pos.realizedPNL else 0.0,
+                        # ib_insync.Position no expone marketValue/PnL; 0.0 como default
+                        "market_value": 0.0,
+                        "unrealized_pnl": 0.0,
+                        "realized_pnl": 0.0,
                         "currency": pos.contract.currency,
                     }
                 )
@@ -624,7 +632,7 @@ class IBConnection:
             # Wait for data
             await asyncio.sleep(1)
 
-            summary = {}
+            summary: dict[str, Any] = {}
             for item in self.ib.accountSummary():
                 tag = item.tag
                 value = item.value
@@ -637,9 +645,8 @@ class IBConnection:
 
             # Add calculated fields
             summary["timestamp"] = datetime.now().isoformat()
-            summary["account_id"] = (
-                self.account or self.ib.managedAccounts()[0] if self.ib.managedAccounts() else ""
-            )
+            managed = self.ib.managedAccounts()
+            summary["account_id"] = self.account or (managed[0] if managed else "")
 
             return summary
 

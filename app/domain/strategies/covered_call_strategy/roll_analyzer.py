@@ -147,13 +147,13 @@ class RollAnalyzer:
 
         # Buscar opciones con strike >= target
         # y expiry >= expiry actual + 7 días
-        min_expiry = position.call_option.expiry_date + timedelta(days=7)
+        min_expiry = position.call_option.expiry + timedelta(days=7)
 
         for option in available_options:
             if option.strike < target_strike:
                 continue
 
-            if option.expiry_date < min_expiry:
+            if option.expiry < min_expiry:
                 continue
 
             # Calcular beneficio del roll
@@ -225,7 +225,7 @@ class RollAnalyzer:
         # Buscar opciones con strike < strike actual
         # y >= target_strike
         # y expiry >= expiry actual + 7 días
-        min_expiry = position.call_option.expiry_date + timedelta(days=7)
+        min_expiry = position.call_option.expiry + timedelta(days=7)
 
         for option in available_options:
             if option.strike >= position.call_option.strike:
@@ -234,7 +234,7 @@ class RollAnalyzer:
             if option.strike < target_strike:
                 continue
 
-            if option.expiry_date < min_expiry:
+            if option.expiry < min_expiry:
                 continue
 
             # Calcular beneficio del roll
@@ -319,7 +319,7 @@ class RollAnalyzer:
             if abs(option.strike - position.call_option.strike) > Decimal("0.50"):
                 continue
 
-            if option.expiry_date < min_expiry:
+            if option.expiry < min_expiry:
                 continue
 
             # Calcular beneficio del roll

@@ -78,6 +78,9 @@ class PortfolioStabilityMetrics:
     period_length_days: int
     stability_threshold: float = 70.0
     timestamp: datetime = field(default_factory=datetime.now)
+    # Extended turnover metrics (populated when returns history is provided)
+    annual_turnover: float | None = None
+    is_cost_effective: bool | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""

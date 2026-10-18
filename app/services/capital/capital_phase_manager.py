@@ -366,7 +366,7 @@ class CapitalPhaseManager:
             'growth'
         """
         current_phase = self._current_phase
-        current_capital = self._current_capital
+        current_capital: Decimal = self._current_capital
 
         if current_phase == CapitalPhase.OPTIMIZATION:
             # Ya estamos en la ultima fase
@@ -391,11 +391,11 @@ class CapitalPhaseManager:
         else:  # GROWTH
             next_phase = CapitalPhase.OPTIMIZATION
 
-        # Calcular progreso
+        # Calcular progreso (renamed: `progress` ya es un dict en la rama anterior)
         phase_range = max_capital - min_capital
-        progress = current_capital - min_capital
+        progress_amount = current_capital - min_capital
         remaining = max_capital - current_capital
-        progress_pct = float((progress / phase_range) * 100) if phase_range > 0 else 100.0
+        progress_pct = float((progress_amount / phase_range) * 100) if phase_range > 0 else 100.0
 
         result = {
             "current_phase": current_phase.value,

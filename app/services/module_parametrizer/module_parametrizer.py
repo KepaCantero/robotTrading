@@ -61,12 +61,15 @@ class ModuleParametrizer:
         self.parametrization_history: list[ParameterizationResult] = []
 
         # Load module configuration
+        resolved_path: Path
         if config_path is None:
-            config_path = (
+            resolved_path = (
                 Path(__file__).parent.parent.parent.parent / "config" / "module_parameters.yaml"
             )
+        else:
+            resolved_path = Path(config_path)
 
-        self.config_path = Path(config_path)
+        self.config_path: Path = resolved_path
         self.module_templates = self._load_module_templates()
         logger.info("✅ ModuleParametrizer initialized")
 
@@ -299,11 +302,16 @@ class ModuleParametrizer:
         low_priority = [m for m, c in module_parameters.items() if c.priority >= 7]
 
         # Calculate aggregate metrics
-        total_max_exposure = sum(config.max_exposure for config in module_parameters.values())
-        total_cost = sum(config.cost_estimate_usd for config in module_parameters.values())
+        total_max_exposure = sum(
+            (config.max_exposure for config in module_parameters.values()), Decimal("0")
+        )
+        total_cost = sum(
+            (config.cost_estimate_usd for config in module_parameters.values()), Decimal("0")
+        )
         avg_improvement = sum(
-            config.estimated_improvement_pct for config in module_parameters.values()
-        ) / max(1, len(module_parameters))
+            (config.estimated_improvement_pct for config in module_parameters.values()),
+            Decimal("0"),
+        ) / Decimal(max(1, len(module_parameters)))
 
         parameter_set = ModuleParameterSet(
             profile_id=request.profile_id,

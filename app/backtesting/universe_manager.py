@@ -82,7 +82,7 @@ class UniverseManager:
         Args:
             universe_config: Custom universe config (uses default if None)
         """
-        self.universe = universe_config or BACKTEST_UNIVERSE
+        self.universe: dict[str, Any] = universe_config or BACKTEST_UNIVERSE
         logger.info("UniverseManager initialized with survivorship bias adjustment")
 
     def get_universe(
@@ -115,7 +115,7 @@ class UniverseManager:
                 f"start_date must be before end_date: start_date={start_date}, end_date={end_date}"
             )
 
-        symbols = []
+        symbols: list[str] = []
 
         # Always include survivors
         symbols.extend(self.universe["survivors"])
@@ -372,7 +372,7 @@ class UniverseManager:
                 symbol_to_sector[ticker] = sector
 
         # Group symbols by sector
-        sectors = {}
+        sectors: dict[str, list[str]] = {}
         for symbol in symbols:
             sector = symbol_to_sector.get(symbol, "Unknown")
             if sector not in sectors:

@@ -365,7 +365,7 @@ class QuestDBConnector:
                 "count": len(close_prices),
                 "min": min(close_prices),
                 "max": max(close_prices),
-                "avg": np.mean(close_prices),
+                "avg": float(np.mean([float(c) for c in close_prices])),
             }
             logger.info(f"✅ Statistics for {symbol}: {stats['count']} records")
             return stats

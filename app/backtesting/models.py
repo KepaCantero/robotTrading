@@ -167,7 +167,7 @@ class PerformanceMetrics(BaseModel):
     # RETURN METRICS
     # =========================================================================
     total_return: Decimal | None = Field(
-        None, description="Total return over entire period (decimal form)"
+        default=None, description="Total return over entire period (decimal form)"
     )
     annualized_return: Decimal | None = Field(
         default=None, description="Annualized return percentage"
@@ -208,15 +208,15 @@ class PerformanceMetrics(BaseModel):
         default=Decimal("0"), le=0, description="Maximum drawdown percentage"
     )
     max_drawdown_duration: int | None = Field(
-        None, ge=0, description="Maximum drawdown duration in days"
+        default=None, ge=0, description="Maximum drawdown duration in days"
     )
     current_drawdown: float | None = Field(default=None, description="Current drawdown")
     volatility: Decimal | None = Field(default=None, description="Volatility (decimal form)")
     volatility_annualized: Decimal | None = Field(
-        None, description="Annualized Volatility: std(returns) * sqrt(252)"
+        default=None, description="Annualized Volatility: std(returns) * sqrt(252)"
     )
     annualized_volatility: Decimal | None = Field(
-        None, description="Annualized volatility (alternative name)"
+        default=None, description="Annualized volatility (alternative name)"
     )
 
     # =========================================================================
@@ -225,32 +225,35 @@ class PerformanceMetrics(BaseModel):
     sharpe_ratio: Decimal | None = Field(default=None, description="Sharpe ratio (annualized)")
     sortino_ratio: Decimal | None = Field(default=None, description="Sortino ratio (downside risk)")
     calmar_ratio: Decimal | None = Field(
-        None, description="Calmar Ratio: CAGR / |Max Drawdown| (>1.0 good, >3.0 excellent)"
+        default=None, description="Calmar Ratio: CAGR / |Max Drawdown| (>1.0 good, >3.0 excellent)"
     )
     omega_ratio: Decimal | None = Field(
-        None, description="Omega Ratio: Probability-weighted gains/losses ratio (>1.0 profitable)"
+        default=None,
+        description="Omega Ratio: Probability-weighted gains/losses ratio (>1.0 profitable)",
     )
     treynor_ratio: Decimal | None = Field(
-        None, description="Treynor ratio: (Return - RiskFree) / Beta"
+        default=None, description="Treynor ratio: (Return - RiskFree) / Beta"
     )
     information_ratio: Decimal | None = Field(
         default=None, description="Information ratio vs benchmark"
     )
     risk_reward_ratio: Decimal | None = Field(
-        None, description="Average risk/reward ratio per trade (target >=1:3)"
+        default=None, description="Average risk/reward ratio per trade (target >=1:3)"
     )
 
     # =========================================================================
     # ADVANCED RISK METRICS
     # =========================================================================
     ulcer_index: Decimal | None = Field(
-        None, description="Ulcer Index: Duration-weighted drawdown penalty (lower is better)"
+        default=None,
+        description="Ulcer Index: Duration-weighted drawdown penalty (lower is better)",
     )
     recovery_factor: Decimal | None = Field(
-        None, description="Recovery Factor: Net Profit / |Max Drawdown|"
+        default=None, description="Recovery Factor: Net Profit / |Max Drawdown|"
     )
     profit_factor: Decimal | None = Field(
-        None, description="Profit Factor: Gross Profit / |Gross Loss| (>1.5 good, >2.0 excellent)"
+        default=None,
+        description="Profit Factor: Gross Profit / |Gross Loss| (>1.5 good, >2.0 excellent)",
     )
     tail_ratio: Decimal | None = Field(
         default=None, description="Ratio of extreme gains to extreme losses"
@@ -260,21 +263,22 @@ class PerformanceMetrics(BaseModel):
     # RETURN DISTRIBUTION METRICS
     # =========================================================================
     skewness: Decimal | None = Field(
-        None, description="Skewness: Return distribution asymmetry (negative is worse)"
+        default=None, description="Skewness: Return distribution asymmetry (negative is worse)"
     )
     kurtosis: Decimal | None = Field(
-        None, description="Excess Kurtosis: Tail risk measure (negative is better)"
+        default=None, description="Excess Kurtosis: Tail risk measure (negative is better)"
     )
 
     # =========================================================================
     # VALUE AT RISK METRICS
     # =========================================================================
     var_95: Decimal | None = Field(
-        None, description="Value at Risk 95%: Worst 5% scenario (negative value = potential loss)"
+        default=None,
+        description="Value at Risk 95%: Worst 5% scenario (negative value = potential loss)",
     )
     var_99: Decimal | None = Field(default=None, description="Value at Risk 99%: Worst 1% scenario")
     cvar_95: Decimal | None = Field(
-        None, description="Conditional VaR 95%: Expected loss beyond VaR threshold"
+        default=None, description="Conditional VaR 95%: Expected loss beyond VaR threshold"
     )
 
     # =========================================================================
@@ -288,7 +292,7 @@ class PerformanceMetrics(BaseModel):
     best_trade: Decimal | None = Field(default=None, description="Best single trade return")
     worst_trade: Decimal | None = Field(default=None, description="Worst single trade return")
     expectancy: Decimal | None = Field(
-        None,
+        default=None,
         description="Expectancy: Expected value per trade (positive=profitable, negative=unprofitable)",
     )
 

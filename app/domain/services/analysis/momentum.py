@@ -153,7 +153,7 @@ class TechnicalIndicatorCalculator:
         fast_period: int = 12,
         slow_period: int = 26,
         signal_period: int = 9,
-    ) -> dict[str, float | None]:
+    ) -> dict[str, float | np.ndarray | None]:
         """
         Calculate MACD (Moving Average Convergence Divergence).
 
@@ -166,13 +166,16 @@ class TechnicalIndicatorCalculator:
         Returns:
             Dictionary with 'macd', 'signal', and 'histogram' values.
         """
-        macd, signal, histogram = self._indicators.macd(
+        components = self._indicators.macd(
             prices,
             fast_period=fast_period,
             slow_period=slow_period,
             signal_period=signal_period,
             return_components=True,
         )
+        if not isinstance(components, tuple):
+            return {"macd": None, "signal": None, "histogram": None}
+        macd, signal, histogram = components
         return {
             "macd": macd,
             "signal": signal,
@@ -257,9 +260,12 @@ class TechnicalIndicatorCalculator:
         Returns:
             Dictionary with 'k' and 'd' values.
         """
-        k, d = self._indicators.stochastic(
+        components = self._indicators.stochastic(
             highs, lows, closes, k_period=k_period, d_period=d_period, return_components=True
         )
+        if not isinstance(components, tuple):
+            return {"k": None, "d": None}
+        k, d = components
         return {"k": k, "d": d}
 
     def calculate_stochastic_rsi(
@@ -305,9 +311,12 @@ class TechnicalIndicatorCalculator:
         Returns:
             Dictionary with 'adx', 'plus_di', 'minus_di' values.
         """
-        adx, plus_di, minus_di = self._indicators.adx(
+        components = self._indicators.adx(
             highs, lows, closes, period=period, return_components=True
         )
+        if not isinstance(components, tuple):
+            return {"adx": None, "plus_di": None, "minus_di": None}
+        adx, plus_di, minus_di = components
         return {
             "adx": adx,
             "plus_di": plus_di,

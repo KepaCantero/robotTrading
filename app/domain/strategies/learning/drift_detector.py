@@ -1355,7 +1355,7 @@ class AdvancedOverfittingDetector:
 
         # Calculate mean losses
         train_losses = [m.train_loss for m in valid_metrics]
-        val_losses = [m.val_loss for m in valid_metrics]
+        val_losses = [m.val_loss for m in valid_metrics if m.val_loss is not None]
 
         mean_train_loss = np.mean(train_losses)
         mean_val_loss = np.mean(val_losses)
@@ -2076,9 +2076,9 @@ class AutoRetrainingTrigger:
         historical_avg = {}
         for metric_name in current_performance:
             values = [
-                p.get(metric_name)
+                value
                 for p in self.performance_history[-10:]
-                if p.get(metric_name) is not None
+                if (value := p.get(metric_name)) is not None
             ]
             if values:
                 historical_avg[metric_name] = np.mean(values)

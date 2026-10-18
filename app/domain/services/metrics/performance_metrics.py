@@ -52,7 +52,6 @@ try:
     QUANTSTATS_AVAILABLE = bool(qs)
 except ImportError:
     QUANTSTATS_AVAILABLE = False
-    qs = None
 
 
 def _to_array(returns: pd.Series | np.ndarray | list[Decimal] | list[float]) -> np.ndarray:

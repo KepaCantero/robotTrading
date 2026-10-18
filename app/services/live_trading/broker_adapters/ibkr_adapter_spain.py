@@ -20,7 +20,7 @@ import logging
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from ib_insync import IB, LimitOrder, MarketOrder, StopOrder, util
+from ib_insync import IB, LimitOrder, MarketOrder, Order, StopOrder, util
 
 from app.infrastructure.resilience.reconnection_manager import (
     ReconnectionConfig,
@@ -198,7 +198,7 @@ class IBKRSpainAdapter:
         """
         try:
             if self._connected and self.ib.isConnected():
-                await self.ib.disconnectAsync()
+                self.ib.disconnect()
                 self._connected = False
                 logger.info("Disconnected from Interactive Brokers")
                 return True
@@ -263,6 +263,7 @@ class IBKRSpainAdapter:
         contract = create_stock_contract(symbol, currency=currency, exchange=exchange)
 
         # Create order based on type
+        ib_order: Order
         if order_type == "MKT":
             ib_order = MarketOrder(side, quantity)
         elif order_type == "LMT":
@@ -389,7 +390,8 @@ class IBKRSpainAdapter:
             # Get positions
             positions = []
             for pos in self.ib.positions():
-                position_value = float(pos.marketValue) if pos.marketValue else 0.0
+                # ib_insync.Position no expone marketValue; 0.0 como default
+                position_value = 0.0
 
                 # Convert to EUR if needed
                 if pos.contract.currency != "EUR":
@@ -404,7 +406,7 @@ class IBKRSpainAdapter:
                         "avg_cost": float(pos.avgCost) if pos.avgCost else 0.0,
                         "market_value": position_value,
                         "currency": pos.contract.currency,
-                        "unrealized_pnl": float(pos.unrealizedPNL) if pos.unrealizedPNL else 0.0,
+                        "unrealized_pnl": 0.0,
                     }
                 )
 

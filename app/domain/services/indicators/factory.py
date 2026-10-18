@@ -188,7 +188,9 @@ class UnifiedIndicatorCalculator:
         backend = self._select_backend(data)
 
         if backend == IndicatorBackend.NUMBA.value:
-            return self._numba_calculator.rsi(self._convert_to_array(data), period, return_array)
+            numba_calc = self._numba_calculator
+            if numba_calc is not None:
+                return numba_calc.rsi(self._convert_to_array(data), period, return_array)
         return self._pandas_calculator.rsi(data, period, return_array)
 
     def ema(
@@ -201,7 +203,9 @@ class UnifiedIndicatorCalculator:
         backend = self._select_backend(data)
 
         if backend == IndicatorBackend.NUMBA.value:
-            return self._numba_calculator.ema(self._convert_to_array(data), period, return_array)
+            numba_calc = self._numba_calculator
+            if numba_calc is not None:
+                return numba_calc.ema(self._convert_to_array(data), period, return_array)
         return self._pandas_calculator.ema(data, period, return_array)
 
     def sma(
@@ -214,7 +218,9 @@ class UnifiedIndicatorCalculator:
         backend = self._select_backend(data)
 
         if backend == IndicatorBackend.NUMBA.value:
-            return self._numba_calculator.sma(self._convert_to_array(data), period, return_array)
+            numba_calc = self._numba_calculator
+            if numba_calc is not None:
+                return numba_calc.sma(self._convert_to_array(data), period, return_array)
         return self._pandas_calculator.sma(data, period, return_array)
 
     def macd(
@@ -229,13 +235,15 @@ class UnifiedIndicatorCalculator:
         backend = self._select_backend(data)
 
         if backend == IndicatorBackend.NUMBA.value:
-            return self._numba_calculator.macd(
-                self._convert_to_array(data),
-                fast_period,
-                slow_period,
-                signal_period,
-                return_components,
-            )
+            numba_calc = self._numba_calculator
+            if numba_calc is not None:
+                return numba_calc.macd(
+                    self._convert_to_array(data),
+                    fast_period,
+                    slow_period,
+                    signal_period,
+                    return_components,
+                )
         return self._pandas_calculator.macd(
             data, fast_period, slow_period, signal_period, return_components
         )
@@ -252,13 +260,15 @@ class UnifiedIndicatorCalculator:
         backend = self._select_backend(close)
 
         if backend == IndicatorBackend.NUMBA.value:
-            return self._numba_calculator.atr(
-                self._convert_to_array(high),
-                self._convert_to_array(low),
-                self._convert_to_array(close),
-                period,
-                return_array,
-            )
+            numba_calc = self._numba_calculator
+            if numba_calc is not None:
+                return numba_calc.atr(
+                    self._convert_to_array(high),
+                    self._convert_to_array(low),
+                    self._convert_to_array(close),
+                    period,
+                    return_array,
+                )
         return self._pandas_calculator.atr(high, low, close, period, return_array)
 
     def bollinger_bands(
@@ -272,9 +282,9 @@ class UnifiedIndicatorCalculator:
         backend = self._select_backend(data)
 
         if backend == IndicatorBackend.NUMBA.value:
-            return self._numba_calculator.bollinger_bands(
-                self._convert_to_array(data), period, std_dev
-            )
+            numba_calc = self._numba_calculator
+            if numba_calc is not None:
+                return numba_calc.bollinger_bands(self._convert_to_array(data), period, std_dev)
         return self._pandas_calculator.bollinger_bands(data, period, std_dev, return_components)
 
     def adx(
@@ -301,13 +311,15 @@ class UnifiedIndicatorCalculator:
         backend = self._select_backend(close)
 
         if backend == IndicatorBackend.NUMBA.value:
-            return self._numba_calculator.stochastic(
-                self._convert_to_array(high),
-                self._convert_to_array(low),
-                self._convert_to_array(close),
-                k_period,
-                d_period,
-            )
+            numba_calc = self._numba_calculator
+            if numba_calc is not None:
+                return numba_calc.stochastic(
+                    self._convert_to_array(high),
+                    self._convert_to_array(low),
+                    self._convert_to_array(close),
+                    k_period,
+                    d_period,
+                )
         return self._pandas_calculator.stochastic(
             high, low, close, k_period, d_period, return_components
         )

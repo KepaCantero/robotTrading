@@ -52,8 +52,8 @@ class MarketAnalyzer:
         )
 
         # Históricos para los detectores
-        self.price_history = deque(maxlen=200)
-        self.atr_history = deque(maxlen=100)
+        self.price_history: deque[float] = deque(maxlen=200)
+        self.atr_history: deque[float] = deque(maxlen=100)
 
     def analyze(self, market_data, price_history: list[float], atr_history: list[float]) -> dict:
         """

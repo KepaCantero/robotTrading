@@ -42,7 +42,7 @@ import asyncio
 import logging
 from collections.abc import Awaitable
 from datetime import datetime
-from typing import TYPE_CHECKING, Callable, Union, cast
+from typing import TYPE_CHECKING, Any, Callable, Union, cast
 
 from .base_optimizer import (
     BaseOptimizer,
@@ -86,6 +86,13 @@ except ImportError:
         "Optuna not installed. Bayesian optimizer will fall back to random search. "
         "Install with: pip install optuna"
     )
+
+
+def _supported_choices(raw: object) -> list[str | int | float | bool]:
+    """Filtra choices a los tipos soportados por suggest_categorical."""
+    if not isinstance(raw, list):
+        return []
+    return [c for c in raw if isinstance(c, (bool, int, float, str))]
 
 
 class ParameterType:
@@ -516,14 +523,16 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
             param_type = defn.get("type", ParameterType.CONTINUOUS)
 
             if param_type == ParameterType.CATEGORICAL:
-                params[name] = trial.suggest_categorical(
-                    name, cast("list[str | int | float | bool]", defn["choices"])
-                )
+                _categorical = _supported_choices(defn.get("choices"))
+                _choice = trial.suggest_categorical(name, _categorical)
+                if _choice is not None:
+                    params[name] = _choice
 
             elif param_type == ParameterType.DISCRETE:
-                params[name] = trial.suggest_categorical(
-                    name, cast("list[str | int | float | bool]", defn["values"])
-                )
+                _discrete = _supported_choices(defn.get("values"))
+                _discrete_choice = trial.suggest_categorical(name, _discrete)
+                if _discrete_choice is not None:
+                    params[name] = _discrete_choice
 
             elif param_type == ParameterType.INTEGER:
                 min_val = int(cast("int | float", defn["min"]))
@@ -540,7 +549,8 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
             elif param_type == ParameterType.CONTINUOUS:
                 min_val_float = float(cast("int | float", defn["min"]))
                 max_val_float = float(cast("int | float", defn["max"]))
-                log = defn.get("log", False)
+                log_raw = defn.get("log", False)
+                log = log_raw if isinstance(log_raw, bool) else False
 
                 params[name] = trial.suggest_float(name, min_val_float, max_val_float, log=log)
 
@@ -742,7 +752,10 @@ class MultiObjectiveBayesianOptimizer(BaseOptimizer[SearchSpace]):
 
     async def optimize(
         self,
-        objectives: list[Callable[[ParamDict], float]],
+        objectives: (
+            Callable[[dict[str, Any]], float | Awaitable[float]]
+            | list[Callable[[ParamDict], float]]
+        ),
         search_space: SearchSpace,
     ) -> OptimizationResult:
         """
@@ -760,13 +773,21 @@ class MultiObjectiveBayesianOptimizer(BaseOptimizer[SearchSpace]):
 
         assert optuna is not None
 
+        # La evaluación multi-objectivo es síncrona por diseño (Optuna);
+        # un objetivo único asíncrono no es soportado por esta clase.
+        objective_list: list[Callable[[ParamDict], float]] = (
+            objectives
+            if isinstance(objectives, list)
+            else [cast("Callable[[ParamDict], float]", objectives)]
+        )
+
         self._start_time = datetime.now()
         self._history: list[TrialResult] = []
         self._search_space = search_space
 
         # Create multi-objective study
         study = optuna.create_study(
-            directions=["maximize"] * len(objectives),
+            directions=["maximize"] * len(objective_list),
             sampler=TPESampler(seed=self.config.random_seed),
         )
 
@@ -777,9 +798,10 @@ class MultiObjectiveBayesianOptimizer(BaseOptimizer[SearchSpace]):
                 param_type = defn.get("type", ParameterType.CONTINUOUS)
 
                 if param_type == ParameterType.CATEGORICAL:
-                    params[name] = trial.suggest_categorical(
-                        name, cast("list[str | int | float | bool]", defn["choices"])
-                    )
+                    _mo_choices = _supported_choices(defn.get("choices"))
+                    _mo_choice = trial.suggest_categorical(name, _mo_choices)
+                    if _mo_choice is not None:
+                        params[name] = _mo_choice
                 elif param_type == ParameterType.INTEGER:
                     params[name] = trial.suggest_int(
                         name,
@@ -795,7 +817,7 @@ class MultiObjectiveBayesianOptimizer(BaseOptimizer[SearchSpace]):
 
             # Evaluate all objectives
             values: list[float] = []
-            for obj_func in objectives:
+            for obj_func in objective_list:
                 try:
                     value = obj_func(params)
                     values.append(float(value))

@@ -20,22 +20,50 @@ import logging
 import math
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any, Callable, TypedDict, cast
 
 import numpy as np
 
-from app.backtesting.core.config_loader import cfg_dict
-
-logger = logging.getLogger(__name__)
-
+from app.backtesting.core.config_loader import YamlDict, cfg_dict, get_value
 from app.backtesting.core.error_handling import MutexError, TrainingError, train_with_retry
 from app.backtesting.core.executor import SimpleBacktestExecutor
-from app.backtesting.models import BacktestConfig, BacktestResult
+from app.backtesting.models import BacktestConfig, BacktestResult, PerformanceMetrics
 from app.domain.strategies.momentum_modular.strategy import ModularMomentumStrategy
 
 if TYPE_CHECKING:
     from app.backtesting.core.memory_manager import AggressiveMemoryManager
     from app.domain.models.market_data import Quote
+
+logger = logging.getLogger(__name__)
+
+
+def _performance_of(backtest_result: BacktestResult) -> PerformanceMetrics:
+    """Narrowa ``BacktestResult.performance``: los executors siempre lo pueblan."""
+    return cast("PerformanceMetrics", backtest_result.performance)
+
+
+def _sharpe_of(backtest_result: BacktestResult) -> float:
+    """Sharpe ratio como float (0.0 cuando el resultado no lo trae)."""
+    sharpe = _performance_of(backtest_result).sharpe_ratio
+    return float(sharpe) if sharpe else 0.0
+
+
+def _num(value: object) -> float:
+    """Coerce un valor de métricas numérico a float (identidad para floats)."""
+    return float(cast("int | float", value))
+
+
+class _WFWindow(TypedDict):
+    """Ventana walk-forward con sus segmentos train/test."""
+
+    window_num: int
+    train: list[Quote]
+    test: list[Quote]
+    train_start: datetime
+    train_end: datetime
+    test_start: datetime
+    test_end: datetime
+
 
 # Callback type aliases for helper functions passed from comprehensive runner
 ThresholdsHelper = Callable[[dict[str, Any]], dict[str, float]]
@@ -128,20 +156,20 @@ class BacktestExecutor:
         result_dict = {
             "test_type": "baseline",
             "test_name": "Baseline - All Modules Active",
-            "modules_active": list(self.raw_config["modules"]["filters"].keys()),
+            "modules_active": list(
+                cfg_dict(cfg_dict(self.raw_config.get("modules"))["filters"]).keys()
+            ),
             "learning_engine": None,
             "thresholds": thresholds_helper(strategy_config),
             "total_pnl": consistent_metrics["total_pnl"],
             "return_pct": consistent_metrics["return_pct"],
-            "win_rate": float(result.performance.win_rate),
-            "sharpe_ratio": (
-                float(result.performance.sharpe_ratio) if result.performance.sharpe_ratio else 0.0
-            ),
-            "max_drawdown": float(result.performance.max_drawdown_percentage),
-            "total_trades": result.performance.total_trades,
+            "win_rate": float(_performance_of(result).win_rate),
+            "sharpe_ratio": (float(_sharpe_of(result)) if _sharpe_of(result) else 0.0),
+            "max_drawdown": float(_performance_of(result).max_drawdown_percentage),
+            "total_trades": _performance_of(result).total_trades,
             "avg_trade_pnl": (
-                consistent_metrics["total_pnl"] / result.performance.total_trades
-                if result.performance.total_trades > 0
+                consistent_metrics["total_pnl"] / _performance_of(result).total_trades
+                if _performance_of(result).total_trades > 0
                 else 0.0
             ),
             "final_capital": consistent_metrics["final_capital"],
@@ -182,7 +210,7 @@ class BacktestExecutor:
         logger.info("Running learning engines backtest...")
 
         results = []
-        learning_engines_config = self.raw_config.get("learning_engines", {})
+        learning_engines_config: YamlDict = cfg_dict(self.raw_config.get("learning_engines"))
 
         # Only test supervised learning engine (others cause mutex blocking)
         logger.info("Learning Engines Policy: Only 'supervised' is supported (scikit-learn)")
@@ -311,17 +339,13 @@ class BacktestExecutor:
                 "thresholds": thresholds_helper(strategy_config),
                 "total_pnl": consistent_metrics["total_pnl"],
                 "return_pct": consistent_metrics["return_pct"],
-                "win_rate": float(result.performance.win_rate),
-                "sharpe_ratio": (
-                    float(result.performance.sharpe_ratio)
-                    if result.performance.sharpe_ratio
-                    else 0.0
-                ),
-                "max_drawdown": float(result.performance.max_drawdown_percentage),
-                "total_trades": result.performance.total_trades,
+                "win_rate": float(_performance_of(result).win_rate),
+                "sharpe_ratio": (float(_sharpe_of(result)) if _sharpe_of(result) else 0.0),
+                "max_drawdown": float(_performance_of(result).max_drawdown_percentage),
+                "total_trades": _performance_of(result).total_trades,
                 "avg_trade_pnl": (
-                    consistent_metrics["total_pnl"] / result.performance.total_trades
-                    if result.performance.total_trades > 0
+                    consistent_metrics["total_pnl"] / _performance_of(result).total_trades
+                    if _performance_of(result).total_trades > 0
                     else 0.0
                 ),
                 "final_capital": consistent_metrics["final_capital"],
@@ -371,13 +395,16 @@ class BacktestExecutor:
         """
         logger.info(f"Running Monte Carlo Backtest ({'parallel' if parallel else 'sequential'})...")
 
-        mc_config = self.raw_config["backtests"]["monte_carlo"]
-        num_simulations = mc_config.get("num_simulations", 100)
-        volatility_multiplier = cfg_dict(mc_config.get("volatility_multiplier")).get("default", 1.0)
+        mc_config: YamlDict = cfg_dict(cfg_dict(self.raw_config.get("backtests"))["monte_carlo"])
+        num_simulations = get_value(mc_config, "num_simulations", 100)
+        volatility_multiplier = get_value(
+            cfg_dict(mc_config.get("volatility_multiplier")), "default", 1.0
+        )
 
         results = []
 
         # Create executor according to configuration
+        executor: ProcessPoolBacktestExecutor | SimpleBacktestExecutor
         if parallel:
             from app.backtesting.core.executor import ProcessPoolBacktestExecutor
 
@@ -415,7 +442,9 @@ class BacktestExecutor:
                 "test_name": f"Monte Carlo - Simulation {sim_num + 1}",
                 "simulation_num": sim_num + 1,
                 "volatility_multiplier": volatility_multiplier,
-                "modules_active": list(self.raw_config["modules"]["filters"].keys()),
+                "modules_active": list(
+                    cfg_dict(cfg_dict(self.raw_config.get("modules"))["filters"]).keys()
+                ),
                 "learning_engine": None,
                 "thresholds": thresholds_helper(strategy_config),
                 "total_pnl": final_capital - initial_capital,
@@ -424,19 +453,19 @@ class BacktestExecutor:
                     if initial_capital > 0
                     else 0.0
                 ),
-                "win_rate": float(result.performance.win_rate) if result.performance else 0.0,
+                "win_rate": float(_performance_of(result).win_rate) if result.performance else 0.0,
                 "sharpe_ratio": (
-                    float(result.performance.sharpe_ratio)
-                    if result.performance and result.performance.sharpe_ratio
-                    else 0.0
+                    float(_sharpe_of(result)) if result.performance and _sharpe_of(result) else 0.0
                 ),
                 "max_drawdown": (
-                    float(result.performance.max_drawdown_percentage) if result.performance else 0.0
+                    float(_performance_of(result).max_drawdown_percentage)
+                    if result.performance
+                    else 0.0
                 ),
-                "total_trades": result.performance.total_trades if result.performance else 0,
+                "total_trades": _performance_of(result).total_trades if result.performance else 0,
                 "avg_trade_pnl": (
-                    (final_capital - initial_capital) / result.performance.total_trades
-                    if result.performance and result.performance.total_trades > 0
+                    (final_capital - initial_capital) / _performance_of(result).total_trades
+                    if result.performance and _performance_of(result).total_trades > 0
                     else 0.0
                 ),
                 "final_capital": final_capital,
@@ -461,13 +490,13 @@ class BacktestExecutor:
         Returns:
             List of modified quotes with realistic data
         """
-        from app.backtesting.realistic_data_generator import RealisticDataGenerator
+        from app.backtesting.realistic_data_generator import MarketRegime, RealisticDataGenerator
 
         # If no base quotes, create new realistic data
         if not self.quotes:
             logger.warning("No base quotes available, generating new realistic data")
             gen = RealisticDataGenerator(
-                seed=self.raw_config.get("random_state", 42),
+                seed=get_value(self.raw_config, "random_state", 42),
                 base_price=100.0,
                 base_volume=50_000_000,
             )
@@ -483,7 +512,7 @@ class BacktestExecutor:
 
         # Use realistic generator for Monte Carlo simulations
         gen = RealisticDataGenerator(
-            seed=self.raw_config.get("random_state", 42),
+            seed=get_value(self.raw_config, "random_state", 42),
             base_price=float(self.quotes[0].close),
             base_volume=int(self.quotes[0].volume) if self.quotes[0].volume else 50_000_000,
         )
@@ -495,7 +524,7 @@ class BacktestExecutor:
             n_days=len(self.quotes),
             start_date=start_date,
             use_regime_switching=True,
-            initial_regime="volatile",  # Use volatile regime for Monte Carlo
+            initial_regime=MarketRegime.VOLATILE,  # Use volatile regime for Monte Carlo
         )
 
         logger.info(
@@ -531,13 +560,15 @@ class BacktestExecutor:
         """
         logger.info("Running walk-forward backtest...")
 
-        wf_config = cfg_dict(self.raw_config.get("backtests")).get("walk_forward", {})
+        wf_config: YamlDict = cfg_dict(
+            cfg_dict(self.raw_config.get("backtests")).get("walk_forward")
+        )
 
         # Window parameters with defaults
-        train_pct = wf_config.get("train_pct", 0.70)
-        test_pct = wf_config.get("test_pct", 0.30)
-        min_train_days = wf_config.get("min_train_days", 100)
-        step_size_days = wf_config.get("step_size_days", 63)
+        train_pct = get_value(wf_config, "train_pct", 0.70)
+        test_pct = get_value(wf_config, "test_pct", 0.30)
+        min_train_days = get_value(wf_config, "min_train_days", 100)
+        step_size_days = get_value(wf_config, "step_size_days", 63)
 
         logger.info(
             f"Walk-forward config: train={train_pct:.0%}, test={test_pct:.0%}, "
@@ -557,7 +588,7 @@ class BacktestExecutor:
         window_size = math.ceil(min_train_days / train_pct)
 
         num_windows = 0
-        windows = []
+        windows: list[_WFWindow] = []
 
         start_idx = 0
         while True:
@@ -602,7 +633,7 @@ class BacktestExecutor:
         logger.info(f"Created {num_windows} walk-forward windows")
 
         # Execute backtest for each window
-        window_results = []
+        window_results: list[dict[str, float | int | datetime]] = []
 
         for window in windows:
             logger.info(
@@ -643,7 +674,7 @@ class BacktestExecutor:
 
                 consistent_metrics = metrics_helper(result, initial_capital)
 
-                window_result = {
+                window_result: dict[str, float | int | datetime] = {
                     "window_num": window["window_num"],
                     "train_start": window["train_start"],
                     "train_end": window["train_end"],
@@ -653,22 +684,26 @@ class BacktestExecutor:
                     "test_size": len(test_quotes),
                     "total_pnl": consistent_metrics["total_pnl"],
                     "return_pct": consistent_metrics["return_pct"],
-                    "win_rate": float(result.performance.win_rate) if result.performance else 0.0,
+                    "win_rate": float(_performance_of(result).win_rate)
+                    if result.performance
+                    else 0.0,
                     "sharpe_ratio": (
-                        float(result.performance.sharpe_ratio)
-                        if result.performance and result.performance.sharpe_ratio
+                        float(_sharpe_of(result))
+                        if result.performance and _sharpe_of(result)
                         else 0.0
                     ),
                     "max_drawdown": (
-                        float(result.performance.max_drawdown_percentage)
+                        float(_performance_of(result).max_drawdown_percentage)
                         if result.performance
                         else 0.0
                     ),
-                    "total_trades": result.performance.total_trades if result.performance else 0,
+                    "total_trades": _performance_of(result).total_trades
+                    if result.performance
+                    else 0,
                     "final_capital": consistent_metrics["final_capital"],
                     "avg_trade_pnl": (
-                        consistent_metrics["total_pnl"] / result.performance.total_trades
-                        if result.performance and result.performance.total_trades > 0
+                        consistent_metrics["total_pnl"] / _performance_of(result).total_trades
+                        if result.performance and _performance_of(result).total_trades > 0
                         else 0.0
                     ),
                 }
@@ -695,9 +730,9 @@ class BacktestExecutor:
             return []
 
         # Aggregate results across windows
-        sharpe_values = [w["sharpe_ratio"] for w in window_results]
-        return_values = [w["return_pct"] for w in window_results]
-        drawdown_values = [w["max_drawdown"] for w in window_results]
+        sharpe_values = [_num(w["sharpe_ratio"]) for w in window_results]
+        return_values = [_num(w["return_pct"]) for w in window_results]
+        drawdown_values = [_num(w["max_drawdown"]) for w in window_results]
 
         avg_sharpe = np.mean(sharpe_values)
         std_sharpe = np.std(sharpe_values)
@@ -728,9 +763,11 @@ class BacktestExecutor:
             "sharpe_max": np.max(sharpe_values),
             "return_min": np.min(return_values),
             "return_max": np.max(return_values),
-            "win_rate": np.mean([w["win_rate"] for w in window_results]),
-            "total_trades": np.sum([w["total_trades"] for w in window_results]),
-            "modules_active": list(self.raw_config["modules"]["filters"].keys()),
+            "win_rate": float(np.mean([_num(w["win_rate"]) for w in window_results])),
+            "total_trades": int(np.sum([_num(w["total_trades"]) for w in window_results])),
+            "modules_active": list(
+                cfg_dict(cfg_dict(self.raw_config.get("modules"))["filters"]).keys()
+            ),
             "learning_engine": None,
             "thresholds": thresholds_helper(create_strategy_config_helper()),
         }

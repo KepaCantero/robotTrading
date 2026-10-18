@@ -104,6 +104,7 @@ class TimeSeriesQuery:
     aggregation_type: AggregationType | None = None
     aggregation_interval_minutes: int = 5  # Default: 5-minute candles
     tags_filter: dict[str, str] | None = None
+    limit: int | None = None  # BUG FIX: QuestDBConnector usaba query.limit inexistente
 
     def validate(self) -> bool:
         """Validate query parameters."""

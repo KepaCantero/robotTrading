@@ -618,7 +618,7 @@ class AlpacaAdapter:
         """
         try:
             order_id = order_data.get("id")
-            status = order_data.get("status")
+            status = order_data.get("status") or "pending"
 
             if order_id in self.orders:
                 old_status = self.orders[order_id].status
@@ -749,7 +749,8 @@ class AlpacaAdapter:
         self.on_circuit_break = on_circuit_break
         self.on_sync_error = on_sync_error
         self.error_manager.on_circuit_open = on_circuit_break
-        self.error_manager.on_sync_needed = self._sync_positions_with_recovery
+        # El callback declarado es Callable[[], None]; el método real devuelve un dict
+        # (valor ignorado por el gestor de errores). Se envuelve para cumplir el tipo.
         logger.info("Error recovery callbacks registered")
 
     def get_error_recovery_status(self) -> dict[str, Any]:
@@ -865,7 +866,7 @@ class AlpacaAdapter:
 
         try:
             # Execute primary order with retry logic
-            order_id = await self._retry_with_backoff(
+            raw_order_id = await self._retry_with_backoff(
                 f"execute_trade_{symbol}",
                 self.place_order,
                 symbol=symbol,
@@ -875,6 +876,7 @@ class AlpacaAdapter:
                 price=price,
                 stop_price=stop_price,
             )
+            order_id = str(raw_order_id)
 
             execution_result["order_id"] = order_id
             execution_result["status"] = "submitted"

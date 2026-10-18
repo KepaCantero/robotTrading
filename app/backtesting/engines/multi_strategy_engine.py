@@ -19,9 +19,10 @@ import logging
 from collections import defaultdict
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 import pandas as pd
+from pydantic import BaseModel
 
 from app.backtesting.backtesting_compliance import (
     BacktestingComplianceResult,
@@ -30,6 +31,7 @@ from app.backtesting.backtesting_compliance import (
 from app.backtesting.base_engine import BaseBacktestEngine, EngineType
 from app.backtesting.models import BacktestConfig, BacktestResult, PerformanceMetrics
 from app.backtesting.signal_diagnostic_logger import SignalDiagnosticLogger
+from app.services._strategy_stock_allocator import AllocationResult
 from app.services.dynamic_capital_reallocation import DynamicCapitalReallocationEngine
 from app.services.portfolio_config_manager import (
     PortfolioConfigManager,
@@ -42,6 +44,7 @@ from app.shared.config.params.strategy_config import StockAllocationSettings
 
 if TYPE_CHECKING:
     from app.domain.models.market_data import Quote
+    from app.domain.models.signal import MarketData, Signal
     from app.domain.strategies.base import BaseStrategy
     from app.services.multi_strategy_allocation import MultiStrategyAllocationManager
 
@@ -58,22 +61,14 @@ class MultiStrategyConfig(BacktestConfig):
     early_abort_loss_pct: Decimal = Decimal("0.20")
 
 
-class MultiStrategyResult:
+class MultiStrategyResult(BaseModel):
     """Result from multi-strategy backtest."""
 
-    def __init__(
-        self,
-        per_strategy: dict[str, dict],
-        combined: dict,
-        allocation: dict,
-        results_by_strategy: dict[str, BacktestResult],
-        stock_allocation: dict | None = None,
-    ):
-        self.per_strategy = per_strategy
-        self.combined = combined
-        self.allocation = allocation
-        self.results_by_strategy = results_by_strategy
-        self.stock_allocation = stock_allocation
+    per_strategy: dict[str, dict]
+    combined: dict
+    allocation: dict
+    results_by_strategy: dict[str, BacktestResult]
+    stock_allocation: dict | None = None
 
 
 class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiStrategyResult]):
@@ -140,19 +135,23 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
         self.early_abort_loss_pct = early_abort_loss_pct or Decimal("0.20")
 
         # Initialize diagnostic logger
-        self.diagnostic_logger = SignalDiagnosticLogger() if enable_diagnostics else None
+        self.diagnostic_logger: SignalDiagnosticLogger | None = (
+            SignalDiagnosticLogger() if enable_diagnostics else None
+        )
 
         # Initialize Strategy Stock Allocator
         allocation_config = StockAllocationSettings()
         self.stock_allocator = StrategyStockAllocator(config=allocation_config)
-        self.allocation_result = None
+        self.allocation_result: AllocationResult | None = None
 
         # Initialize Dynamic Capital Reallocation Engine
         self.enable_dynamic_reallocation = enable_dynamic_reallocation
         if enable_dynamic_reallocation:
-            self.reallocation_engine = DynamicCapitalReallocationEngine(
-                rebalance_frequency_days=reallocation_frequency_days,
-                rolling_window_days=30,
+            self.reallocation_engine: DynamicCapitalReallocationEngine | None = (
+                DynamicCapitalReallocationEngine(
+                    rebalance_frequency_days=reallocation_frequency_days,
+                    rolling_window_days=30,
+                )
             )
             logger.info(
                 f"Dynamic Capital Reallocation Engine enabled (frequency: {reallocation_frequency_days} days)"
@@ -176,8 +175,8 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
 
     def run_backtest(
         self,
-        market_data: list[Quote] | list[Any],
-        signals: list[Any] | None = None,
+        market_data: list[object] | object,
+        signals: list[object] | None = None,
         start_date: datetime | None = None,
         end_date: datetime | None = None,
         **kwargs,
@@ -197,7 +196,7 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
         Returns:
             MultiStrategyResult with consolidated results per strategy
         """
-        quotes = market_data  # Alias for clarity
+        quotes = cast("list[Quote]", market_data)  # Alias for clarity
 
         logger.info(
             f"Starting multi-strategy backtest with ${self.total_capital:,.2f} total capital"
@@ -280,7 +279,12 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
                 total_portfolio_capital=self.total_capital,
                 reallocation_engine=self.reallocation_engine,
             )
-            result = backtester.run_backtest(filtered_quotes, signals, start_date, end_date)
+            result = backtester.run_backtest(
+                cast("list[MarketData | Quote]", filtered_quotes),
+                cast("list[Signal]", signals),
+                start_date,
+                end_date,
+            )
             results_by_strategy[strategy_name] = result
 
             # Early-abort check
@@ -300,7 +304,7 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
             consolidated["stock_allocation"] = {
                 "validation_passed": self.allocation_result.validation_passed,
                 "allocated_stocks": len(self.allocation_result.allocations),
-                "residual_capital": float(self.allocation_result.residual_capital),
+                "residual_capital": float(cast("Decimal", self.allocation_result.residual_capital)),
                 "validation_errors": self.allocation_result.validation_errors,
                 "allocation_method": "StrategyStockAllocator",
                 "decision_logs": (

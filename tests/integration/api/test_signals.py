@@ -28,7 +28,7 @@ class TestSignalsAPIEndpoints:
 
         app = FastAPI()
         app.include_router(router)
-        return TestClient(app)
+        return TestClient(app, headers={"X-API-Key": "test-integration-key-1"})
 
     @pytest.fixture
     def mock_signal(self):

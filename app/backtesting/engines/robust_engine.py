@@ -24,7 +24,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Optional, Union
+from typing import TYPE_CHECKING, Callable, Optional, Union, cast
 
 import pandas as pd
 
@@ -34,7 +34,10 @@ from app.backtesting.base_engine import BaseBacktestEngine, EngineType
 from app.shared.config.centralized_config import get_config
 
 if TYPE_CHECKING:
-    from app.backtesting.robust_engine.look_ahead_validator import ValidationResult
+    from app.backtesting.robust_engine.look_ahead_validator import (
+        LookAheadValidator,
+        ValidationResult,
+    )
     from app.domain.models.signal import Signal
     from app.domain.strategies.base import BaseStrategy
     from app.services.corporate_actions.handler import CorporateAction
@@ -126,7 +129,7 @@ class RobustBacktestConfig:
         if self.slippage_bps is None:
             self.slippage_bps = bt_config.base_slippage_bps
         if self.risk_free_rate is None:
-            self.risk_free_rate = bt_config.risk_free_rate
+            self.risk_free_rate = bt_config.default_risk_free_rate
 
         if self.end_date <= self.start_date:
             raise ValueError("end_date must be after start_date")
@@ -248,7 +251,7 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
         self._survivorship_adjuster = None
         self._performance_tracker = None
         self._pit_client = None
-        self._lookahead_validator = None
+        self._lookahead_validator: LookAheadValidator | None = None
 
     # =========================================================================
     # IMPLEMENTATION OF ABSTRACT METHODS
@@ -492,7 +495,7 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
         if shares <= 0:
             return
 
-        commission = self.config.commission_per_trade
+        commission = cast("Decimal", self.config.commission_per_trade)
         total_cost = Decimal(str(shares)) * price + commission
 
         if total_cost > self._capital:
@@ -528,7 +531,7 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
             return
 
         shares_to_sell = current_shares
-        commission = self.config.commission_per_trade
+        commission = cast("Decimal", self.config.commission_per_trade)
 
         proceeds = shares_to_sell * price - commission
         self._capital += proceeds

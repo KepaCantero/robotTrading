@@ -114,11 +114,16 @@ class VolatilityCalculator:
         vol_60d = self.calculate_historical_volatility(price_series, window=60)
         vol_252d = self.calculate_historical_volatility(price_series, window=252)
 
-        beta = self.calculate_beta(aligned_returns[0], aligned_returns[1])
-        downside_risk = self.calculate_downside_risk(stock_returns)
-        max_drawdown = self.calculate_max_drawdown(price_series)
+        # Valores por defecto del dominio (VolatilityMetrics) si el cálculo es None
+        beta_raw = self.calculate_beta(aligned_returns[0], aligned_returns[1])
+        beta = beta_raw if beta_raw is not None else Decimal("1.0")
+        downside_raw = self.calculate_downside_risk(stock_returns)
+        downside_risk = downside_raw if downside_raw is not None else Decimal("0.10")
+        max_drawdown_raw = self.calculate_max_drawdown(price_series)
+        max_drawdown = max_drawdown_raw if max_drawdown_raw is not None else Decimal("0.10")
 
-        sortino = self.calculate_sortino_ratio(stock_returns)
+        sortino_raw = self.calculate_sortino_ratio(stock_returns)
+        sortino = sortino_raw if sortino_raw is not None else Decimal("1.0")
         sharpe = self.calculate_sharpe_ratio(stock_returns)
         correlation = self.calculate_correlation(aligned_returns[0], aligned_returns[1])
 

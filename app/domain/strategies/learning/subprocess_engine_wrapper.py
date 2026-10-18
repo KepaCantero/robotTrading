@@ -27,6 +27,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
+from .base_learning_engine import BaseLearningEngine
+
 logger = logging.getLogger(__name__)
 
 # Engines that require subprocess mode (PyTorch-based)
@@ -85,7 +87,7 @@ def _worker_process(
         engine_type: Type of learning engine to create
         config: Configuration for the engine
     """
-    engine = None
+    engine: BaseLearningEngine | None = None
 
     try:
         # Set environment variables for single-threaded operation
@@ -112,6 +114,15 @@ def _worker_process(
 
             engine = ReinforcementLearningEngine(config)
         else:
+            response_queue.put(
+                SubprocessResponse(
+                    success=False,
+                    error=f"Unknown engine type: {engine_type}",
+                )
+            )
+            return
+
+        if engine is None:
             response_queue.put(
                 SubprocessResponse(
                     success=False,
@@ -151,12 +162,12 @@ def _worker_process(
                     response_queue.put(SubprocessResponse(success=True, result=result))
 
                 elif request.operation == EngineOperation.LOAD_MODEL:
-                    result = engine.load_model(request.model_path)
-                    response_queue.put(SubprocessResponse(success=result, result=result))
+                    loaded = engine.load_model(request.model_path)
+                    response_queue.put(SubprocessResponse(success=loaded, result=loaded))
 
                 elif request.operation == EngineOperation.SAVE_MODEL:
-                    result = engine.save_model(request.model_path)
-                    response_queue.put(SubprocessResponse(success=result, result=result))
+                    saved = engine.save_model(request.model_path)
+                    response_queue.put(SubprocessResponse(success=saved, result=saved))
 
             except Exception as e:
                 response_queue.put(SubprocessResponse(success=False, error=str(e)))
@@ -392,9 +403,17 @@ class SubprocessLearningEngineWrapper:
                 error="Failed to start subprocess",
             )
 
+        request_queue = self._request_queue
+        response_queue = self._response_queue
+        if request_queue is None or response_queue is None:
+            return SubprocessResponse(
+                success=False,
+                error="Failed to start subprocess",
+            )
+
         try:
-            self._request_queue.put(request)
-            response = self._response_queue.get(timeout=120)  # 2 minute timeout
+            request_queue.put(request)
+            response = response_queue.get(timeout=120)  # 2 minute timeout
             return response
         except Exception as e:
             return SubprocessResponse(

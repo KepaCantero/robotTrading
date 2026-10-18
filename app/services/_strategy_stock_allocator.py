@@ -42,7 +42,8 @@ except ImportError:
     STATSMODELS_AVAILABLE = False
 
 
-def ols(*args: object, **kwargs: object) -> object:
+def ols(*args: Any, **kwargs: Any) -> Any:
+    # Interfaz hacia statsmodels.OLS / fallback (terceros, sin stubs estrictos)
     return _OLS_IMPL(*args, **kwargs)
 
 
@@ -53,13 +54,18 @@ except ImportError:
     from app.shared.performance.statsmodels_fallback import adfuller, kpss
 
 # Optional ARCH/GARCH library
+ARCH_AVAILABLE = True
 try:
-    from arch import arch_model
-
-    ARCH_AVAILABLE = True
+    from arch import arch_model as _arch_model
 except ImportError:
     ARCH_AVAILABLE = False
-    arch_model = None
+
+
+def arch_model(*args: Any, **kwargs: Any) -> Any:
+    """Wrapper tipado de arch.arch_model (requiere ARCH_AVAILABLE)."""
+    if not ARCH_AVAILABLE:
+        raise ImportError("arch package is not installed")
+    return _arch_model(*args, **kwargs)
 
 
 class StockMetrics(BaseModel):
@@ -451,7 +457,7 @@ class StrategyStockAllocator:
             logger.error(f"Error calculating Hurst exponent: {e}", exc_info=True)
             return None
 
-    def classify_market_regime(self, prices: np.ndarray) -> dict[str, float | None]:
+    def classify_market_regime(self, prices: np.ndarray) -> dict[str, float | str | None]:
         """
         Classify market regime using Hurst exponent (short and long horizons).
 
@@ -463,7 +469,12 @@ class StrategyStockAllocator:
         """
         if len(prices) < 250:
             logger.warning(f"Insufficient data for regime classification: {len(prices)} < 250")
-            return {"H_short": None, "H_long": None, "regime": "unknown"}
+            early: dict[str, float | str | None] = {
+                "H_short": None,
+                "H_long": None,
+                "regime": "unknown",
+            }
+            return early
 
         # Calculate H_short (50 days)
         prices_short = prices[-50:] if len(prices) >= 50 else prices
@@ -490,7 +501,11 @@ class StrategyStockAllocator:
             else:
                 regime = "neutral"
 
-        result = {"H_short": h_short, "H_long": h_long, "regime": regime}
+        result: dict[str, float | str | None] = {
+            "H_short": h_short,
+            "H_long": h_long,
+            "regime": regime,
+        }
 
         logger.debug(f"Regime classification: {result}")
         return result
@@ -505,7 +520,7 @@ class StrategyStockAllocator:
         Returns:
             Dictionary with test results and stationarity type
         """
-        result = {
+        result: dict[str, Any] = {
             "adf_pvalue": None,
             "adf_stationary": False,
             "kpss_pvalue": None,
@@ -718,8 +733,8 @@ class StrategyStockAllocator:
             if ARCH_AVAILABLE:
                 try:
                     # Fit GARCH(1,1) model
-                    model = arch_model(clean_returns * 100, vol="Garch", p=1, q=1, rescale=False)
-                    fitted = model.fit(disp="of")
+                    model = arch_model(clean_returns * 100, vol="GARCH", p=1, q=1, rescale=False)
+                    fitted = model.fit(disp="off")
 
                     # Forecast volatility
                     forecast = fitted.forecast(horizon=self.config.GARCH_FORECAST_HORIZON)
@@ -1601,7 +1616,7 @@ class StrategyStockAllocator:
                     )
 
             # Check strategy exposure limits
-            strategy_totals = defaultdict(float)
+            strategy_totals: defaultdict[str, float] = defaultdict(float)
             for alloc in allocations.values():
                 if alloc.strategy:
                     strategy_totals[alloc.strategy] += alloc.weight
@@ -1739,7 +1754,7 @@ class StrategyStockAllocator:
         )
 
         # Assign pairs (limit per asset)
-        asset_pair_count = defaultdict(int)
+        asset_pair_count: defaultdict[str, int] = defaultdict(int)
         pairs_assigned = 0
         for pair_metrics_obj in sorted_pairs:
             ticker1, ticker2 = pair_metrics_obj.ticker1, pair_metrics_obj.ticker2
@@ -1978,7 +1993,7 @@ class StrategyStockAllocator:
                     )
 
                 # Second pass: Check strategy-level limits and cap if needed
-                strategy_totals = defaultdict(float)
+                strategy_totals: defaultdict[str, float] = defaultdict(float)
                 for alloc in final_allocations.values():
                     if alloc.strategy:
                         strategy_totals[alloc.strategy] += alloc.weight

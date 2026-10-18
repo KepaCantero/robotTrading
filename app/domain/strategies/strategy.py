@@ -30,6 +30,10 @@ if TYPE_CHECKING:
     from app.domain.models.market_data import Quote
     from app.domain.models.portfolio import Portfolio
 
+    from .learning.feature_extractor import FeatureExtractor
+    from .learning.subprocess_engine_wrapper import SubprocessLearningEngineWrapper
+    from .learning.supervised_learning_engine import SupervisedLearningEngine
+
 # BaseLearningEngine solo para type hints (no se ejecuta en runtime)
 
 logger = logging.getLogger(__name__)
@@ -148,7 +152,15 @@ class ModularMomentumStrategy(BaseStrategy):
         # Filtros modulares
         modules_config = config.get("modules", {})
         self.filters = []
-        filter_classes = {
+        filter_classes: dict[
+            str,
+            type[EMAFilter]
+            | type[RSIFilter]
+            | type[StochRSIFilter]
+            | type[MomentumFilter]
+            | type[VolumeFilter]
+            | type[ATRFilter],
+        ] = {
             "ema_filter": EMAFilter,
             "rsi_filter": RSIFilter,
             "stoch_rsi_filter": StochRSIFilter,
@@ -174,7 +186,8 @@ class ModularMomentumStrategy(BaseStrategy):
             if learning_config.get("enabled", False)
             else None
         )
-        self.learning_engine = None  # Se inicializará lazy cuando se necesite
+        # Se inicializará lazy cuando se necesite (engine concreto o wrapper)
+        self.learning_engine: "SupervisedLearningEngine | SubprocessLearningEngineWrapper | None" = None
 
         # Solo loguear que está configurado, pero NO crear la instancia
         if self._learning_config:
@@ -184,7 +197,7 @@ class ModularMomentumStrategy(BaseStrategy):
 
         # Feature extractor para learning engines (import lazy - solo cuando se necesite)
         # NO importar aquí para evitar bloqueos - se importará cuando realmente se use
-        self._feature_extractor = None
+        self._feature_extractor: FeatureExtractor | None = None
 
         # Thresholds configurables - lowered from 0.6 to 0.45 for less aggressive filtering
         self.min_success_probability = self.current_preset.get("min_confidence", 0.45)
@@ -549,7 +562,7 @@ class ModularMomentumStrategy(BaseStrategy):
                     }
                     logger.debug(
                         f"⚠️ Learning engine ({self.learning_engine.__class__.__name__}) no entrenado - usando predicción neutral. "
-                        f"Estado: enabled={self.learning_engine.enabled}, is_trained={self.learning_engine.is_trained}, model={'exists' if self.learning_engine.model else 'None'}"
+                        f"Estado: enabled={self.learning_engine.enabled}, is_trained={self.learning_engine.is_trained}, model={'exists' if getattr(self.learning_engine, 'model', None) else 'None'}"
                     )
 
             # 7. Crear señal
@@ -707,7 +720,9 @@ class ModularMomentumStrategy(BaseStrategy):
             indicators["atr_percentile"] = 50.0
 
         # StochRSI - CRITICAL: Use None instead of neutral 50.0 to force proper handling
-        stoch_rsi_k, stoch_rsi_d = self._calculate_stochastic_rsi(indicators["rsi"], period=14)
+        stoch_rsi_k, stoch_rsi_d = self._calculate_stochastic_rsi(
+            indicators["rsi"] if indicators["rsi"] is not None else 50.0, period=14
+        )
         indicators["stoch_rsi_k"] = stoch_rsi_k  # Can be None - filters must handle this
         indicators["stoch_rsi_d"] = stoch_rsi_d  # Can be None - filters must handle this
 
@@ -1092,8 +1107,8 @@ class ModularMomentumStrategy(BaseStrategy):
 
         # Reshape para (sequence_length, 1) - una sola feature (price change)
         if len(pct_changes) < sequence_length:
-            padding = np.zeros(sequence_length - len(pct_changes), dtype=np.float32)
-            pct_changes = np.concatenate([padding, pct_changes])
+            pad_array = np.zeros(sequence_length - len(pct_changes), dtype=np.float32)
+            pct_changes = np.concatenate([pad_array, pct_changes])
 
         sequence = pct_changes.reshape(sequence_length, 1)
         return sequence

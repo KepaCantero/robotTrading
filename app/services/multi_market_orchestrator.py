@@ -407,7 +407,7 @@ class MultiMarketOrchestrator:
         for i, symbol in enumerate(symbols):
             try:
                 sentiment_data = sentiment_results[i] if i < len(sentiment_results) else {}
-                if isinstance(sentiment_data, Exception):
+                if isinstance(sentiment_data, BaseException):
                     sentiment_data = {}
 
                 sentiment_score = Decimal(str(sentiment_data.get("sentiment_score", 0.0)))
@@ -450,7 +450,11 @@ class MultiMarketOrchestrator:
         Returns:
             Dict con resultados de ejecución
         """
-        results = {"executed": 0, "failed": 0, "total_value": Decimal("0")}
+        results: dict[str, int | Decimal] = {
+            "executed": 0,
+            "failed": 0,
+            "total_value": Decimal("0"),
+        }
 
         for signal in signals:
             if signal.action == "HOLD":

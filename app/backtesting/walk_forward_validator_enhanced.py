@@ -56,7 +56,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 from scipy import stats
@@ -64,21 +64,31 @@ from scipy import stats
 from app.backtesting.engine import SimpleBacktester
 
 if TYPE_CHECKING:
-    from app.backtesting.models import BacktestConfig
+    from app.backtesting.models import BacktestConfig, BacktestResult, PerformanceMetrics
     from app.domain.models.market_data import Quote
+    from app.engines.context_engine.regime_detectors.clustering_regime_detector import (
+        ClusteringRegimeDetector as _ClusteringRegimeDetector,
+    )
 
 # Optional regime detector (may not be available)
+ClusteringRegimeDetector: type[_ClusteringRegimeDetector] | None
 try:
     from app.engines.context_engine.regime_detectors.clustering_regime_detector import (
-        ClusteringRegimeDetector,
+        ClusteringRegimeDetector as _ClusteringRegimeDetectorImpl,
     )
 
     REGIME_DETECTOR_AVAILABLE = True
+    ClusteringRegimeDetector = _ClusteringRegimeDetectorImpl
 except ImportError:
     REGIME_DETECTOR_AVAILABLE = False
     ClusteringRegimeDetector = None
 
 logger = logging.getLogger(__name__)
+
+
+def _performance_of(backtest_result: BacktestResult) -> PerformanceMetrics:
+    """Narrowa ``BacktestResult.performance``: el engine siempre lo puebla."""
+    return cast("PerformanceMetrics", backtest_result.performance)
 
 
 # ============================================================================
@@ -374,10 +384,11 @@ class TomasiniWalkForwardValidator:
 
         # State tracking
         self.parameter_history: list[ParameterHistory] = []
-        self.regime_detector: ClusteringRegimeDetector | None = None
+        self.regime_detector: _ClusteringRegimeDetector | None = None
 
-        if self.regime_aware and REGIME_DETECTOR_AVAILABLE:
-            self.regime_detector = ClusteringRegimeDetector(config={"n_clusters": 3})
+        detector_cls = ClusteringRegimeDetector
+        if self.regime_aware and REGIME_DETECTOR_AVAILABLE and detector_cls is not None:
+            self.regime_detector = detector_cls(config={"n_clusters": 3})
         elif self.regime_aware and not REGIME_DETECTOR_AVAILABLE:
             logger.warning(
                 "Regime detection requested but dependencies not available. Regime-aware features disabled."
@@ -481,7 +492,7 @@ class TomasiniWalkForwardValidator:
             returns = np.diff(np.log(closes))
 
             # Detect regime using clustering
-            regimes = self.regime_detector.detect(returns)
+            regimes = cast("list[int]", self.regime_detector.detect(returns))
 
             # Get most common regime
             if regimes:
@@ -548,13 +559,13 @@ class TomasiniWalkForwardValidator:
 
                 # Extract optimization metric
                 if optimization_metric == "sharpe_ratio":
-                    score = float(result.performance.sharpe_ratio or 0)
+                    score = float(_performance_of(result).sharpe_ratio or 0)
                 elif optimization_metric == "total_return":
                     score = float(result.total_return)
                 elif optimization_metric == "sortino_ratio":
-                    score = float(result.performance.sortino_ratio or 0)
+                    score = float(_performance_of(result).sortino_ratio or 0)
                 else:
-                    score = float(result.performance.sharpe_ratio or 0)
+                    score = float(_performance_of(result).sharpe_ratio or 0)
 
                 # Track best
                 if score > best_score:
@@ -563,11 +574,11 @@ class TomasiniWalkForwardValidator:
                     best_metrics = {
                         "sharpe_ratio": score,
                         "total_return": float(result.total_return),
-                        "sortino_ratio": float(result.performance.sortino_ratio or 0),
-                        "max_drawdown": float(result.performance.max_drawdown_percentage or 0),
+                        "sortino_ratio": float(_performance_of(result).sortino_ratio or 0),
+                        "max_drawdown": float(_performance_of(result).max_drawdown_percentage or 0),
                         "volatility": 0.0,
-                        "total_trades": result.performance.total_trades,
-                        "win_rate": float(result.performance.win_rate),
+                        "total_trades": _performance_of(result).total_trades,
+                        "win_rate": float(_performance_of(result).win_rate),
                     }
 
             except Exception as e:
@@ -618,12 +629,12 @@ class TomasiniWalkForwardValidator:
 
             return {
                 "total_return": float(result.total_return),
-                "sharpe_ratio": float(result.performance.sharpe_ratio or 0),
-                "sortino_ratio": float(result.performance.sortino_ratio or 0),
-                "max_drawdown": float(result.performance.max_drawdown_percentage or 0),
+                "sharpe_ratio": float(_performance_of(result).sharpe_ratio or 0),
+                "sortino_ratio": float(_performance_of(result).sortino_ratio or 0),
+                "max_drawdown": float(_performance_of(result).max_drawdown_percentage or 0),
                 "volatility": 0.0,  # Not available in PerformanceMetrics
-                "total_trades": result.performance.total_trades,
-                "win_rate": float(result.performance.win_rate),
+                "total_trades": _performance_of(result).total_trades,
+                "win_rate": float(_performance_of(result).win_rate),
             }
 
         except Exception as e:
@@ -960,7 +971,7 @@ class TomasiniWalkForwardValidator:
 
         # Calculate stability for each parameter
         for param_name in param_names:
-            values = []
+            values: list[float] = []
             window_ids = []
 
             for h in history:
@@ -971,21 +982,21 @@ class TomasiniWalkForwardValidator:
             if len(values) < 2:
                 continue
 
-            values = np.array(values)
+            values_array = np.array(values)
 
             # Basic statistics
-            mean_value: float = float(np.mean(values))
-            std_value: float = float(np.std(values))
+            mean_value: float = float(np.mean(values_array))
+            std_value: float = float(np.std(values_array))
             cv: float = std_value / mean_value if mean_value != 0 else float("inf")
 
-            min_value: float = float(np.min(values))
-            max_value: float = float(np.max(values))
+            min_value: float = float(np.min(values_array))
+            max_value: float = float(np.max(values_array))
             range_pct = (max_value - min_value) / mean_value if mean_value != 0 else 0
 
             # Drift analysis (linear regression)
-            if len(values) >= 3:
+            if len(values_array) >= 3:
                 slope, _intercept, _r_value, p_value, _std_err = stats.linregress(
-                    window_ids, values
+                    window_ids, values_array
                 )
                 drift_trend = slope
                 drift_significance = p_value
@@ -994,7 +1005,7 @@ class TomasiniWalkForwardValidator:
                 drift_significance = 1.0
 
             # 95% confidence interval
-            if len(values) >= 2:
+            if len(values_array) >= 2:
                 ci = stats.t.interval(
                     0.95,
                     len(values) - 1,

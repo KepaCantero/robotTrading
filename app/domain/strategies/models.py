@@ -1411,6 +1411,8 @@ class CryptoAsset:
     exchanges: list[CryptoExchange]
     btc_correlation: float | None = None
     volatility_30d: Decimal | None = None
+    volatility_90d: Decimal | None = None
+    liquidity_score: Decimal = Decimal("100")  # Default to full liquidity
     circulating_supply: Decimal | None = None
     total_supply: Decimal | None = None
 

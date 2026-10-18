@@ -88,7 +88,7 @@ class WorkflowManager:
         """
         start_time = datetime.utcnow()
         errors = []
-        warnings = []
+        warnings: list[str] = []
         data = None
 
         logger.info(f"▶️  Starting stage: {stage_type.value}")
@@ -265,7 +265,7 @@ class WorkflowManager:
             "success_rate": successful_executions / total_executions,
             "avg_duration_ms": avg_duration,
             "last_execution": (
-                self.execution_history[-1].to_dict() if self.execution_history else None
+                self.execution_history[-1].__dict__ if self.execution_history else None
             ),
         }
 

@@ -34,7 +34,6 @@ from .protocols import (
     MetaLabelingService,
     Optimizable,
     PostTradeCheckable,
-    PreTradeCheckable,
     RegimeDetectable,
     RiskCalculable,
     TransactionCostModel,
@@ -72,7 +71,6 @@ __all__ = [
     "PostTradeCheckable",
     "PostTradeComplianceChecker",
     "PreTradeCheckResult",
-    "PreTradeCheckable",
     # Coordinators
     "PreTradeComplianceChecker",
     "RegimeDetectable",

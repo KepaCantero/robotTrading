@@ -61,7 +61,7 @@ from app.shared.config.params.risk_config import (
 from app.shared.config.params.shadow_mode_config import ShadowModeConfigParams
 from app.shared.config.params.strategy_config import StrategyConfig
 from app.shared.config.params.trading_thresholds import TradingThresholds
-from app.shared.config.signal_risk import MarketMicrostructureThresholds
+from app.shared.config.signal_risk import MarketMicrostructureThresholds, TradingCostThresholds
 from app.shared.config.validators import CompositeConfigValidator
 
 logger = logging.getLogger(__name__)
@@ -144,6 +144,10 @@ class CentralizedConfig(BaseSettings):
     market_microstructure: MarketMicrostructureThresholds = Field(
         default_factory=MarketMicrostructureThresholds,
         description="Market microstructure thresholds",
+    )
+    trading_costs: TradingCostThresholds = Field(
+        default_factory=TradingCostThresholds,
+        description="Trading cost thresholds for profitability validation",
     )
 
     # Strategy configurations

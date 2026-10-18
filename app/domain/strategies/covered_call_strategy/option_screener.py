@@ -109,14 +109,14 @@ class OptionScreener:
                             "theta": str(greeks.theta),
                             "gamma": str(greeks.gamma),
                             "vega": str(greeks.vega),
-                            "assignment_probability": prob,
+                            "assignment_probability": prob.value,
                         }
                     except Exception as e:
                         logger.warning(f"Error calculando Greeks: {e}")
 
                 options_passed.append(option)
             else:
-                options_failed[option.option_symbol or f"{option.strike}"] = failures
+                options_failed[f"{option.strike}"] = failures
 
         screening_time = (time.time() - start_time) * 1000  # ms
 
@@ -258,7 +258,10 @@ class OptionScreener:
 
         # 3. Assignment probability score (0-25 puntos)
         if hasattr(option, "metadata") and "assignment_probability" in option.metadata:
-            prob = option.metadata["assignment_probability"]
+            try:
+                prob = AssignmentProbability(option.metadata["assignment_probability"])
+            except ValueError:
+                prob = AssignmentProbability.MODERATE
             prob_scores = {
                 AssignmentProbability.VERY_LOW: 25,
                 AssignmentProbability.LOW: 20,
@@ -276,11 +279,11 @@ class OptionScreener:
         score += Decimal(str(dte_score))
 
         # 5. Liquidity score (0-10 puntos)
-        liquidity_score = 0
+        liquidity_score = 0.0
         if option.open_interest:
-            liquidity_score += min(5, option.open_interest / 100)
+            liquidity_score += min(5.0, option.open_interest / 100)
         if option.volume:
-            liquidity_score += min(5, option.volume / 100)
+            liquidity_score += min(5.0, option.volume / 100)
         score += Decimal(str(liquidity_score))
 
         return max(Decimal("0"), min(Decimal("100"), score))

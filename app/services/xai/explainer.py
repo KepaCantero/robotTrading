@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
+from typing import Any, cast
 
 import numpy as np
 from requests.exceptions import HTTPError, RequestException
@@ -76,12 +77,13 @@ class SHAPExplainer:
         try:
             # In production: shap_values = self.explainer.shap_values(sample)
             # Simulated SHAP values
-            prediction = float(self.model.predict(sample.reshape(1, -1))[0])
+            model = cast("Any", self.model)
+            prediction = float(model.predict(sample.reshape(1, -1))[0])
             base_value = float(np.mean(self.data))
 
             shap_values = np.random.randn(len(feature_names)) * 0.1
 
-            explanation = {
+            explanation: dict[str, str | float | list[dict[str, str | float | bool]]] = {
                 "prediction_id": prediction_id or f"pred_{datetime.now().timestamp()}",
                 "predicted_value": prediction,
                 "base_value": base_value,
@@ -95,7 +97,7 @@ class SHAPExplainer:
                     for i in range(len(feature_names))
                 ],
                 "timestamp": datetime.now().isoformat(),
-                "model_name": model_name,
+                "model_name": model_name if model_name is not None else "",
             }
 
             logger.info(f"✅ SHAP explanation generated for {prediction_id}")
@@ -216,11 +218,12 @@ class LIMEExplainer:
         try:
             # In production: exp = self.explainer.explain_instance(sample, self.model.predict)
             # Simulated LIME explanation
-            prediction = float(self.model.predict(sample.reshape(1, -1))[0])
+            model = cast("Any", self.model)
+            prediction = float(model.predict(sample.reshape(1, -1))[0])
             probability = float(np.random.uniform(0.5, 1.0))
 
             # Generate simulated LIME contributions
-            feature_contributions = []
+            feature_contributions: list[dict[str, str | float | bool]] = []
             contributions = np.random.randn(len(feature_names)) * 0.2
             contributions = contributions / np.sum(np.abs(contributions))
 
@@ -236,7 +239,9 @@ class LIMEExplainer:
                 )
                 contributions[idx] = 0
 
-            explanation = {
+            explanation: dict[
+                str, str | float | bool | int | list[dict[str, str | float | bool]]
+            ] = {
                 "prediction_id": prediction_id or f"pred_{datetime.now().timestamp()}",
                 "predicted_class": "positive" if prediction > 0.5 else "negative",
                 "predicted_probability": probability,

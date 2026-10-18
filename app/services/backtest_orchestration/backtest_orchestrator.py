@@ -188,6 +188,10 @@ class BacktestOrchestrator:
     #: Signal model caps volume at 10M shares (validator fallback)
     _VOLUME_CAP = Decimal("9999999")
 
+    #: optional param overrides injected by the optimizer (name → value);
+    #: merged on top of the strategy's YAML config before instantiation.
+    _strategy_param_overrides: dict | None = None
+
     def _build_strategy(self, name: str):
         """Instantiate the real strategy class for `name` (with fallback)."""
         import importlib
@@ -195,6 +199,7 @@ class BacktestOrchestrator:
         path = self._STRATEGIES.get(name, self._STRATEGIES["mean_reversion"])
         module_path, class_name = path.split(":")
         strategy_cls = getattr(importlib.import_module(module_path), class_name)
+        overrides = self._strategy_param_overrides or {}
         if name == "momentum_modular":
             import yaml
 
@@ -202,8 +207,34 @@ class BacktestOrchestrator:
             cfg = yaml.safe_load(
                 (repo_root / "config" / "strategies" / "momentum_modular.yaml").read_text()
             )
-            return strategy_cls({"name": "momentum_modular", "enabled": True, **cfg})
-        return strategy_cls({"name": name, "enabled": True})
+            strategy = strategy_cls({"name": "momentum_modular", "enabled": True, **cfg})
+        else:
+            strategy = strategy_cls({"name": name, "enabled": True})
+        # Optimizer overrides: the strategy's __init__ prioritises its YAML
+        # config, so re-apply the tuned values directly on the instance
+        # (they are plain attributes read at signal-generation time).
+        for key, value in overrides.items():
+            if hasattr(strategy, key):
+                current = getattr(strategy, key)
+                setattr(strategy, key, type(current)(value) if current is not None else value)
+        return strategy
+
+    @staticmethod
+    def _reset_live_trading_gates() -> None:
+        """Reset live-trading gates that misfire on historical replay.
+
+        The compliance engine and the Harris microstructure integrator keep
+        process-wide singletons whose quote-stuffing detector counts quotes
+        per WALL-CLOCK second. Replaying years of daily bars in a couple of
+        seconds looks like 150+ quotes/sec, and state accumulated by earlier
+        runs in the same process trips "DO NOT TRADE" for every fill.
+        Backtests are offline simulations: start each one from clean gates.
+        """
+        from app.engines.execution_engine.microstructure import harris_integration
+        from app.services.compliance.compliance_engine import ComplianceEngine
+
+        harris_integration._harris_integrator = None
+        ComplianceEngine._instance = None
 
     def _run_real_backtest(self, config) -> BacktestResult:
         """Synchronous real backtest (worker thread)."""
@@ -258,6 +289,8 @@ class BacktestOrchestrator:
                 "The strategy generated no signals in the selected period — "
                 "try a longer window or another strategy"
             )
+
+        self._reset_live_trading_gates()
 
         engine = BacktestEngine(
             EngineConfig(

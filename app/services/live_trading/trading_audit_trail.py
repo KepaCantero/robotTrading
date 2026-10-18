@@ -270,7 +270,7 @@ class AuditPersistence:
                 params.append(end_date.isoformat())
 
             query += " ORDER BY timestamp DESC LIMIT ? OFFSET ?"
-            params.extend([limit, offset])
+            params.extend([str(limit), str(offset)])
 
             cursor = conn.execute(query, params)
             return [dict(row) for row in cursor.fetchall()]
@@ -632,7 +632,7 @@ class TradingAuditTrail:
                         time_diff = (exec_event.timestamp - trade_event.timestamp).total_seconds()
                         execution_times.append(time_diff)
             if execution_times:
-                avg_execution_time = np.mean(execution_times)
+                avg_execution_time = float(np.mean(execution_times))
 
         # Count critical and high risk
         critical_count = len([e for e in alert_events if e.details.get("severity") == "critical"])
@@ -673,7 +673,7 @@ class TradingAuditTrail:
                 [e for e in self.events if e.event_type == event_type]
             )
 
-        risk_levels = {}
+        risk_levels: dict[str, int] = {}
         for event in self.events:
             if event.risk_level:
                 risk_levels[event.risk_level] = risk_levels.get(event.risk_level, 0) + 1

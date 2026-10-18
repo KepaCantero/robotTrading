@@ -12,7 +12,7 @@ the required methods automatically satisfies the protocol.
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING, Callable, Protocol
 
 logger = logging.getLogger(__name__)
 
@@ -94,9 +94,8 @@ class ChangeDetectorProtocol(Protocol):
     def detect_change(
         self,
         symbol: str,
-        get_history_func: callable,
+        get_history_func: Callable,
         lookback_periods: int = 10,
-        threshold: float = 0.1,
     ) -> RegimeChange | None:
         """Detect regime change for a symbol."""
         ...

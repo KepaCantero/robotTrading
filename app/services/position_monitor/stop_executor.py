@@ -174,10 +174,29 @@ class StopExecutor:
                     stop_type=StopType.STOP_LOSS,
                     symbol=position.symbol,
                     quantity=position.quantity,
-                    requested_price=position.stop_loss_price,
+                    requested_price=(
+                        position.stop_loss_price
+                        if position.stop_loss_price is not None
+                        else position.current_price
+                    ),
                     error_message=f"Failed after {retry_attempts + 1} attempts: {e!s}",
                     executed_at=datetime.now(timezone.utc),
                 )
+
+        # Inalcanzable en la práctica (bucle con retry_attempts >= 0 siempre ejecuta)
+        return StopExecutionResult(
+            success=False,
+            stop_type=StopType.STOP_LOSS,
+            symbol=position.symbol,
+            quantity=position.quantity,
+            requested_price=(
+                position.stop_loss_price
+                if position.stop_loss_price is not None
+                else position.current_price
+            ),
+            error_message="Retry loop did not execute",
+            executed_at=datetime.now(timezone.utc),
+        )
 
     async def execute_take_profit(
         self, position: MonitoredPosition, retry_attempts: int = DEFAULT_RETRY_ATTEMPTS
@@ -252,10 +271,29 @@ class StopExecutor:
                     stop_type=StopType.TAKE_PROFIT,
                     symbol=position.symbol,
                     quantity=position.quantity,
-                    requested_price=position.take_profit_price,
+                    requested_price=(
+                        position.take_profit_price
+                        if position.take_profit_price is not None
+                        else position.current_price
+                    ),
                     error_message=f"Failed after {retry_attempts + 1} attempts: {e!s}",
                     executed_at=datetime.now(timezone.utc),
                 )
+
+        # Inalcanzable en la práctica (bucle con retry_attempts >= 0 siempre ejecuta)
+        return StopExecutionResult(
+            success=False,
+            stop_type=StopType.TAKE_PROFIT,
+            symbol=position.symbol,
+            quantity=position.quantity,
+            requested_price=(
+                position.take_profit_price
+                if position.take_profit_price is not None
+                else position.current_price
+            ),
+            error_message="Retry loop did not execute",
+            executed_at=datetime.now(timezone.utc),
+        )
 
     async def _execute_order(
         self,

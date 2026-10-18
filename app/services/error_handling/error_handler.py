@@ -290,7 +290,7 @@ class ErrorHandler:
             Exception: If all retries fail
         """
         delay = initial_delay
-        last_exception = None
+        last_exception: BaseException | None = None
 
         for attempt in range(max_retries + 1):
             try:
@@ -309,7 +309,9 @@ class ErrorHandler:
                         f"❌ All {max_retries + 1} attempts failed for {async_fn.__name__}"
                     )
 
-        raise last_exception
+        if last_exception is not None:
+            raise last_exception
+        raise RuntimeError("Retry loop exited without result")
 
     async def with_timeout(
         self, async_fn: Callable, timeout_seconds: float = 30.0, *args, **kwargs

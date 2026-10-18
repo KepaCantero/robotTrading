@@ -211,7 +211,11 @@ class CryptoScreener:
             )
 
         # Volatility check
-        if max_volatility is not None and asset.volatility_90d > max_volatility:
+        if (
+            max_volatility is not None
+            and asset.volatility_90d is not None
+            and asset.volatility_90d > max_volatility
+        ):
             failures.append(
                 f"Volatility too high: {asset.volatility_90d:.1f}% > {max_volatility:.1f}%"
             )

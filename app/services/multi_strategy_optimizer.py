@@ -10,12 +10,15 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 import optuna
 
 from app.backtesting.data_loader import DataLoader
-from app.backtesting.engines.multi_strategy_engine import MultiStrategyBacktester
+from app.backtesting.engines.multi_strategy_engine import (
+    MultiStrategyBacktester,
+    MultiStrategyResult,
+)
 from app.domain.strategies.factory import StrategyFactory
 from app.domain.strategies.mean_reversion import MeanReversionStrategy
 from app.domain.strategies.momentum import MomentumStrategy
@@ -105,7 +108,7 @@ class MultiStrategyOptimizer:
         # Pairs trading gets remainder to ensure sum = 1.0
         pairs_weight = max(0.05, 1.0 - momentum_weight - mean_reversion_weight)
 
-        params = {
+        params: dict[str, dict[str, Any]] = {
             "momentum": {
                 "name": "momentum",
                 "rsi_threshold": trial.suggest_float(
@@ -166,7 +169,7 @@ class MultiStrategyOptimizer:
         Returns:
             Dictionary of strategy instances
         """
-        strategies = {}
+        strategies: dict[str, Any] = {}
 
         # Create Momentum strategy
         momentum_config = params["momentum"].copy()
@@ -273,7 +276,9 @@ class MultiStrategyOptimizer:
             )
 
             # Run backtest
-            results = backtester.run_backtest(self.market_data, self.start_date, self.end_date)
+            results = backtester.run_backtest(
+                self.market_data, start_date=self.start_date, end_date=self.end_date
+            )
 
             # Extract metric based on objective
             if self.objective_metric == "sharpe":
@@ -331,14 +336,14 @@ class MultiStrategyOptimizer:
         if storage:
             study = optuna.create_study(
                 study_name=study_name,
-                direction=self.optimization_direction,
+                direction=cast("Literal['minimize', 'maximize']", self.optimization_direction),
                 storage=storage,
                 load_if_exists=resume,
             )
         else:
             study = optuna.create_study(
                 study_name=study_name,
-                direction=self.optimization_direction,
+                direction=cast("Literal['minimize', 'maximize']", self.optimization_direction),
             )
 
         # Run optimization
@@ -405,7 +410,7 @@ class MultiStrategyOptimizer:
 
         return best_config
 
-    def run_backtest_with_best_params(self) -> dict[str, Any]:
+    def run_backtest_with_best_params(self) -> MultiStrategyResult:
         """
         Run a final backtest with optimized parameters.
 
@@ -435,6 +440,8 @@ class MultiStrategyOptimizer:
             },
         )
 
-        results = backtester.run_backtest(self.market_data, self.start_date, self.end_date)
+        results = backtester.run_backtest(
+            self.market_data, start_date=self.start_date, end_date=self.end_date
+        )
 
         return results

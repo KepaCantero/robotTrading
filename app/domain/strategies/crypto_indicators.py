@@ -251,7 +251,7 @@ class CryptoIndicators:
         volatility = returns.std() * np.sqrt(365)  # 365 days for crypto
 
         # Risk-adjusted return (Sharpe-like ratio without risk-free rate)
-        risk_adj_return = total_return / volatility if volatility > 0 else 0
+        risk_adj_return = total_return / volatility if volatility > 0 else 0.0
 
         # Normalize to 0-100 scale
         # Assume reasonable range is -2 to +2 risk-adjusted returns

@@ -23,7 +23,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Protocol, Union, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, Union, cast, runtime_checkable
 
 import numpy as np
 from numpy.typing import NDArray
@@ -1046,7 +1046,7 @@ class FeatureImportanceAnalyzer:
         include_shap: bool = True,
         include_attention: bool = False,
         include_selection: bool = False,
-    ) -> dict[str, list[str] | dict[str, object] | None | dict[str, float]]:
+    ) -> dict[str, object]:
         """
         Análisis completo de importancia de features.
 
@@ -1063,7 +1063,7 @@ class FeatureImportanceAnalyzer:
         Returns:
             Dict con análisis completo
         """
-        results: dict[str, list[str] | dict[str, object] | dict[str, float] | None] = {
+        results: dict[str, object] = {
             "feature_names": feature_names or [f"feature_{i}" for i in range(X.shape[-1])],
             "shap_analysis": None,
             "attention_analysis": None,
@@ -1269,7 +1269,15 @@ class PermutationImportanceAnalyzer:
         X: FloatArray,
         y: FloatArray,
         feature_names: list[str] | None = None,
-    ) -> dict[str, str | dict[str, float] | list[tuple[str, float]]]:
+    ) -> dict[
+        str,
+        str
+        | dict[str, float]
+        | dict[str, dict[str, float]]
+        | list[tuple[str, float]]
+        | list[str]
+        | int,
+    ]:
         """
         Fallback implementation without sklearn.inspection.
 
@@ -1291,7 +1299,7 @@ class PermutationImportanceAnalyzer:
                 return {"error": "Model does not have predict method"}
 
             # Get baseline score
-            baseline_pred = model.predict(X)
+            baseline_pred = cast("FloatArray", np.asarray(model.predict(X)))
             if hasattr(y, "dtype") and np.issubdtype(y.dtype, np.floating):
                 # Regression
                 baseline_score = -np.mean((y - baseline_pred) ** 2)
@@ -1308,7 +1316,7 @@ class PermutationImportanceAnalyzer:
                 for _ in range(self.n_repeats):
                     X_permuted = X.copy()
                     rng.shuffle(X_permuted[:, i])
-                    permuted_pred = model.predict(X_permuted)
+                    permuted_pred = cast("FloatArray", np.asarray(model.predict(X_permuted)))
 
                     if hasattr(y, "dtype") and np.issubdtype(y.dtype, np.floating):
                         score = -np.mean((y - permuted_pred) ** 2)
@@ -1319,11 +1327,11 @@ class PermutationImportanceAnalyzer:
                 importances.append(float(np.mean(feat_scores)))
 
             # Normalize
-            importances = np.array(importances)
-            if np.sum(np.abs(importances)) > 0:
-                importances_normalized = np.abs(importances) / np.sum(np.abs(importances))
+            importances_arr = np.array(importances)
+            if np.sum(np.abs(importances_arr)) > 0:
+                importances_normalized = np.abs(importances) / np.sum(np.abs(importances_arr))
             else:
-                importances_normalized = np.zeros_like(importances)
+                importances_normalized = np.zeros_like(importances_arr)
 
             importance_dict = {
                 name: float(imp) for name, imp in zip(feature_names, importances_normalized)
@@ -1533,9 +1541,8 @@ class CorrelationAnalyzer:
 
         try:
             # Target correlations
-            results["target_correlations"] = self._calculate_target_correlations(
-                X, y, feature_names
-            )
+            target_correlations = self._calculate_target_correlations(X, y, feature_names)
+            results["target_correlations"] = target_correlations
 
             # Feature-feature correlations
             corr_matrix, highly_correlated = self._calculate_feature_correlations(X, feature_names)
@@ -1555,14 +1562,11 @@ class CorrelationAnalyzer:
                 )
 
             # Rank features by absolute correlation
-            _tc = results["target_correlations"]
-            if isinstance(_tc, dict):
-                ranked_by_correlation = sorted(
-                    _tc.items(),
-                    key=lambda x: abs(x[1]),
-                    reverse=True,
-                )
-                results["ranked_by_correlation"] = ranked_by_correlation
+            results["ranked_by_correlation"] = sorted(
+                target_correlations.items(),
+                key=lambda x: abs(x[1]),
+                reverse=True,
+            )
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error in correlation analysis: {e}")
@@ -1877,9 +1881,7 @@ class ComprehensiveFeatureAnalyzer:
 
     def __init__(
         self,
-        config: (
-            dict[str, str | int | float | bool | dict[str, str | int | float | bool]] | None
-        ) = None,
+        config: dict[str, object] | None = None,
     ):
         """
         Initialize comprehensive analyzer.
@@ -1976,9 +1978,9 @@ class ComprehensiveFeatureAnalyzer:
             try:
                 shap_result = self.shap_analyzer.explain_model(model, X, feature_names)
                 if "feature_importance" in shap_result:
-                    _fi = shap_result["feature_importance"]
-                    if isinstance(_fi, dict):
-                        all_importances["shap"] = _fi
+                    _fi_shap = shap_result["feature_importance"]
+                    if isinstance(_fi_shap, dict):
+                        all_importances["shap"] = _fi_shap
                         methods_used.append("shap")
             except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 logger.warning(f"SHAP analysis failed: {e}")
@@ -1990,15 +1992,19 @@ class ComprehensiveFeatureAnalyzer:
             if (include_permutation and y is not None)
             else False
         )
-        if _perm_enabled:
+        if _perm_enabled and y is not None:
             try:
                 perm_result = self.permutation_analyzer.calculate_importance(
                     model, X, y, feature_names
                 )
                 if "feature_importance" in perm_result:
-                    _fi = perm_result["feature_importance"]
-                    if isinstance(_fi, dict):
-                        all_importances["permutation"] = _fi
+                    _fi_perm = perm_result["feature_importance"]
+                    if isinstance(_fi_perm, dict):
+                        all_importances["permutation"] = {
+                            name: value
+                            for name, value in _fi_perm.items()
+                            if isinstance(value, (int, float))
+                        }
                         methods_used.append("permutation")
             except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 logger.warning(f"Permutation importance failed: {e}")
@@ -2014,9 +2020,9 @@ class ComprehensiveFeatureAnalyzer:
             try:
                 builtin_result = self.builtin_analyzer.calculate_importance(model, feature_names)
                 if builtin_result.get("supported", False):
-                    _fi = builtin_result.get("feature_importance")
-                    if isinstance(_fi, dict):
-                        all_importances["builtin"] = _fi
+                    _fi_builtin = builtin_result.get("feature_importance")
+                    if isinstance(_fi_builtin, dict):
+                        all_importances["builtin"] = _fi_builtin
                         methods_used.append("builtin")
             except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 logger.warning(f"Built-in importance failed: {e}")
@@ -2029,7 +2035,7 @@ class ComprehensiveFeatureAnalyzer:
                 | dict[str, float]
                 | list[str]
                 | list[tuple[str, str, float]]
-                | dict[str, dict[str, float]]
+                | list[tuple[str, float]]
                 | dict[str, dict[str, float]]
                 | None,
             ]
@@ -2041,7 +2047,7 @@ class ComprehensiveFeatureAnalyzer:
             if (include_correlation and y is not None)
             else False
         )
-        if _corr_enabled:
+        if _corr_enabled and y is not None:
             try:
                 correlation_result = self.correlation_analyzer.analyze(X, y, feature_names)
             except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
@@ -2080,7 +2086,9 @@ class ComprehensiveFeatureAnalyzer:
         if correlation_result is not None and "highly_correlated_pairs" in correlation_result:
             _hcp = correlation_result["highly_correlated_pairs"]
             if isinstance(_hcp, list):
-                highly_correlated = _hcp
+                highly_correlated = [
+                    cast("tuple[str, str, float]", pair) for pair in _hcp if isinstance(pair, tuple)
+                ]
 
         # Generate recommendations
         recommendations = self._generate_recommendations(
@@ -2137,7 +2145,7 @@ class ComprehensiveFeatureAnalyzer:
                 | dict[str, float]
                 | list[str]
                 | list[tuple[str, str, float]]
-                | dict[str, dict[str, float]]
+                | list[tuple[str, float]]
                 | dict[str, dict[str, float]]
                 | None,
             ]

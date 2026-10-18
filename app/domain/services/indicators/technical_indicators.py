@@ -945,6 +945,9 @@ class TechnicalIndicators:
         if not (is_valid_h and is_valid_l and is_valid_c):
             return None
 
+        if highs is None or lows is None or closes is None:
+            return None
+
         if self.use_pandas_ta:
             try:
                 df = pd.DataFrame({"high": highs, "low": lows, "close": closes})
@@ -1065,6 +1068,9 @@ class TechnicalIndicators:
         if not (is_valid_h and is_valid_l and is_valid_c):
             return None
 
+        if highs is None or lows is None or closes is None:
+            return None
+
         if self.use_pandas_ta:
             try:
                 df = pd.DataFrame({"high": highs, "low": lows, "close": closes})
@@ -1106,7 +1112,7 @@ class TechnicalIndicators:
             ROC value (as decimal, e.g., 0.05 for 5%) or None.
         """
         is_valid, prices = self._validate_input(data, min_length=period + 1, name="ROC")
-        if not is_valid:
+        if not is_valid or prices is None:
             return None
 
         if self.use_pandas_ta:

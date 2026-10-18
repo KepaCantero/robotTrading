@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import logging
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -41,6 +42,16 @@ CREATE TABLE IF NOT EXISTS swarm_events (
     payload_json TEXT NOT NULL DEFAULT '{}'
 );
 CREATE INDEX IF NOT EXISTS idx_swarm_events_run ON swarm_events(workflow_id);
+CREATE TABLE IF NOT EXISTS param_sets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    strategy TEXT NOT NULL,
+    params_json TEXT NOT NULL,
+    metrics_json TEXT NOT NULL DEFAULT '{}',
+    source TEXT NOT NULL DEFAULT 'optimizer',
+    note TEXT DEFAULT '',
+    created_at TEXT NOT NULL,
+    is_active INTEGER NOT NULL DEFAULT 0
+);
 """
 
 
@@ -138,6 +149,101 @@ class SwarmRunStore:
                 }
             )
         return runs
+
+    # ── Parameter sets (optimizer) ─────────────────────────────────────────
+
+    async def save_param_set(
+        self,
+        strategy: str,
+        params: dict,
+        metrics: dict | None = None,
+        source: str = "optimizer",
+        note: str = "",
+        activate: bool = False,
+    ) -> int:
+        """Persist a parameter set; optionally mark it as the active one."""
+        db = self._require_db()
+        if activate:
+            await db.execute("UPDATE param_sets SET is_active = 0 WHERE strategy = ?", (strategy,))
+        cursor = await db.execute(
+            "INSERT INTO param_sets (strategy, params_json, metrics_json, source, note, "
+            "created_at, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (
+                strategy,
+                json.dumps(params, default=str),
+                json.dumps(metrics or {}, default=str),
+                source,
+                note,
+                datetime.utcnow().isoformat(),
+                1 if activate else 0,
+            ),
+        )
+        await db.commit()
+        return int(cursor.lastrowid or 0)
+
+    async def list_param_sets(self, strategy: str | None = None) -> list[dict]:
+        """All parameter sets, newest first (optionally filtered by strategy)."""
+        db = self._require_db()
+        if strategy:
+            cursor = await db.execute(
+                "SELECT id, strategy, params_json, metrics_json, source, note, created_at, "
+                "is_active FROM param_sets WHERE strategy = ? ORDER BY id DESC",
+                (strategy,),
+            )
+        else:
+            cursor = await db.execute(
+                "SELECT id, strategy, params_json, metrics_json, source, note, created_at, "
+                "is_active FROM param_sets ORDER BY id DESC"
+            )
+        rows = await cursor.fetchall()
+        return [
+            {
+                "id": row[0],
+                "strategy": row[1],
+                "params": _load_json(row[2]),
+                "metrics": _load_json(row[3]),
+                "source": row[4],
+                "note": row[5],
+                "created_at": row[6],
+                "is_active": bool(row[7]),
+            }
+            for row in rows
+        ]
+
+    async def activate_param_set(self, param_set_id: int) -> bool:
+        """Mark a parameter set as the active one for its strategy."""
+        db = self._require_db()
+        cursor = await db.execute("SELECT strategy FROM param_sets WHERE id = ?", (param_set_id,))
+        row = await cursor.fetchone()
+        if not row:
+            return False
+        await db.execute("UPDATE param_sets SET is_active = 0 WHERE strategy = ?", (row[0],))
+        await db.execute("UPDATE param_sets SET is_active = 1 WHERE id = ?", (param_set_id,))
+        await db.commit()
+        return True
+
+    async def get_active_param_set(self, strategy: str) -> dict | None:
+        """The active parameter set for a strategy, if any."""
+        db = self._require_db()
+        cursor = await db.execute(
+            "SELECT id, strategy, params_json, metrics_json, source, note, created_at, "
+            "is_active FROM param_sets WHERE strategy = ? AND is_active = 1 "
+            "ORDER BY id DESC LIMIT 1",
+            (strategy,),
+        )
+        row = await cursor.fetchone()
+        if not row:
+            return None
+        return {
+            "id": row[0],
+            "strategy": row[1],
+            "params": _load_json(row[2]),
+            "metrics": _load_json(row[3]),
+            "source": row[4],
+            "note": row[5],
+            "created_at": row[6],
+            "is_active": bool(row[7]),
+        }
 
     # ── Events ───────────────────────────────────────────────────────────────
 

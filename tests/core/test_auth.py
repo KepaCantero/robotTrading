@@ -108,11 +108,11 @@ def test_user_config(clean_env):
     os.environ["AUTH_API_KEY_TEST_KEY_USER"] = "testtrader"
 
     # Reset singletons
-    import app.core.auth as auth_module
+    from app.security.authentication import auth_attempt_tracker, jwt_token_manager, user_store
 
-    auth_module._user_store = None
-    auth_module._token_manager = None
-    auth_module._attempt_tracker = None
+    user_store._user_store = None
+    jwt_token_manager._token_manager = None
+    auth_attempt_tracker._attempt_tracker = None
 
 
 @pytest.fixture
@@ -329,9 +329,9 @@ class TestUserStoreThreadSafety:
 
     def test_user_store_singleton_initialization_with_lock(self, test_user_config):
         """Test that UserStore uses thread-safe initialization with locks."""
-        import app.core.auth as auth_module
+        from app.security.authentication import user_store
 
-        auth_module._user_store = None
+        user_store._user_store = None
 
         # Create multiple threads that all try to get the user store
         results = []
@@ -500,9 +500,9 @@ class TestJWTTokenManagerThreadSafety:
 
     def test_token_manager_singleton_initialization_with_lock(self, test_user_config):
         """Test that JWTTokenManager uses thread-safe initialization."""
-        import app.core.auth as auth_module
+        from app.security.authentication import jwt_token_manager
 
-        auth_module._token_manager = None
+        jwt_token_manager._token_manager = None
 
         results = []
         errors = []
@@ -643,9 +643,9 @@ class TestAuthAttemptTrackerThreadSafety:
 
     def test_attempt_tracker_singleton_initialization_with_lock(self, test_user_config):
         """Test that AuthAttemptTracker uses thread-safe initialization."""
-        import app.core.auth as auth_module
+        from app.security.authentication import auth_attempt_tracker
 
-        auth_module._attempt_tracker = None
+        auth_attempt_tracker._attempt_tracker = None
 
         results = []
         errors = []
@@ -805,9 +805,9 @@ class TestGetCurrentUserOptional:
     async def test_no_credentials_returns_none(self, test_user_config):
         """Test that no credentials returns None."""
         # Reset the attempt tracker to ensure clean state
-        import app.core.auth as auth_module
+        from app.security.authentication import auth_attempt_tracker
 
-        auth_module._attempt_tracker = None
+        auth_attempt_tracker._attempt_tracker = None
 
         user = await get_current_user_optional(
             request_id="test_request", api_key=None, auth_header=None
@@ -818,9 +818,9 @@ class TestGetCurrentUserOptional:
     async def test_valid_api_key_returns_user(self, test_user_config):
         """Test valid API key returns user."""
         # Reset the attempt tracker to ensure clean state
-        import app.core.auth as auth_module
+        from app.security.authentication import auth_attempt_tracker
 
-        auth_module._attempt_tracker = None
+        auth_attempt_tracker._attempt_tracker = None
 
         user = await get_current_user_optional(
             request_id="test_request", api_key="sk_test_test_api_key_12345", auth_header=None
@@ -833,9 +833,9 @@ class TestGetCurrentUserOptional:
     async def test_invalid_api_key_returns_none(self, test_user_config):
         """Test invalid API key returns None."""
         # Reset the attempt tracker to ensure clean state
-        import app.core.auth as auth_module
+        from app.security.authentication import auth_attempt_tracker
 
-        auth_module._attempt_tracker = None
+        auth_attempt_tracker._attempt_tracker = None
 
         user = await get_current_user_optional(
             request_id="test_request", api_key="invalid_api_key", auth_header=None
@@ -870,9 +870,9 @@ class TestGetCurrentUserOptional:
     async def test_rate_limit_blocks_requests(self, test_user_config):
         """Test rate limiting blocks excessive requests."""
         # Reset the attempt tracker to ensure clean state
-        import app.core.auth as auth_module
+        from app.security.authentication import auth_attempt_tracker
 
-        auth_module._attempt_tracker = None
+        auth_attempt_tracker._attempt_tracker = None
 
         tracker = get_attempt_tracker()
 
@@ -890,9 +890,9 @@ class TestGetCurrentUserOptional:
     async def test_lockout_blocks_requests(self, test_user_config, mock_audit_logger):
         """Test lockout blocks requests."""
         # Reset the attempt tracker to ensure clean state
-        import app.core.auth as auth_module
+        from app.security.authentication import auth_attempt_tracker
 
-        auth_module._attempt_tracker = None
+        auth_attempt_tracker._attempt_tracker = None
 
         tracker = get_attempt_tracker()
         tracker._audit = mock_audit_logger

@@ -10,7 +10,7 @@ Following SOLID principles:
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol, TypedDict
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +25,15 @@ from app.domain.models.momentum import (
 
 if TYPE_CHECKING:
     from decimal import Decimal
+
+
+class PriceData(TypedDict):
+    """Datos de precio por símbolo (volumen en Decimal, resto float)."""
+
+    prices: list[float]
+    highs: list[float]
+    lows: list[float]
+    volumes: list[Decimal]
 
 
 class IndicatorCalculator(Protocol):
@@ -114,7 +123,12 @@ class IndicatorCalculator(Protocol):
         ...
 
     def calculate_all_indicators(
-        self, prices: list[float], highs: list[float], lows: list[float], volumes: list[Decimal]
+        self,
+        symbol: str,
+        prices: list[float],
+        highs: list[float],
+        lows: list[float],
+        volumes: list[Decimal],
     ) -> TechnicalIndicators:
         """Calculate all technical indicators at once."""
         ...
@@ -281,10 +295,10 @@ class PriceDataProvider(Protocol):
     Interface Segregation: Focused on data retrieval
     """
 
-    async def get_price_data(self, symbol: str, timeframe: Timeframe) -> dict[str, list[float]]:
+    async def get_price_data(self, symbol: str, timeframe: Timeframe) -> PriceData:
         """Get price data for a symbol."""
         ...
 
-    async def generate_mock_data(self, symbol: str, timeframe: Timeframe) -> dict[str, list[float]]:
+    async def generate_mock_data(self, symbol: str, timeframe: Timeframe) -> PriceData:
         """Generate mock price data for testing."""
         ...

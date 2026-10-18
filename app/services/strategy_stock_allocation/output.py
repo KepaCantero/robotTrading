@@ -8,39 +8,14 @@ and metrics for reporting and analysis.
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 import pandas as pd
-from pydantic import BaseModel
+
+if TYPE_CHECKING:
+    from app.services.strategy_stock_allocation.orchestrator import PairMetrics, StockMetrics
 
 logger = logging.getLogger(__name__)
-
-
-# Data models for type checking
-class StockMetrics(BaseModel):
-    """Metrics for a single stock."""
-
-    ticker: str
-    strategy: str | None = None
-    weight: float = 0.0
-    capital: float = 0.0
-    sps_score: float = 0.0
-    sortino_ratio: float | None = None
-    h_long: float | None = None
-    h_short: float | None = None
-    half_life_tau: float | None = None
-    garch_volatility: float | None = None
-    decision_log: str = ""
-
-
-class PairMetrics(BaseModel):
-    """Metrics for a trading pair."""
-
-    ticker1: str
-    ticker2: str
-    cointegration_score: float
-    correlation: float
-    half_life_tau: float | None = None
-    decision_log: str = ""
 
 
 class OutputGenerator:

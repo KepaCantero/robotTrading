@@ -18,7 +18,7 @@ import math
 from datetime import datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
-from typing import ClassVar, Union, cast
+from typing import TYPE_CHECKING, ClassVar, Mapping, Union, cast
 
 import numpy as np
 import pandas as pd
@@ -36,8 +36,13 @@ from app.backtesting.backtesting_compliance import (
 
 # Core backtesting modules (Fase 1 + Fase 2)
 from app.backtesting.core import BacktestConfigLoader, BacktestOrchestrator
-from app.backtesting.core.config_loader import YamlDict, cfg_dict
-from app.backtesting.core.error_handling import MutexError, TrainingError, train_with_retry
+from app.backtesting.core.config_loader import YamlDict, YamlValue, cfg_dict, get_section, get_value
+from app.backtesting.core.error_handling import (
+    MutexError,
+    StrategyProtocol,
+    TrainingError,
+    train_with_retry,
+)
 from app.backtesting.core.executor import ProcessPoolBacktestExecutor, SimpleBacktestExecutor
 from app.backtesting.core.memory_manager import AggressiveMemoryManager
 
@@ -50,11 +55,14 @@ from app.backtesting.data_split import (
     TrainValTestSplitter,
     validate_out_of_sample_performance,
 )
-from app.backtesting.engines.multi_strategy_engine import MultiStrategyBacktester
+from app.backtesting.engines.multi_strategy_engine import (
+    MultiStrategyBacktester,
+    MultiStrategyResult,
+)
 
 # Strategy factory (Phase 5: extracted from God Object)
 from app.backtesting.factories import StrategyFactory
-from app.backtesting.models import BacktestConfig, BacktestResult
+from app.backtesting.models import BacktestConfig, BacktestResult, PerformanceMetrics
 from app.backtesting.runners.monte_carlo_simulator import MonteCarloSimulator
 
 # SRP Extracted modules (Phase 6)
@@ -65,12 +73,31 @@ from app.backtesting.runners.result_aggregator import ResultAggregator
 # TODO: Create momentum_modular module. Using MomentumStrategy as alias.
 from app.domain.strategies.momentum import MomentumStrategy as ModularMomentumStrategy
 
+if TYPE_CHECKING:
+    from app.domain.strategies.base import BaseStrategy
+
 # Backtesting engine and models
 
 
 # Survivorship bias adjustment
 
 # Portfolio management
+
+
+def _performance_of(backtest_result: BacktestResult) -> PerformanceMetrics:
+    """Narrowa ``BacktestResult.performance``: los executors siempre lo pueblan."""
+    return cast("PerformanceMetrics", backtest_result.performance)
+
+
+def _sharpe_of(backtest_result: BacktestResult) -> float:
+    """Sharpe ratio como float (0.0 cuando el resultado no lo trae)."""
+    sharpe = _performance_of(backtest_result).sharpe_ratio
+    return float(sharpe) if sharpe else 0.0
+
+
+def _as_float(value: ResultValue) -> float:
+    """Convierte un valor de resultado numérico a float (identidad para floats)."""
+    return float(cast("int | float", value))
 
 
 class ComprehensiveBacktestRunner:
@@ -143,7 +170,9 @@ class ComprehensiveBacktestRunner:
         default_parallel = platform.system() != "Darwin"  # Disable on macOS
         self.parallel_enabled = bool(parallelization_cfg.get("enabled", default_parallel))
         max_workers_raw = parallelization_cfg.get("max_workers")
-        self.max_workers = int(max_workers_raw) if max_workers_raw is not None else None
+        self.max_workers = (
+            int(cast("int", max_workers_raw)) if max_workers_raw is not None else None
+        )
 
         # Integrar meta_analyzer si está habilitado
         meta_analysis_cfg: YamlDict = cfg_dict(self.raw_config.get("meta_analysis"))
@@ -163,7 +192,7 @@ class ComprehensiveBacktestRunner:
         # SRP: Initialize extracted modules (Phase 6)
         self.regime_analyzer = RegimeAnalyzer()
         self.monte_carlo_simulator = MonteCarloSimulator(
-            random_state=int(self.raw_config.get("random_state", 42))
+            random_state=get_value(self.raw_config, "random_state", 42)
         )
         self.result_aggregator = ResultAggregator(
             output_dir=self.output_dir,
@@ -408,7 +437,7 @@ class ComprehensiveBacktestRunner:
         mc_var_95 = 0.0
         mc_var_99 = 0.0
         if mc_results:
-            returns = [float(r.get("return_pct", 0)) for r in mc_results]
+            returns = [float(cast("int | float", r.get("return_pct", 0))) for r in mc_results]
             mc_var_95 = float(np.percentile(returns, 5)) if returns else 0.0
             mc_var_99 = float(np.percentile(returns, 1)) if returns else 0.0
 
@@ -452,20 +481,21 @@ class ComprehensiveBacktestRunner:
             if isinstance(module_config, dict):
                 module_cfg: YamlDict = module_config
                 # Contar thresholds y parámetros
-                if "thresholds" in module_cfg:
-                    count += len(module_cfg["thresholds"])
-                if "parameters" in module_cfg:
-                    count += len(module_cfg["parameters"])
+                thresholds = module_cfg.get("thresholds")
+                if isinstance(thresholds, (list, dict)):
+                    count += len(thresholds)
+                parameters = module_cfg.get("parameters")
+                if isinstance(parameters, (list, dict)):
+                    count += len(parameters)
 
         # Contar parámetros de learning engines
         learning_engines: YamlDict = cfg_dict(self.raw_config.get("learning_engines"))
         for _engine_name, engine_config in learning_engines.items():
-            if (
-                isinstance(engine_config, dict)
-                and engine_config.get("enabled", False)
-                and "config" in engine_config
-            ):
-                count += len(engine_config["config"])
+            if isinstance(engine_config, dict):
+                engine_cfg: YamlDict = engine_config
+                engine_subconfig = engine_cfg.get("config")
+                if engine_cfg.get("enabled", False) and isinstance(engine_subconfig, (list, dict)):
+                    count += len(engine_subconfig)
 
         # Parámetros base de backtest
         count += 6  # initial_capital, commission, slippage, max_position, stop_loss, take_profit
@@ -601,7 +631,7 @@ class ComprehensiveBacktestRunner:
 
         consistent_metrics = self._calculate_consistent_metrics(result, initial_capital)
 
-        result_dict = {
+        result_dict: dict[str, ResultValue] = {
             "test_type": "baseline",
             "test_name": "Baseline - All Modules Active",
             "modules_active": list(
@@ -611,15 +641,13 @@ class ComprehensiveBacktestRunner:
             "thresholds": self._extract_thresholds(strategy_config),
             "total_pnl": consistent_metrics["total_pnl"],
             "return_pct": consistent_metrics["return_pct"],
-            "win_rate": float(result.performance.win_rate),
-            "sharpe_ratio": (
-                float(result.performance.sharpe_ratio) if result.performance.sharpe_ratio else 0.0
-            ),
-            "max_drawdown": float(result.performance.max_drawdown_percentage),
-            "total_trades": result.performance.total_trades,
+            "win_rate": float(_performance_of(result).win_rate),
+            "sharpe_ratio": (float(_sharpe_of(result)) if _sharpe_of(result) else 0.0),
+            "max_drawdown": float(_performance_of(result).max_drawdown_percentage),
+            "total_trades": _performance_of(result).total_trades,
             "avg_trade_pnl": (
-                consistent_metrics["total_pnl"] / result.performance.total_trades
-                if result.performance.total_trades > 0
+                consistent_metrics["total_pnl"] / _performance_of(result).total_trades
+                if _performance_of(result).total_trades > 0
                 else 0.0
             ),
             "final_capital": consistent_metrics["final_capital"],
@@ -664,7 +692,7 @@ class ComprehensiveBacktestRunner:
         engine_types = ["supervised"]
 
         for engine_type in engine_types:
-            if not learning_engines_config.get(engine_type, {}).get("enabled", False):
+            if not cfg_dict(learning_engines_config.get(engine_type, {})).get("enabled", False):
                 logger.info(f"Skipping {engine_type} learning engine (disabled)")
                 continue
 
@@ -714,7 +742,7 @@ class ComprehensiveBacktestRunner:
 
             # Add any additional config parameters for the specific engine
             if "config" in engine_config:
-                adaptive_learning_config.update(engine_config["config"])
+                adaptive_learning_config.update(cfg_dict(engine_config["config"]))
 
             strategy_config = self._create_strategy_config()
             strategy_config["adaptive_learning"] = adaptive_learning_config
@@ -726,7 +754,7 @@ class ComprehensiveBacktestRunner:
 
             # Usar train_with_retry (Fase 3)
             training_successful = train_with_retry(
-                strategy=strategy,
+                strategy=cast("StrategyProtocol", strategy),
                 engine_type=engine_type,
                 use_subprocess=False,  # Usar multiprocessing como fallback
             )
@@ -754,7 +782,7 @@ class ComprehensiveBacktestRunner:
 
             consistent_metrics = self._calculate_consistent_metrics(result, initial_capital)
 
-            result_dict = {
+            result_dict: dict[str, ResultValue] = {
                 "test_type": f"learning_engine_{engine_type}",
                 "test_name": f"Learning Engine - {engine_type.capitalize()}",
                 "modules_active": list(cast("dict", strategy_config.get("modules", {})).keys()),
@@ -762,17 +790,13 @@ class ComprehensiveBacktestRunner:
                 "thresholds": self._extract_thresholds(strategy_config),
                 "total_pnl": consistent_metrics["total_pnl"],
                 "return_pct": consistent_metrics["return_pct"],
-                "win_rate": float(result.performance.win_rate),
-                "sharpe_ratio": (
-                    float(result.performance.sharpe_ratio)
-                    if result.performance.sharpe_ratio
-                    else 0.0
-                ),
-                "max_drawdown": float(result.performance.max_drawdown_percentage),
-                "total_trades": result.performance.total_trades,
+                "win_rate": float(_performance_of(result).win_rate),
+                "sharpe_ratio": (float(_sharpe_of(result)) if _sharpe_of(result) else 0.0),
+                "max_drawdown": float(_performance_of(result).max_drawdown_percentage),
+                "total_trades": _performance_of(result).total_trades,
                 "avg_trade_pnl": (
-                    consistent_metrics["total_pnl"] / result.performance.total_trades
-                    if result.performance.total_trades > 0
+                    consistent_metrics["total_pnl"] / _performance_of(result).total_trades
+                    if _performance_of(result).total_trades > 0
                     else 0.0
                 ),
                 "final_capital": consistent_metrics["final_capital"],
@@ -817,15 +841,16 @@ class ComprehensiveBacktestRunner:
         """
         logger.info(f"Running Monte Carlo Backtest ({'parallel' if parallel else 'sequential'})...")
 
-        mc_config = cfg_dict(self.raw_config["backtests"])["monte_carlo"]
-        num_simulations = mc_config.get("num_simulations", 100)
-        volatility_multiplier = cfg_dict(mc_config.get("volatility_multiplier", {})).get(
-            "default", 1.0
+        mc_config: YamlDict = cfg_dict(cfg_dict(self.raw_config["backtests"])["monte_carlo"])
+        num_simulations = get_value(mc_config, "num_simulations", 100)
+        volatility_multiplier = get_value(
+            cfg_dict(mc_config.get("volatility_multiplier")), "default", 1.0
         )
 
-        results = []
+        results: list[dict[str, ResultValue]] = []
 
         # Crear executor según configuración
+        executor: ProcessPoolBacktestExecutor | SimpleBacktestExecutor
         if parallel:
             executor = ProcessPoolBacktestExecutor(
                 self.backtest_config, max_processes=self.max_workers or 4
@@ -859,12 +884,14 @@ class ComprehensiveBacktestRunner:
             initial_capital = float(self.backtest_config.initial_capital)
             final_capital = float(result.final_capital)
 
-            result_dict = {
+            result_dict: dict[str, ResultValue] = {
                 "test_type": "monte_carlo",
                 "test_name": f"Monte Carlo - Simulation {sim_num + 1}",
                 "simulation_num": sim_num + 1,
                 "volatility_multiplier": volatility_multiplier,
-                "modules_active": list(cfg_dict(self.raw_config["modules"])["filters"].keys()),
+                "modules_active": list(
+                    cfg_dict(cfg_dict(self.raw_config["modules"])["filters"]).keys()
+                ),
                 "learning_engine": None,
                 "thresholds": self._extract_thresholds(strategy_config),
                 "total_pnl": final_capital - initial_capital,
@@ -873,19 +900,19 @@ class ComprehensiveBacktestRunner:
                     if initial_capital > 0
                     else 0.0
                 ),
-                "win_rate": float(result.performance.win_rate) if result.performance else 0.0,
+                "win_rate": float(_performance_of(result).win_rate) if result.performance else 0.0,
                 "sharpe_ratio": (
-                    float(result.performance.sharpe_ratio)
-                    if result.performance and result.performance.sharpe_ratio
-                    else 0.0
+                    float(_sharpe_of(result)) if result.performance and _sharpe_of(result) else 0.0
                 ),
                 "max_drawdown": (
-                    float(result.performance.max_drawdown_percentage) if result.performance else 0.0
+                    float(_performance_of(result).max_drawdown_percentage)
+                    if result.performance
+                    else 0.0
                 ),
-                "total_trades": result.performance.total_trades if result.performance else 0,
+                "total_trades": _performance_of(result).total_trades if result.performance else 0,
                 "avg_trade_pnl": (
-                    (final_capital - initial_capital) / result.performance.total_trades
-                    if result.performance and result.performance.total_trades > 0
+                    (final_capital - initial_capital) / _performance_of(result).total_trades
+                    if result.performance and _performance_of(result).total_trades > 0
                     else 0.0
                 ),
                 "final_capital": final_capital,
@@ -937,13 +964,13 @@ class ComprehensiveBacktestRunner:
         """
         logger.info("Running walk-forward backtest...")
 
-        wf_config = cfg_dict(self.raw_config.get("backtests", {})).get("walk_forward", {})
+        wf_config: YamlDict = get_section(self.raw_config.get("backtests"), "walk_forward")
 
         # Parámetros de ventana con valores default desde López de Prado
-        train_pct = wf_config.get("train_pct", 0.70)  # 70% training
-        test_pct = wf_config.get("test_pct", 0.30)  # 30% test
-        min_train_days = wf_config.get("min_train_days", 100)  # REDUCIDO: 100 días (era 252)
-        step_size_days = wf_config.get("step_size_days", 63)  # Quarterly (3 meses)
+        train_pct = get_value(wf_config, "train_pct", 0.70)  # 70% training
+        test_pct = get_value(wf_config, "test_pct", 0.30)  # 30% test
+        min_train_days = get_value(wf_config, "min_train_days", 100)  # REDUCIDO: 100 días (era 252)
+        step_size_days = get_value(wf_config, "step_size_days", 63)  # Quarterly (3 meses)
 
         logger.info(
             f"Walk-forward config: train={train_pct:.0%}, test={test_pct:.0%}, "
@@ -1015,7 +1042,7 @@ class ComprehensiveBacktestRunner:
 
         # Ejecutar backtest para cada ventana
         # IMPORTANTE: Usar SimpleBacktestExecutor para cada ventana (Regla López de Prado)
-        window_results = []
+        window_results: list[dict[str, ResultValue]] = []
 
         for window in windows:
             logger.info(
@@ -1074,22 +1101,26 @@ class ComprehensiveBacktestRunner:
                     # Métricas
                     "total_pnl": consistent_metrics["total_pnl"],
                     "return_pct": consistent_metrics["return_pct"],
-                    "win_rate": float(result.performance.win_rate) if result.performance else 0.0,
+                    "win_rate": float(_performance_of(result).win_rate)
+                    if result.performance
+                    else 0.0,
                     "sharpe_ratio": (
-                        float(result.performance.sharpe_ratio)
-                        if result.performance and result.performance.sharpe_ratio
+                        float(_sharpe_of(result))
+                        if result.performance and _sharpe_of(result)
                         else 0.0
                     ),
                     "max_drawdown": (
-                        float(result.performance.max_drawdown_percentage)
+                        float(_performance_of(result).max_drawdown_percentage)
                         if result.performance
                         else 0.0
                     ),
-                    "total_trades": result.performance.total_trades if result.performance else 0,
+                    "total_trades": _performance_of(result).total_trades
+                    if result.performance
+                    else 0,
                     "final_capital": consistent_metrics["final_capital"],
                     "avg_trade_pnl": (
-                        consistent_metrics["total_pnl"] / result.performance.total_trades
-                        if result.performance and result.performance.total_trades > 0
+                        consistent_metrics["total_pnl"] / _performance_of(result).total_trades
+                        if result.performance and _performance_of(result).total_trades > 0
                         else 0.0
                     ),
                 }
@@ -1118,9 +1149,9 @@ class ComprehensiveBacktestRunner:
 
         # Agregar resultados across windows
         # Seguir López de Prado: Reportar mean + std de métricas
-        sharpe_values = [w["sharpe_ratio"] for w in window_results]
-        return_values = [w["return_pct"] for w in window_results]
-        drawdown_values = [w["max_drawdown"] for w in window_results]
+        sharpe_values = [_as_float(w["sharpe_ratio"]) for w in window_results]
+        return_values = [_as_float(w["return_pct"]) for w in window_results]
+        drawdown_values = [_as_float(w["max_drawdown"]) for w in window_results]
 
         avg_sharpe = np.mean(sharpe_values)
         std_sharpe = np.std(sharpe_values)
@@ -1133,32 +1164,34 @@ class ComprehensiveBacktestRunner:
         stability_ratio = avg_sharpe / (std_sharpe + 1e-6)  # Avoid div by zero
 
         # Crear resultado consolidado
-        consolidated_result = {
+        consolidated_result: dict[str, ResultValue] = {
             "test_type": "walk_forward",
             "test_name": "Walk-Forward Validation",
             "num_windows": num_windows,
             "window_metrics": window_results,  # Métricas por ventana
             # Métricas agregadas (mean ± std)
-            "avg_sharpe": avg_sharpe,
-            "sharpe_std": std_sharpe,
-            "avg_return": avg_return,
-            "return_std": std_return,
-            "avg_max_drawdown": avg_drawdown,
-            "stability_ratio": stability_ratio,
+            "avg_sharpe": float(avg_sharpe),
+            "sharpe_std": float(std_sharpe),
+            "avg_return": float(avg_return),
+            "return_std": float(std_return),
+            "avg_max_drawdown": float(avg_drawdown),
+            "stability_ratio": float(stability_ratio),
             # Configuración
             "train_pct": train_pct,
             "test_pct": test_pct,
             "min_train_days": min_train_days,
             "step_size_days": step_size_days,
             # Métricas adicionales
-            "sharpe_min": np.min(sharpe_values),
-            "sharpe_max": np.max(sharpe_values),
-            "return_min": np.min(return_values),
-            "return_max": np.max(return_values),
-            "win_rate": np.mean([w["win_rate"] for w in window_results]),
-            "total_trades": np.sum([w["total_trades"] for w in window_results]),
+            "sharpe_min": float(np.min(sharpe_values)),
+            "sharpe_max": float(np.max(sharpe_values)),
+            "return_min": float(np.min(return_values)),
+            "return_max": float(np.max(return_values)),
+            "win_rate": float(np.mean([_as_float(w["win_rate"]) for w in window_results])),
+            "total_trades": int(np.sum([_as_float(w["total_trades"]) for w in window_results])),
             # Metadata
-            "modules_active": list(cfg_dict(self.raw_config["modules"])["filters"].keys()),
+            "modules_active": list(
+                cfg_dict(cfg_dict(self.raw_config["modules"])["filters"]).keys()
+            ),
             "learning_engine": None,
             "thresholds": self._extract_thresholds(self._create_strategy_config()),
         }
@@ -1214,20 +1247,17 @@ class ComprehensiveBacktestRunner:
         logger.info("Running Transformer optimization backtest...")
 
         try:
-            transformer_config = cfg_dict(self.raw_config.get("learning_engines", {})).get(
-                "transformer", {}
+            transformer_config: YamlDict = get_section(
+                cfg_dict(self.raw_config.get("learning_engines")), "transformer"
             )
             if not transformer_config.get("enabled", False):
                 logger.info("Transformer learning engine disabled, skipping optimization")
                 return []
 
             # Step 1: Determine safe date bounds for splitting
-            config_start = datetime.strptime(
-                cfg_dict(self.raw_config["input"])["start_date"], "%Y-%m-%d"
-            )
-            config_end = datetime.strptime(
-                cfg_dict(self.raw_config["input"])["end_date"], "%Y-%m-%d"
-            )
+            input_cfg: YamlDict = cfg_dict(self.raw_config.get("input"))
+            config_start = datetime.strptime(str(input_cfg["start_date"]), "%Y-%m-%d")
+            config_end = datetime.strptime(str(input_cfg["end_date"]), "%Y-%m-%d")
             split_start, split_end = self._get_safe_split_dates(config_start, config_end)
 
             # Step 2: Split data into train/validation/test (60%/20%/20%)
@@ -1251,7 +1281,7 @@ class ComprehensiveBacktestRunner:
             baseline_strategy = ModularMomentumStrategy(baseline_config)
 
             baseline_train_success = train_with_retry(
-                strategy=baseline_strategy,
+                strategy=cast("StrategyProtocol", baseline_strategy),
                 engine_type="transformer",
                 use_subprocess=False,
             )
@@ -1276,7 +1306,7 @@ class ComprehensiveBacktestRunner:
 
             logger.info(
                 f"Baseline metrics - PnL=${baseline_metrics['total_pnl']:.2f}, "
-                f"Sharpe={baseline_test_result.performance.sharpe_ratio or 0:.2f}"
+                f"Sharpe={_sharpe_of(baseline_test_result) or 0:.2f}"
             )
 
             # Step 5: Bayesian optimization of parameters
@@ -1293,7 +1323,7 @@ class ComprehensiveBacktestRunner:
             optimized_strategy = ModularMomentumStrategy(optimized_config)
 
             optimized_train_success = train_with_retry(
-                strategy=optimized_strategy,
+                strategy=cast("StrategyProtocol", optimized_strategy),
                 engine_type="transformer",
                 use_subprocess=False,
             )
@@ -1317,12 +1347,12 @@ class ComprehensiveBacktestRunner:
 
             logger.info(
                 f"Optimized metrics - PnL=${optimized_metrics['total_pnl']:.2f}, "
-                f"Sharpe={optimized_test_result.performance.sharpe_ratio or 0:.2f}"
+                f"Sharpe={_sharpe_of(optimized_test_result) or 0:.2f}"
             )
 
             # Step 9: Calculate improvement
-            baseline_sharpe = float(baseline_test_result.performance.sharpe_ratio or 0)
-            optimized_sharpe = float(optimized_test_result.performance.sharpe_ratio or 0)
+            baseline_sharpe = float(_sharpe_of(baseline_test_result) or 0)
+            optimized_sharpe = float(_sharpe_of(optimized_test_result) or 0)
 
             improvement_pct = 0.0
             if baseline_sharpe != 0:
@@ -1353,26 +1383,28 @@ class ComprehensiveBacktestRunner:
                 test_sharpe=optimized_sharpe,
             )
 
-            result_dict = {
+            result_dict: dict[str, ResultValue] = {
                 "test_type": "transformer_optimization",
                 "test_name": "Transformer Optimization",
                 "baseline_metrics": {
                     "total_pnl": baseline_metrics["total_pnl"],
                     "return_pct": baseline_metrics["return_pct"],
                     "sharpe_ratio": baseline_sharpe,
-                    "win_rate": float(baseline_test_result.performance.win_rate),
-                    "max_drawdown": float(baseline_test_result.performance.max_drawdown_percentage),
-                    "total_trades": baseline_test_result.performance.total_trades,
+                    "win_rate": float(_performance_of(baseline_test_result).win_rate),
+                    "max_drawdown": float(
+                        _performance_of(baseline_test_result).max_drawdown_percentage
+                    ),
+                    "total_trades": _performance_of(baseline_test_result).total_trades,
                 },
                 "optimized_metrics": {
                     "total_pnl": optimized_metrics["total_pnl"],
                     "return_pct": optimized_metrics["return_pct"],
                     "sharpe_ratio": optimized_sharpe,
-                    "win_rate": float(optimized_test_result.performance.win_rate),
+                    "win_rate": float(_performance_of(optimized_test_result).win_rate),
                     "max_drawdown": float(
-                        optimized_test_result.performance.max_drawdown_percentage
+                        _performance_of(optimized_test_result).max_drawdown_percentage
                     ),
-                    "total_trades": optimized_test_result.performance.total_trades,
+                    "total_trades": _performance_of(optimized_test_result).total_trades,
                 },
                 "improvement_pct": improvement_pct,
                 "pnl_improvement_pct": pnl_improvement,
@@ -1439,15 +1471,19 @@ class ComprehensiveBacktestRunner:
         logger.info("=" * 80)
 
         # Get ablation configuration
-        ablation_config = cfg_dict(self.raw_config.get("backtests", {})).get("ablation", {})
+        ablation_config: YamlDict = get_section(
+            cfg_dict(self.raw_config.get("backtests")), "ablation"
+        )
 
         # Get filters to test from config or use all enabled filters
-        modules_to_test = ablation_config.get("modules_to_test", [])
+        modules_to_test = cast("list[str]", ablation_config.get("modules_to_test", []))
         if not modules_to_test:
             # Default: test all enabled filters
-            modules_config = cfg_dict(self.raw_config.get("modules", {})).get("filters", {})
+            filters_cfg: YamlDict = get_section(cfg_dict(self.raw_config.get("modules")), "filters")
             modules_to_test = [
-                name for name, config in modules_config.items() if config.get("enabled", False)
+                name
+                for name, config in filters_cfg.items()
+                if isinstance(config, dict) and config.get("enabled", False)
             ]
 
         if not modules_to_test:
@@ -1484,17 +1520,13 @@ class ComprehensiveBacktestRunner:
 
         baseline_metrics = self._calculate_consistent_metrics(baseline_result, initial_capital)
 
-        baseline_sharpe = (
-            float(baseline_result.performance.sharpe_ratio)
-            if baseline_result.performance.sharpe_ratio
-            else 0.0
-        )
+        baseline_sharpe = float(_sharpe_of(baseline_result)) if _sharpe_of(baseline_result) else 0.0
         baseline_return = baseline_metrics["return_pct"]
         baseline_win_rate = (
-            float(baseline_result.performance.win_rate) if baseline_result.performance else 0.0
+            float(_performance_of(baseline_result).win_rate) if baseline_result.performance else 0.0
         )
         baseline_max_dd = (
-            float(baseline_result.performance.max_drawdown_percentage)
+            float(_performance_of(baseline_result).max_drawdown_percentage)
             if baseline_result.performance
             else 0.0
         )
@@ -1505,7 +1537,7 @@ class ComprehensiveBacktestRunner:
         logger.info(f"  Win Rate:     {baseline_win_rate:.2%}")
         logger.info(f"  Max DD:       {baseline_max_dd:.2f}%")
         logger.info(
-            f"  Total Trades: {baseline_result.performance.total_trades if baseline_result.performance else 0}"
+            f"  Total Trades: {_performance_of(baseline_result).total_trades if baseline_result.performance else 0}"
         )
 
         # Step 2: Run ablation tests for each filter
@@ -1513,7 +1545,7 @@ class ComprehensiveBacktestRunner:
         logger.info("STEP 2: Running ablation tests (disabling each filter)")
         logger.info("-" * 80)
 
-        ablation_results = []
+        ablation_results: list[dict[str, ResultValue]] = []
 
         for filter_name in modules_to_test:
             logger.info(f"\nTesting ablation: {filter_name} DISABLED")
@@ -1537,18 +1569,16 @@ class ComprehensiveBacktestRunner:
                 )
 
                 ablation_sharpe = (
-                    float(ablation_result.performance.sharpe_ratio)
-                    if ablation_result.performance.sharpe_ratio
-                    else 0.0
+                    float(_sharpe_of(ablation_result)) if _sharpe_of(ablation_result) else 0.0
                 )
                 ablation_return = ablation_metrics["return_pct"]
                 ablation_win_rate = (
-                    float(ablation_result.performance.win_rate)
+                    float(_performance_of(ablation_result).win_rate)
                     if ablation_result.performance
                     else 0.0
                 )
                 ablation_max_dd = (
-                    float(ablation_result.performance.max_drawdown_percentage)
+                    float(_performance_of(ablation_result).max_drawdown_percentage)
                     if ablation_result.performance
                     else 0.0
                 )
@@ -1570,7 +1600,7 @@ class ComprehensiveBacktestRunner:
                     + 0.2 * (win_rate_degradation / (abs(baseline_win_rate) + 1e-6))
                 )
 
-                result_dict = {
+                result_dict: dict[str, ResultValue] = {
                     "test_type": "ablation",
                     "test_name": f"Ablation - {filter_name}",
                     "filter_name": filter_name,
@@ -1584,14 +1614,15 @@ class ComprehensiveBacktestRunner:
                     "sharpe_ratio": ablation_sharpe,
                     "max_drawdown": ablation_max_dd,
                     "total_trades": (
-                        ablation_result.performance.total_trades
+                        _performance_of(ablation_result).total_trades
                         if ablation_result.performance
                         else 0
                     ),
                     "avg_trade_pnl": (
-                        ablation_metrics["total_pnl"] / ablation_result.performance.total_trades
+                        ablation_metrics["total_pnl"]
+                        / _performance_of(ablation_result).total_trades
                         if ablation_result.performance
-                        and ablation_result.performance.total_trades > 0
+                        and _performance_of(ablation_result).total_trades > 0
                         else 0.0
                     ),
                     "final_capital": ablation_metrics["final_capital"],
@@ -1632,7 +1663,7 @@ class ComprehensiveBacktestRunner:
         logger.info("-" * 80)
 
         ranked_results = sorted(
-            ablation_results, key=lambda x: x["combined_importance"], reverse=True
+            ablation_results, key=lambda x: _as_float(x["combined_importance"]), reverse=True
         )
 
         for rank, result in enumerate(ranked_results, 1):
@@ -1644,9 +1675,9 @@ class ComprehensiveBacktestRunner:
             )
 
         # Step 4: Create consolidated summary
-        importance_scores = [r["combined_importance"] for r in ablation_results]
-        sharpe_degradations = [r["sharpe_degradation"] for r in ablation_results]
-        return_degradations = [r["return_degradation_pct"] for r in ablation_results]
+        importance_scores = [_as_float(r["combined_importance"]) for r in ablation_results]
+        sharpe_degradations = [_as_float(r["sharpe_degradation"]) for r in ablation_results]
+        return_degradations = [_as_float(r["return_degradation_pct"]) for r in ablation_results]
 
         most_important = ranked_results[0] if ranked_results else None
         least_important = ranked_results[-1] if ranked_results else None
@@ -1656,11 +1687,15 @@ class ComprehensiveBacktestRunner:
         avg_sharpe_impact = np.mean(sharpe_degradations)
         avg_return_impact = np.mean(return_degradations)
 
-        helpful_filters = sum(1 for r in ablation_results if r["combined_importance"] > 0)
-        harmful_filters = sum(1 for r in ablation_results if r["combined_importance"] < 0)
+        helpful_filters = sum(
+            1 for r in ablation_results if _as_float(r["combined_importance"]) > 0
+        )
+        harmful_filters = sum(
+            1 for r in ablation_results if _as_float(r["combined_importance"]) < 0
+        )
         neutral_filters = len(ablation_results) - helpful_filters - harmful_filters
 
-        summary_dict = {
+        summary_dict: dict[str, ResultValue] = {
             "test_type": "ablation_summary",
             "test_name": "Ablation Study - Filter Importance Analysis",
             "baseline_metrics": {
@@ -1681,19 +1716,19 @@ class ComprehensiveBacktestRunner:
             "neutral_filters_count": neutral_filters,
             "most_important_filter": most_important["filter_name"] if most_important else None,
             "most_important_score": (
-                float(most_important["combined_importance"]) if most_important else 0.0
+                _as_float(most_important["combined_importance"]) if most_important else 0.0
             ),
             "least_important_filter": least_important["filter_name"] if least_important else None,
             "least_important_score": (
-                float(least_important["combined_importance"]) if least_important else 0.0
+                _as_float(least_important["combined_importance"]) if least_important else 0.0
             ),
             "filter_rankings": [
                 {
                     "rank": idx + 1,
                     "filter_name": r["filter_name"],
-                    "importance": float(r["combined_importance"]),
-                    "sharpe_degradation": float(r["sharpe_degradation"]),
-                    "return_degradation_pct": float(r["return_degradation_pct"]),
+                    "importance": _as_float(r["combined_importance"]),
+                    "sharpe_degradation": _as_float(r["sharpe_degradation"]),
+                    "return_degradation_pct": _as_float(r["return_degradation_pct"]),
                 }
                 for idx, r in enumerate(ranked_results)
             ],
@@ -1762,8 +1797,12 @@ class ComprehensiveBacktestRunner:
 
         try:
             # Step 1: Define parameter grid from configuration
-            grid_config = cfg_dict(self.raw_config.get("backtests", {})).get("grid_search", {})
-            param_grid_def = grid_config.get("param_grid", {})
+            grid_config: YamlDict = get_section(
+                cfg_dict(self.raw_config.get("backtests")), "grid_search"
+            )
+            param_grid_def: dict[str, list[float]] = cast(
+                "dict[str, list[float]]", cfg_dict(grid_config.get("param_grid"))
+            )
 
             # Default parameter grid if not specified
             if not param_grid_def:
@@ -1796,12 +1835,9 @@ class ComprehensiveBacktestRunner:
                 param_combinations.append(param_dict)
 
             # Step 3: Determine actual data bounds and validate against config
-            config_start = datetime.strptime(
-                cfg_dict(self.raw_config["input"])["start_date"], "%Y-%m-%d"
-            )
-            config_end = datetime.strptime(
-                cfg_dict(self.raw_config["input"])["end_date"], "%Y-%m-%d"
-            )
+            grid_input_cfg: YamlDict = cfg_dict(self.raw_config.get("input"))
+            config_start = datetime.strptime(str(grid_input_cfg["start_date"]), "%Y-%m-%d")
+            config_end = datetime.strptime(str(grid_input_cfg["end_date"]), "%Y-%m-%d")
 
             # Get actual data bounds from loaded quotes
             if self.quotes:
@@ -1860,7 +1896,7 @@ class ComprehensiveBacktestRunner:
 
             # Helper function to evaluate a single parameter combination
             def evaluate_param_set(
-                params: dict[str, ResultValue], param_idx: int
+                params: Mapping[str, float], param_idx: int
             ) -> dict[str, ResultValue] | None:
                 """
                 Evaluate a single parameter combination on train/val sets.
@@ -1906,7 +1942,7 @@ class ComprehensiveBacktestRunner:
                     train_success = True
                     if hasattr(strategy, "learning_engine") and strategy.learning_engine:  # pylint: disable=no-member
                         train_success = train_with_retry(
-                            strategy=strategy,
+                            strategy=cast("StrategyProtocol", strategy),
                             engine_type="supervised",
                             use_subprocess=False,
                         )
@@ -1923,7 +1959,7 @@ class ComprehensiveBacktestRunner:
                         initial_capital=initial_capital,
                     )
 
-                    val_sharpe = float(val_result.performance.sharpe_ratio or 0)
+                    val_sharpe = float(_sharpe_of(val_result) or 0)
                     val_return = (
                         (float(val_result.final_capital) - float(initial_capital))
                         / float(initial_capital)
@@ -1937,26 +1973,28 @@ class ComprehensiveBacktestRunner:
                         initial_capital=initial_capital,
                     )
 
-                    train_sharpe = float(train_result.performance.sharpe_ratio or 0)
+                    train_sharpe = float(_sharpe_of(train_result) or 0)
 
                     return {
                         "param_idx": param_idx,
-                        "params": params.copy(),
+                        "params": dict(params),
                         "train_sharpe": train_sharpe,
                         "val_sharpe": val_sharpe,
                         "val_return": val_return,
                         "win_rate": (
-                            float(val_result.performance.win_rate)
+                            float(_performance_of(val_result).win_rate)
                             if val_result.performance
                             else 0.0
                         ),
                         "max_drawdown": (
-                            float(val_result.performance.max_drawdown_percentage)
+                            float(_performance_of(val_result).max_drawdown_percentage)
                             if val_result.performance
                             else 0.0
                         ),
                         "total_trades": (
-                            val_result.performance.total_trades if val_result.performance else 0
+                            _performance_of(val_result).total_trades
+                            if val_result.performance
+                            else 0
                         ),
                     }
 
@@ -2056,7 +2094,7 @@ class ComprehensiveBacktestRunner:
                 initial_capital=initial_capital,
             )
 
-            test_sharpe = float(test_result.performance.sharpe_ratio or 0)
+            test_sharpe = float(_sharpe_of(test_result) or 0)
             test_return = (
                 (float(test_result.final_capital) - float(initial_capital))
                 / float(initial_capital)
@@ -2066,15 +2104,15 @@ class ComprehensiveBacktestRunner:
             logger.info("Test performance:")
             logger.info(f"  Sharpe Ratio: {test_sharpe:.3f}")
             logger.info(f"  Return:       {test_return:.2f}%")
-            logger.info(f"  Win Rate:     {float(test_result.performance.win_rate):.2%}")
+            logger.info(f"  Win Rate:     {float(_performance_of(test_result).win_rate):.2%}")
             logger.info(
-                f"  Max Drawdown: {float(test_result.performance.max_drawdown_percentage):.2f}%"
+                f"  Max Drawdown: {float(_performance_of(test_result).max_drawdown_percentage):.2f}%"
             )
 
             # Step 8: Validate OOS performance
             oos_validation = validate_out_of_sample_performance(
-                train_sharpe=best_result["train_sharpe"],
-                val_sharpe=best_result["val_sharpe"],
+                train_sharpe=_as_float(best_result["train_sharpe"]),
+                val_sharpe=_as_float(best_result["val_sharpe"]),
                 test_sharpe=test_sharpe,
                 min_performance_ratio=0.7,
             )
@@ -2096,7 +2134,7 @@ class ComprehensiveBacktestRunner:
             logger.info(f"  OOS validation: {'PASSED' if oos_validation else 'FAILED'}")
 
             # Step 10: Compile comprehensive results
-            result_dict = {
+            result_dict: dict[str, ResultValue] = {
                 "test_type": "grid_search",
                 "test_name": "Grid Search Hyperparameter Optimization",
                 # Best parameters
@@ -2108,9 +2146,9 @@ class ComprehensiveBacktestRunner:
                 "val_return": best_result["val_return"],
                 "test_return": test_return,
                 "val_win_rate": best_result["win_rate"],
-                "test_win_rate": float(test_result.performance.win_rate),
+                "test_win_rate": float(_performance_of(test_result).win_rate),
                 "val_max_drawdown": best_result["max_drawdown"],
-                "test_max_drawdown": float(test_result.performance.max_drawdown_percentage),
+                "test_max_drawdown": float(_performance_of(test_result).max_drawdown_percentage),
                 # Performance degradation
                 "sharpe_degradation_pct": sharpe_degradation,
                 "return_degradation_pct": return_degradation,
@@ -2167,7 +2205,7 @@ class ComprehensiveBacktestRunner:
     @staticmethod
     def _evaluate_param_set_static(
         config_path: str,
-        params: dict[str, ResultValue],
+        params: Mapping[str, float],
         param_idx: int,
         train_size: int,
         val_size: int,
@@ -2197,7 +2235,7 @@ class ComprehensiveBacktestRunner:
             # Full implementation would require significant refactoring
             return {
                 "param_idx": param_idx,
-                "params": params,
+                "params": dict(params),
                 "train_sharpe": 0.0,
                 "val_sharpe": 0.0,
                 "val_return": 0.0,
@@ -2236,27 +2274,27 @@ class ComprehensiveBacktestRunner:
         logger.info("=" * 80)
 
         # Get optimization config
-        opt_config = cfg_dict(self.raw_config.get("backtests", {})).get(
-            "hyperparameter_optimization", {}
+        opt_config: YamlDict = get_section(
+            cfg_dict(self.raw_config.get("backtests")), "hyperparameter_optimization"
         )
-        n_trials = opt_config.get("n_trials", 50)
-        timeout = opt_config.get("timeout", 600)
-        metric = opt_config.get("metric", "sharpe_ratio")
+        n_trials = get_value(opt_config, "n_trials", 50)
+        timeout = get_value(opt_config, "timeout", 600)
+        metric = get_value(opt_config, "metric", "sharpe_ratio")
 
         logger.info(f"Configuration: {n_trials} trials, {timeout}s timeout, optimizing {metric}")
 
         # Store results
-        trial_results = []
+        trial_results: list[dict[str, ResultValue]] = []
         best_result = None
         best_params = None
         best_value = float("-inf")
 
         # Get learning engine config
-        learning_config = cfg_dict(self.raw_config.get("learning_engines", {})).get(
-            "supervised", {}
+        learning_config: YamlDict = get_section(
+            cfg_dict(self.raw_config.get("learning_engines")), "supervised"
         )
-        algorithm = cfg_dict(learning_config.get("parameters", {})).get(
-            "algorithm", "random_forest"
+        algorithm = get_value(
+            cfg_dict(learning_config.get("parameters")), "algorithm", "random_forest"
         )
 
         logger.info(f"Optimizing {algorithm} learning engine")
@@ -2306,9 +2344,10 @@ class ComprehensiveBacktestRunner:
 
                 # Create modified config for this trial
                 trial_config = copy.deepcopy(self.raw_config)
-                trial_config.setdefault("learning_engines", {}).setdefault("supervised", {})
+                trial_config.setdefault("learning_engines", {})
+                cfg_dict(trial_config.get("learning_engines")).setdefault("supervised", {})
                 cfg_dict(cfg_dict(trial_config["learning_engines"])["supervised"])["parameters"] = (
-                    params
+                    cast("YamlValue", params)
                 )
                 cfg_dict(cfg_dict(trial_config["learning_engines"])["supervised"])[
                     "lookahead_days"
@@ -2337,7 +2376,7 @@ class ComprehensiveBacktestRunner:
                     value = cast("float", result.get(metric, 0) or 0)
 
                     # Store trial result
-                    trial_result = {
+                    trial_result: dict[str, ResultValue] = {
                         "trial_number": trial.number,
                         "params": params,
                         "lookahead_days": lookahead_days,
@@ -2421,7 +2460,7 @@ class ComprehensiveBacktestRunner:
         logger.info(f"Optimization complete: {len(study.trials)} trials")
 
         # Compile final results
-        final_results = {
+        final_results: dict[str, ResultValue] = {
             "test_type": "optuna_optimization",
             "test_name": "Optuna Hyperparameter Optimization",
             "algorithm": algorithm,
@@ -2475,10 +2514,10 @@ class ComprehensiveBacktestRunner:
             f"Sharpe: {baseline_metrics.get('sharpe_ratio', 0):.2f}"
         )
         logger.info(
-            f"  Optimized PnL:   ${final_results['best_result'].get('total_pnl', 0):,.2f} | "
-            f"Sharpe: {final_results['best_result'].get('sharpe_ratio', 0):.2f}"
+            f"  Optimized PnL:   ${cfg_dict(final_results['best_result']).get('total_pnl', 0):,.2f} | "
+            f"Sharpe: {cfg_dict(final_results['best_result']).get('sharpe_ratio', 0):.2f}"
         )
-        improvement = cfg_dict(final_results["improvement"])["pnl_diff"]
+        improvement = _as_float(cfg_dict(final_results["improvement"])["pnl_diff"])
         logger.info(
             f"  Improvement:     ${improvement:,.2f} ({'✅ BETTER' if improvement > 0 else '❌ WORSE'})"
         )
@@ -2520,10 +2559,12 @@ class ComprehensiveBacktestRunner:
         logger.info("=" * 80)
 
         # Configuración del split OOS
-        oos_config = cfg_dict(self.raw_config.get("backtests", {})).get("out_of_sample", {})
-        train_ratio = oos_config.get("train_ratio", 0.70)
-        acceptable_degradation = oos_config.get("acceptable_degradation_pct", 0.30)
-        concept_drift_threshold = oos_config.get("concept_drift_threshold", 0.50)
+        oos_config: YamlDict = get_section(
+            cfg_dict(self.raw_config.get("backtests")), "out_of_sample"
+        )
+        train_ratio = get_value(oos_config, "train_ratio", 0.70)
+        acceptable_degradation = get_value(oos_config, "acceptable_degradation_pct", 0.30)
+        concept_drift_threshold = get_value(oos_config, "concept_drift_threshold", 0.50)
 
         logger.info(f"OOS Configuration: {train_ratio:.0%} train, {1 - train_ratio:.0%} test")
         logger.info(f"Acceptable degradation: {acceptable_degradation:.0%}")
@@ -2549,8 +2590,8 @@ class ComprehensiveBacktestRunner:
         out_of_sample_quotes = [q for q in all_quotes if q.timestamp > split_date]
 
         # Use config values instead of hardcoded
-        min_test_size = oos_config.get("min_test_size", 100)
-        min_train_size = oos_config.get("min_train_size", 100)
+        min_test_size = get_value(oos_config, "min_test_size", 100)
+        min_train_size = get_value(oos_config, "min_train_size", 100)
 
         if len(in_sample_quotes) < min_train_size or len(out_of_sample_quotes) < min_test_size:
             logger.error(
@@ -2642,7 +2683,9 @@ class ComprehensiveBacktestRunner:
             try:
                 # Usar train_with_retry para robustez
                 training_success = train_with_retry(
-                    strategy=strategy, engine_type="supervised", use_subprocess=False
+                    strategy=cast("StrategyProtocol", strategy),
+                    engine_type="supervised",
+                    use_subprocess=False,
                 )
 
                 if training_success:
@@ -2679,12 +2722,12 @@ class ComprehensiveBacktestRunner:
 
         logger.info("In-Sample Results:")
         logger.info(f"  Return:       {in_sample_metrics['return_pct']:.2f}%")
-        logger.info(f"  Sharpe:       {float(in_sample_result.performance.sharpe_ratio or 0):.3f}")
-        logger.info(f"  Win Rate:     {float(in_sample_result.performance.win_rate):.2%}")
+        logger.info(f"  Sharpe:       {float(_sharpe_of(in_sample_result) or 0):.3f}")
+        logger.info(f"  Win Rate:     {float(_performance_of(in_sample_result).win_rate):.2%}")
         logger.info(
-            f"  Max DD:       {float(in_sample_result.performance.max_drawdown_percentage):.2%}"
+            f"  Max DD:       {float(_performance_of(in_sample_result).max_drawdown_percentage):.2%}"
         )
-        logger.info(f"  Total Trades: {in_sample_result.performance.total_trades}")
+        logger.info(f"  Total Trades: {_performance_of(in_sample_result).total_trades}")
 
         # Paso 7: Backtest out-of-sample con PARÁMETROS FROZEN
         # CRÍTICO: NO re-entrenar (López de Prado)
@@ -2703,27 +2746,29 @@ class ComprehensiveBacktestRunner:
 
         logger.info("Out-of-Sample Results:")
         logger.info(f"  Return:       {oos_metrics['return_pct']:.2f}%")
-        logger.info(f"  Sharpe:       {float(oos_result.performance.sharpe_ratio or 0):.3f}")
-        logger.info(f"  Win Rate:     {float(oos_result.performance.win_rate):.2%}")
-        logger.info(f"  Max DD:       {float(oos_result.performance.max_drawdown_percentage):.2%}")
-        logger.info(f"  Total Trades: {oos_result.performance.total_trades}")
+        logger.info(f"  Sharpe:       {float(_sharpe_of(oos_result) or 0):.3f}")
+        logger.info(f"  Win Rate:     {float(_performance_of(oos_result).win_rate):.2%}")
+        logger.info(
+            f"  Max DD:       {float(_performance_of(oos_result).max_drawdown_percentage):.2%}"
+        )
+        logger.info(f"  Total Trades: {_performance_of(oos_result).total_trades}")
 
         # Paso 8: Calcular degradación de performance
         logger.info("\n" + "-" * 80)
         logger.info("PERFORMANCE DEGRADATION ANALYSIS")
         logger.info("-" * 80)
 
-        is_return = in_sample_metrics["return_pct"]
-        oos_return = oos_metrics["return_pct"]
+        is_return = float(in_sample_metrics["return_pct"])
+        oos_return = float(oos_metrics["return_pct"])
 
-        is_sharpe = float(in_sample_result.performance.sharpe_ratio or 0)
-        oos_sharpe = float(oos_result.performance.sharpe_ratio or 0)
+        is_sharpe = float(_sharpe_of(in_sample_result) or 0)
+        oos_sharpe = float(_sharpe_of(oos_result) or 0)
 
-        is_win_rate = float(in_sample_result.performance.win_rate)
-        oos_win_rate = float(oos_result.performance.win_rate)
+        is_win_rate = float(_performance_of(in_sample_result).win_rate)
+        oos_win_rate = float(_performance_of(oos_result).win_rate)
 
-        is_max_dd = float(in_sample_result.performance.max_drawdown_percentage)
-        oos_max_dd = float(oos_result.performance.max_drawdown_percentage)
+        is_max_dd = float(_performance_of(in_sample_result).max_drawdown_percentage)
+        oos_max_dd = float(_performance_of(oos_result).max_drawdown_percentage)
 
         # Calcular drops (protección contra división por cero)
         return_drop = (
@@ -2841,7 +2886,7 @@ class ComprehensiveBacktestRunner:
         logger.info(f"  Degradation:   {(in_signal_quality - oos_signal_quality) * 100:+.1f}%")
 
         # Paso 10: Construir resultado completo
-        result_dict = {
+        result_dict: dict[str, ResultValue] = {
             "test_type": "out_of_sample",
             "test_name": "Out-of-Sample Validation",
             # Períodos
@@ -2861,7 +2906,7 @@ class ComprehensiveBacktestRunner:
                 "sharpe": float(is_sharpe),
                 "win_rate": float(is_win_rate),
                 "max_dd": float(is_max_dd),
-                "total_trades": in_sample_result.performance.total_trades,
+                "total_trades": _performance_of(in_sample_result).total_trades,
                 "total_pnl": float(in_sample_metrics["total_pnl"]),
                 "final_capital": float(in_sample_metrics["final_capital"]),
             },
@@ -2871,7 +2916,7 @@ class ComprehensiveBacktestRunner:
                 "sharpe": float(oos_sharpe),
                 "win_rate": float(oos_win_rate),
                 "max_dd": float(oos_max_dd),
-                "total_trades": oos_result.performance.total_trades,
+                "total_trades": _performance_of(oos_result).total_trades,
                 "total_pnl": float(oos_metrics["total_pnl"]),
                 "final_capital": float(oos_metrics["final_capital"]),
             },
@@ -2914,7 +2959,7 @@ class ComprehensiveBacktestRunner:
             "overall_status": "PASS" if (is_acceptable and not concept_drift_detected) else "FAIL",
             # Configuración de filtros
             "modules_active": (
-                list(cfg_dict(self.raw_config["modules"])["filters"].keys())
+                list(cfg_dict(cfg_dict(self.raw_config["modules"])["filters"]).keys())
                 if "modules" in self.raw_config
                 else []
             ),
@@ -3017,21 +3062,22 @@ class ComprehensiveBacktestRunner:
 
             multi_strategy_backtester = MultiStrategyBacktester(
                 allocation_manager=allocation_manager,
-                strategies=strategies,
+                # PairsTrading no hereda de BaseStrategy pero cumple el contrato
+                # estructural que usa el engine (duck typing).
+                strategies=cast("dict[str, BaseStrategy]", strategies),
                 config_params=config_params,
-                enable_diagnostics=cfg_dict(self.raw_config.get("diagnostics", {})).get(
-                    "enabled", False
+                enable_diagnostics=bool(
+                    cfg_dict(self.raw_config.get("diagnostics")).get("enabled", False)
                 ),
-                enable_dynamic_reallocation=cfg_dict(
-                    self.raw_config.get("dynamic_reallocation", {})
-                ).get("enabled", True),
+                enable_dynamic_reallocation=bool(
+                    cfg_dict(self.raw_config.get("dynamic_reallocation")).get("enabled", True)
+                ),
             )
 
             # Paso 7: Ejecutar backtest multi-strategy
-            start_date = datetime.strptime(
-                cfg_dict(self.raw_config["input"])["start_date"], "%Y-%m-%d"
-            )
-            end_date = datetime.strptime(cfg_dict(self.raw_config["input"])["end_date"], "%Y-%m-%d")
+            run_input_cfg: YamlDict = cfg_dict(self.raw_config.get("input"))
+            start_date = datetime.strptime(str(run_input_cfg["start_date"]), "%Y-%m-%d")
+            end_date = datetime.strptime(str(run_input_cfg["end_date"]), "%Y-%m-%d")
 
             logger.info(
                 f"Running multi-strategy backtest from {start_date.date()} to {end_date.date()}"
@@ -3070,22 +3116,16 @@ class ComprehensiveBacktestRunner:
         from app.domain.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
 
         # Extraer parámetros del config
-        initial_capital = Decimal(str(cfg_dict(self.raw_config["input"])["initial_capital"]))
+        input_cfg: YamlDict = cfg_dict(self.raw_config.get("input"))
+        profile_cfg: YamlDict = cfg_dict(self.raw_config.get("profile"))
+        initial_capital = Decimal(str(input_cfg["initial_capital"]))
 
         # Obtener objetivo y riesgo del config o usar defaults
-        objective_str = cfg_dict(self.raw_config.get("profile", {})).get(
-            "objective", "balanced_growth"
-        )
-        risk_str = cfg_dict(self.raw_config.get("profile", {})).get("risk_tolerance", "medio")
-
-        # Mapear a enums
-        objective = ObjectivoInversion(objective_str)
-        risk = RiskTolerance(risk_str)
+        objective = ObjectivoInversion(get_value(profile_cfg, "objective", "balanced_growth"))
+        risk = RiskTolerance(get_value(profile_cfg, "risk_tolerance", "medio"))
 
         # Obtener horizonte de inversión (default 24 meses)
-        investment_horizon = cfg_dict(self.raw_config.get("profile", {})).get(
-            "investment_horizon", 24
-        )
+        investment_horizon = get_value(profile_cfg, "investment_horizon", 24)
 
         profile = InputProfile(
             capital_initial=initial_capital,
@@ -3103,7 +3143,7 @@ class ComprehensiveBacktestRunner:
 
     def _create_strategy_config_for_type(
         self, strategy_name: str, strategy_mapping
-    ) -> dict[str, ResultValue]:
+    ) -> dict[str, str | int | float | bool | list | dict]:
         """
         Crear configuración para un tipo de estrategia específico.
 
@@ -3152,7 +3192,7 @@ class ComprehensiveBacktestRunner:
             )
         elif strategy_name == "mean_reversion_modular":
             # Configuración para mean reversion
-            base_config["parameters"].update(
+            cfg_dict(base_config["parameters"]).update(
                 {
                     "lookback_period": 20,
                     "entry_threshold": 2.0,
@@ -3161,7 +3201,7 @@ class ComprehensiveBacktestRunner:
             )
         elif strategy_name == "dividend_screener":
             # Configuración para dividendos
-            base_config["parameters"].update(
+            cfg_dict(base_config["parameters"]).update(
                 {
                     "min_dividend_yield": 0.03,
                     "max_payout_ratio": 0.8,
@@ -3179,14 +3219,18 @@ class ComprehensiveBacktestRunner:
             Diccionario con configuración de filtros
         """
         filters_config: dict[str, ResultValue] = {}
+        modules_cfg = cfg_dict(self.raw_config.get("modules"))
 
-        if "modules" in self.raw_config and "filters" in self.raw_config["modules"]:
-            filters = cfg_dict(self.raw_config["modules"])["filters"]
+        if "modules" in self.raw_config and "filters" in modules_cfg:
+            filters: YamlDict = cfg_dict(modules_cfg["filters"])
 
-            for filter_name, filter_config in filters.items():
+            for filter_name, filter_entry in filters.items():
+                filter_config = cfg_dict(filter_entry)
                 if filter_config.get("enabled", False):
-                    filter_params = {}
-                    for param_name, param_config in filter_config.get("parameters", {}).items():
+                    filter_params: dict[str, YamlValue] = {}
+                    parameters = cfg_dict(filter_config.get("parameters"))
+                    for param_name, param_entry in parameters.items():
+                        param_config = cfg_dict(param_entry)
                         if "default" in param_config:
                             filter_params[param_name] = param_config["default"]
 
@@ -3196,7 +3240,7 @@ class ComprehensiveBacktestRunner:
 
     def _format_multi_strategy_results(
         self,
-        consolidated_results: dict,
+        consolidated_results: MultiStrategyResult,
         strategy_mapping,
         profile,
     ) -> list[dict[str, ResultValue]]:
@@ -3211,16 +3255,16 @@ class ComprehensiveBacktestRunner:
         Returns:
             Lista de diccionarios con resultados formateados
         """
-        results = []
+        results: list[dict[str, ResultValue]] = []
 
         # Extraer resultados por estrategia
-        per_strategy = consolidated_results.get("per_strategy", {})
-        combined = consolidated_results.get("combined", {})
-        allocation_info = consolidated_results.get("allocation", {})
+        per_strategy = consolidated_results.per_strategy
+        combined = consolidated_results.combined
+        allocation_info = consolidated_results.allocation
 
         # Crear resultado individual por cada estrategia
         for strategy_name, strategy_metrics in per_strategy.items():
-            result_dict = {
+            result_dict: dict[str, ResultValue] = {
                 "test_type": f"multi_strategy_{strategy_name}",
                 "test_name": f"Multi-Strategy - {strategy_name}",
                 "strategy_name": strategy_name,
@@ -3243,7 +3287,9 @@ class ComprehensiveBacktestRunner:
                 "final_capital": strategy_metrics["final_capital"],
                 # Información de asignación
                 "allocated_capital": strategy_metrics["initial_capital"],
-                "capital_weight": allocation_info.get(strategy_name, {}).get("weight", 0.0),
+                "capital_weight": cfg_dict(allocation_info.get(strategy_name, {})).get(
+                    "weight", 0.0
+                ),
                 # Perfil
                 "profile_objective": profile.objetivo_inversion.value,
                 "profile_risk": profile.risk_tolerance.value,
@@ -3323,15 +3369,17 @@ class ComprehensiveBacktestRunner:
             # ============================================================
             # STEP 1: Load configuration and prepare data
             # ============================================================
-            regime_config = cfg_dict(self.raw_config.get("backtests", {})).get("regime_test", {})
+            regime_config: YamlDict = get_section(
+                cfg_dict(self.raw_config.get("backtests")), "regime_test"
+            )
 
             # Regime detection method selection
-            detection_method = regime_config.get(
-                "detection_method", "hmm"
+            detection_method = get_value(
+                regime_config, "detection_method", "hmm"
             )  # hmm, clustering, correlation, ensemble
-            n_regimes = regime_config.get("n_regimes", 3)  # Bull, Neutral, Bear
-            min_regime_samples = regime_config.get(
-                "min_regime_samples", 50
+            n_regimes = get_value(regime_config, "n_regimes", 3)  # Bull, Neutral, Bear
+            min_regime_samples = get_value(
+                regime_config, "min_regime_samples", 50
             )  # Minimum samples per regime
 
             logger.info("Regime detection configuration:")
@@ -3539,7 +3587,7 @@ class ComprehensiveBacktestRunner:
             executor = SimpleBacktestExecutor(backtest_config)
 
             # Store results per regime
-            regime_results = []
+            regime_results: list[dict[str, ResultValue]] = []
             regime_performance_summary = {}
 
             for regime_idx in unique_regimes:
@@ -3585,29 +3633,29 @@ class ComprehensiveBacktestRunner:
                         "total_pnl": consistent_metrics["total_pnl"],
                         "return_pct": consistent_metrics["return_pct"],
                         "sharpe_ratio": (
-                            float(result.performance.sharpe_ratio)
-                            if result.performance and result.performance.sharpe_ratio
+                            float(_sharpe_of(result))
+                            if result.performance and _sharpe_of(result)
                             else 0.0
                         ),
                         "sortino_ratio": (
-                            float(result.performance.sortino_ratio)
-                            if result.performance and hasattr(result.performance, "sortino_ratio")
+                            float(_performance_of(result).sortino_ratio or 0)
+                            if result.performance
                             else 0.0
                         ),
                         "win_rate": (
-                            float(result.performance.win_rate) if result.performance else 0.0
+                            float(_performance_of(result).win_rate) if result.performance else 0.0
                         ),
                         "max_drawdown": (
-                            float(result.performance.max_drawdown_percentage)
+                            float(_performance_of(result).max_drawdown_percentage)
                             if result.performance
                             else 0.0
                         ),
                         "total_trades": (
-                            result.performance.total_trades if result.performance else 0
+                            _performance_of(result).total_trades if result.performance else 0
                         ),
                         "avg_trade_pnl": (
-                            consistent_metrics["total_pnl"] / result.performance.total_trades
-                            if result.performance and result.performance.total_trades > 0
+                            consistent_metrics["total_pnl"] / _performance_of(result).total_trades
+                            if result.performance and _performance_of(result).total_trades > 0
                             else 0.0
                         ),
                         "final_capital": consistent_metrics["final_capital"],
@@ -3649,8 +3697,8 @@ class ComprehensiveBacktestRunner:
             logger.info("-" * 80)
 
             # Identify best and worst performing regimes
-            best_regime = max(regime_results, key=lambda x: x["sharpe_ratio"])
-            worst_regime = min(regime_results, key=lambda x: x["sharpe_ratio"])
+            best_regime = max(regime_results, key=lambda x: _as_float(x["sharpe_ratio"]))
+            worst_regime = min(regime_results, key=lambda x: _as_float(x["sharpe_ratio"]))
 
             logger.info(f"Best performing regime: {best_regime['regime_name']}")
             logger.info(f"  Sharpe: {best_regime['sharpe_ratio']:.3f}")
@@ -3663,8 +3711,8 @@ class ComprehensiveBacktestRunner:
             logger.info(f"  Win Rate: {worst_regime['win_rate']:.2%}")
 
             # Calculate performance consistency across regimes
-            sharpe_values = [r["sharpe_ratio"] for r in regime_results]
-            return_values = [r["return_pct"] for r in regime_results]
+            sharpe_values = [_as_float(r["sharpe_ratio"]) for r in regime_results]
+            return_values = [_as_float(r["return_pct"]) for r in regime_results]
 
             sharpe_std = np.std(sharpe_values)
             sharpe_range = max(sharpe_values) - min(sharpe_values)
@@ -3682,7 +3730,7 @@ class ComprehensiveBacktestRunner:
             # ============================================================
             # STEP 7: Compile comprehensive results
             # ============================================================
-            result_dict = {
+            result_dict: dict[str, ResultValue] = {
                 "test_type": "regime_test",
                 "test_name": "Regime-Based Performance Analysis",
                 # Configuration
@@ -3698,15 +3746,15 @@ class ComprehensiveBacktestRunner:
                 # Best and worst regimes
                 "best_regime": {
                     "name": best_regime["regime_name"],
-                    "sharpe_ratio": float(best_regime["sharpe_ratio"]),
-                    "return_pct": float(best_regime["return_pct"]),
-                    "win_rate": float(best_regime["win_rate"]),
+                    "sharpe_ratio": _as_float(best_regime["sharpe_ratio"]),
+                    "return_pct": _as_float(best_regime["return_pct"]),
+                    "win_rate": _as_float(best_regime["win_rate"]),
                 },
                 "worst_regime": {
                     "name": worst_regime["regime_name"],
-                    "sharpe_ratio": float(worst_regime["sharpe_ratio"]),
-                    "return_pct": float(worst_regime["return_pct"]),
-                    "win_rate": float(worst_regime["win_rate"]),
+                    "sharpe_ratio": _as_float(worst_regime["sharpe_ratio"]),
+                    "return_pct": _as_float(worst_regime["return_pct"]),
+                    "win_rate": _as_float(worst_regime["win_rate"]),
                 },
                 # Transition analysis
                 "transition_analysis": transition_analysis,
@@ -3722,13 +3770,17 @@ class ComprehensiveBacktestRunner:
                 "performance_summary": {
                     "avg_sharpe": float(np.mean(sharpe_values)),
                     "avg_return": float(np.mean(return_values)),
-                    "avg_win_rate": float(np.mean([r["win_rate"] for r in regime_results])),
-                    "avg_max_drawdown": float(np.mean([r["max_drawdown"] for r in regime_results])),
-                    "total_trades": int(sum(r["total_trades"] for r in regime_results)),
+                    "avg_win_rate": float(
+                        np.mean([_as_float(r["win_rate"]) for r in regime_results])
+                    ),
+                    "avg_max_drawdown": float(
+                        np.mean([_as_float(r["max_drawdown"]) for r in regime_results])
+                    ),
+                    "total_trades": int(sum(_as_float(r["total_trades"]) for r in regime_results)),
                 },
                 # Metadata
                 "modules_active": (
-                    list(cfg_dict(self.raw_config["modules"])["filters"].keys())
+                    list(cfg_dict(cfg_dict(self.raw_config["modules"])["filters"]).keys())
                     if "modules" in self.raw_config
                     else []
                 ),
@@ -3801,10 +3853,9 @@ class ComprehensiveBacktestRunner:
         splitter = TrainValTestSplitter(DataSplit(train_pct=0.6, val_pct=0.2, test_pct=0.2))
 
         # Determine safe date bounds for splitting
-        config_start = datetime.strptime(
-            cfg_dict(self.raw_config["input"])["start_date"], "%Y-%m-%d"
-        )
-        config_end = datetime.strptime(cfg_dict(self.raw_config["input"])["end_date"], "%Y-%m-%d")
+        opt_input_cfg: YamlDict = cfg_dict(self.raw_config.get("input"))
+        config_start = datetime.strptime(str(opt_input_cfg["start_date"]), "%Y-%m-%d")
+        config_end = datetime.strptime(str(opt_input_cfg["end_date"]), "%Y-%m-%d")
         split_start, split_end = self._get_safe_split_dates(config_start, config_end)
 
         # Split data
@@ -3837,7 +3888,9 @@ class ComprehensiveBacktestRunner:
             # Create strategy with parameters
             try:
                 strategy_config = self._create_strategy_config()
-                strategy_config.update(params)
+                strategy_config.update(
+                    cast("dict[str, str | int | float | bool | list | dict]", params)
+                )
                 strategy = strategy_class(strategy_config)
 
                 # Backtest on training data
@@ -3889,12 +3942,12 @@ class ComprehensiveBacktestRunner:
             strategy=strategy,
         )
 
-        test_sharpe = test_result.get("sharpe_ratio", 0.0)
+        test_sharpe = _as_float(test_result.get("sharpe_ratio", 0.0))
 
         # Validate OOS performance
         oos_ok = validate_out_of_sample_performance(
-            train_sharpe=best_result["train_sharpe"],
-            val_sharpe=best_result["val_sharpe"],
+            train_sharpe=_as_float(best_result["train_sharpe"]),
+            val_sharpe=_as_float(best_result["val_sharpe"]),
             test_sharpe=test_sharpe,
             min_performance_ratio=0.5,
         )
@@ -3961,26 +4014,24 @@ class ComprehensiveBacktestRunner:
         return {
             "total_pnl": consistent_metrics["total_pnl"],
             "return_pct": consistent_metrics["return_pct"],
-            "win_rate": float(result.performance.win_rate) if result.performance else 0.0,
+            "win_rate": float(_performance_of(result).win_rate) if result.performance else 0.0,
             "sharpe_ratio": (
-                float(result.performance.sharpe_ratio)
-                if result.performance and result.performance.sharpe_ratio
-                else 0.0
+                float(_sharpe_of(result)) if result.performance and _sharpe_of(result) else 0.0
             ),
             "max_drawdown": (
-                float(result.performance.max_drawdown_percentage) if result.performance else 0.0
+                float(_performance_of(result).max_drawdown_percentage)
+                if result.performance
+                else 0.0
             ),
-            "total_trades": result.performance.total_trades if result.performance else 0,
+            "total_trades": _performance_of(result).total_trades if result.performance else 0,
             "final_capital": consistent_metrics["final_capital"],
             "expectancy": (
-                float(result.performance.expectancy)
-                if result.performance and result.performance.expectancy
-                else 0.0
+                float(_performance_of(result).expectancy or 0) if result.performance else 0.0
             ),
         }
 
     # Métodos helper
-    def _create_strategy_config(self) -> dict[str, ResultValue]:
+    def _create_strategy_config(self) -> dict[str, str | int | float | bool | list | dict]:
         """
         Crear configuración de estrategia desde config YAML.
 
@@ -3991,22 +4042,23 @@ class ComprehensiveBacktestRunner:
         2. Optimized config with strategy.modules (from Bayesian optimizer)
         """
         # Check for strategy.modules (from optimizer) FIRST
-        strategy_config = self.raw_config.get("strategy", {})
-        if "modules" in strategy_config:
+        strategy_section: YamlDict = cfg_dict(self.raw_config.get("strategy"))
+        if "modules" in strategy_section:
             # Config from optimizer - use the modules directly
             return {
-                "type": strategy_config.get("type", "modular_momentum"),
-                "preset": strategy_config.get("preset", "balanced"),
-                "modules": strategy_config["modules"],
-                "thresholds": strategy_config.get("thresholds", {}),
-                "risk_manager": strategy_config.get("risk_manager", {}),
+                "type": get_value(strategy_section, "type", "modular_momentum"),
+                "preset": get_value(strategy_section, "preset", "balanced"),
+                "modules": strategy_section["modules"],
+                "thresholds": get_value(strategy_section, "thresholds", {}),
+                "risk_manager": get_value(strategy_section, "risk_manager", {}),
             }
 
         # Si la config tiene modules.filters, crear config adaptada
-        if "modules" in self.raw_config and "filters" in self.raw_config["modules"]:
+        create_modules_cfg = cfg_dict(self.raw_config.get("modules"))
+        if "modules" in self.raw_config and "filters" in create_modules_cfg:
             # Crear configuración de filtros desde YAML
             filters_config = {}
-            filters = cfg_dict(self.raw_config["modules"])["filters"]
+            filters = cfg_dict(create_modules_cfg["filters"])
 
             # Mapeo de nombres de filtros (config -> estrategia)
             filter_name_map = {
@@ -4018,7 +4070,8 @@ class ComprehensiveBacktestRunner:
                 "atr": "atr_filter",
             }
 
-            for filter_name, filter_config in filters.items():
+            for filter_name, filter_entry in filters.items():
+                filter_config = cfg_dict(filter_entry)
                 if filter_config.get("enabled", False):
                     # Mapear nombre del filtro
                     # First check if name already has _filter suffix
@@ -4029,7 +4082,10 @@ class ComprehensiveBacktestRunner:
 
                     # Extraer parámetros default
                     filter_params = {}
-                    for param_name, param_config in filter_config.get("parameters", {}).items():
+                    for param_name, param_entry in cfg_dict(
+                        filter_config.get("parameters")
+                    ).items():
+                        param_config = cfg_dict(param_entry)
                         if "default" in param_config:
                             filter_params[param_name] = param_config["default"]
 
@@ -4052,7 +4108,9 @@ class ComprehensiveBacktestRunner:
                 },
             }
 
-        config: dict[str, ResultValue] = StrategyFactory.create_baseline_config(self.raw_config)
+        config: dict[str, str | int | float | bool | list | dict] = (
+            StrategyFactory.create_baseline_config(self.raw_config)
+        )
         return config
 
     def _extract_filter_thresholds(self) -> dict[str, ResultValue]:
@@ -4062,15 +4120,17 @@ class ComprehensiveBacktestRunner:
         Returns:
             Diccionario con thresholds de cada filtro activo
         """
-        thresholds = {}
-        filters_config = cfg_dict(self.raw_config.get("modules", {})).get("filters", {})
+        thresholds: dict[str, ResultValue] = {}
+        filters_config: YamlDict = get_section(cfg_dict(self.raw_config.get("modules")), "filters")
 
         # Extraer thresholds de cada filtro
-        for filter_name, filter_config in filters_config.items():
+        for filter_name, filter_entry in filters_config.items():
+            filter_config = cfg_dict(filter_entry)
             if filter_config.get("enabled", False):
-                params = filter_config.get("parameters", {})
+                params = cfg_dict(filter_config.get("parameters"))
                 # Usar valores default de los parámetros
-                for param_name, param_config in params.items():
+                for param_name, param_entry in params.items():
+                    param_config = cfg_dict(param_entry)
                     if "default" in param_config:
                         threshold_key = f"{filter_name}.{param_name}"
                         thresholds[threshold_key] = param_config["default"]
@@ -4087,14 +4147,16 @@ class ComprehensiveBacktestRunner:
         return name
 
     def _extract_thresholds(
-        self, strategy_config: dict[str, ResultValue]
-    ) -> dict[str, ResultValue]:
+        self, strategy_config: dict[str, str | int | float | bool | list | dict]
+    ) -> dict[str, str | int | float | bool | list | dict]:
         """
         Extraer thresholds de configuración de estrategia.
 
         Phase 5: Now delegates to StrategyFactory.
         """
-        result: dict[str, ResultValue] = StrategyFactory.extract_thresholds(strategy_config)
+        result: dict[str, str | int | float | bool | list | dict] = (
+            StrategyFactory.extract_thresholds(strategy_config)
+        )
         return result
 
     def _calculate_consistent_metrics(
@@ -4299,8 +4361,8 @@ class ComprehensiveBacktestRunner:
         Returns:
             Lista de resultados
         """
-        results: list[dict[str, ResultValue]] = self.memory_manager.get_results()
-        return results
+        results = self.memory_manager.get_results()
+        return cast("list[dict[str, ResultValue]]", results)
 
     def get_memory_stats(self) -> dict[str, ResultValue]:
         """
@@ -4309,8 +4371,8 @@ class ComprehensiveBacktestRunner:
         Returns:
             Diccionario con estadísticas
         """
-        stats: dict[str, ResultValue] = self.memory_manager.get_stats()
-        return stats
+        stats = self.memory_manager.get_stats()
+        return cast("dict[str, ResultValue]", stats)
 
     def _extract_transformer_predictions(
         self, strategy: ModularMomentumStrategy, quotes: list
@@ -4331,8 +4393,9 @@ class ComprehensiveBacktestRunner:
             if hasattr(strategy, "learning_engines") and "transformer" in strategy.learning_engines:
                 transformer_engine = strategy.learning_engines["transformer"]
 
+                compute_features = strategy._compute_features
                 for quote in quotes:
-                    features = strategy._compute_features(quote)
+                    features = compute_features(quote)
                     prediction = transformer_engine.predict(features)
                     predictions.append(prediction.get("confidence", 0.0))
 
@@ -4348,7 +4411,7 @@ class ComprehensiveBacktestRunner:
         self,
         train_quotes: list,
         val_quotes: list,
-        transformer_config: dict[str, ResultValue],
+        transformer_config: YamlDict,
         n_iterations: int = 20,
     ) -> dict[str, float]:
         """
@@ -4397,7 +4460,7 @@ class ComprehensiveBacktestRunner:
 
             # Train on train set
             train_success = train_with_retry(
-                strategy=strategy,
+                strategy=cast("StrategyProtocol", strategy),
                 engine_type="transformer",
                 use_subprocess=False,
             )
@@ -4410,7 +4473,7 @@ class ComprehensiveBacktestRunner:
             val_result = self._run_backtest_with_quotes(strategy, val_quotes, initial_capital)
 
             # Score: Sharpe ratio (or other metric)
-            score = float(val_result.performance.sharpe_ratio or 0)
+            score = float(_sharpe_of(val_result) or 0)
 
             # Track best
             if score > best_score:
@@ -4537,7 +4600,9 @@ class ComprehensiveBacktestRunner:
             logger.warning(f"Error applying meta-labeling: {e}")
             return {}
 
-    def _create_ablation_config(self, disabled_filter: str) -> dict[str, ResultValue]:
+    def _create_ablation_config(
+        self, disabled_filter: str
+    ) -> dict[str, str | int | float | bool | list | dict]:
         """
         Create strategy configuration with a specific filter disabled for ablation testing.
 
@@ -4547,22 +4612,25 @@ class ComprehensiveBacktestRunner:
         Returns:
             Strategy configuration dictionary with the specified filter disabled
         """
-        if "modules" not in self.raw_config or "filters" not in self.raw_config["modules"]:
+        ablation_modules_cfg = cfg_dict(self.raw_config.get("modules"))
+        if "modules" not in self.raw_config or "filters" not in ablation_modules_cfg:
             return self._create_strategy_config()
 
         # Create filters config
         filters_config = {}
-        filters = cfg_dict(self.raw_config["modules"])["filters"]
+        filters: YamlDict = cfg_dict(ablation_modules_cfg["filters"])
 
-        for filter_name, filter_config in filters.items():
+        for filter_name, filter_entry in filters.items():
             if filter_name == disabled_filter:
                 # Skip this filter (disable it)
                 continue
 
+            filter_config = cfg_dict(filter_entry)
             if filter_config.get("enabled", False):
                 # Extract default parameters
                 filter_params = {}
-                for param_name, param_config in filter_config.get("parameters", {}).items():
+                for param_name, param_entry in cfg_dict(filter_config.get("parameters")).items():
+                    param_config = cfg_dict(param_entry)
                     if "default" in param_config:
                         filter_params[param_name] = param_config["default"]
 

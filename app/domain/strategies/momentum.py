@@ -160,8 +160,8 @@ class MomentumStrategy(BaseStrategy):
         self.high_history: deque = deque(maxlen=price_history_len)
         self.low_history: deque = deque(maxlen=price_history_len)
         self.volume_history: deque = deque(maxlen=price_history_len)
-        self.last_rsi = None
-        self.last_ema = None
+        self.last_rsi: float | None = None
+        self.last_ema: float | None = None
         self.rsi_history: deque = deque(maxlen=rsi_history_len)
 
         # ATR volatility filter settings
@@ -980,6 +980,8 @@ class MomentumStrategy(BaseStrategy):
         # OPTIMIZED: Use configurable thresholds
         stoch_rsi_min = self.config.get("stoch_rsi_min")
         stoch_rsi_max = self.config.get("stoch_rsi_max")
+        if stoch_rsi_min is None or stoch_rsi_max is None:
+            return True
 
         # Condiciones de filtrado:
         # - Generar señales cuando no está en extremos (evitar sobrecompra/sobreventa)

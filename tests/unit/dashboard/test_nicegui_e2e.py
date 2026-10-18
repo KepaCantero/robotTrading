@@ -116,11 +116,12 @@ class TestAppHome:
             await user.should_see("Backtesting Dashboard")
             await user.should_see("Dark")
             # Navigation buttons (from PAGES definition in theme)
-            await user.should_see("Backtest Runner")
+            await user.should_see("Agent Swarm")
             await user.should_see("Results")
             await user.should_see("History & Compare")
             await user.should_see("Config Viewer")
             await user.should_see("Profitability")
+            await user.should_see("Set up and run your strategy")
 
 
 # ---------------------------------------------------------------------------
@@ -452,7 +453,7 @@ class TestTheme:
         from app.presentation.dashboard.nicegui_app.theme import PAGES
 
         routes = {page["route"] for page in PAGES}
-        for route in ("/", "/results", "/history", "/config", "/profitability", "/swarm"):
+        for route in ("/", "/results", "/history", "/config", "/profitability", "/docs/"):
             assert route in routes
 
     def test_pages_have_required_fields(self) -> None:

@@ -336,7 +336,7 @@ class ParameterOptimizationRequest(BaseModel):
     data_start_date: date = Field(..., description="Start date for optimization data")
     data_end_date: date = Field(..., description="End date for optimization data")
     cost_analysis_enabled: bool = Field(
-        True,
+        default=True,
         description="Whether to include cost analysis",
     )
 
@@ -372,7 +372,7 @@ class OutOfSampleTestRequest(BaseModel):
 
     test_config: OutOfSampleTest = Field(..., description="Out-of-sample test configuration")
     cost_analysis_enabled: bool = Field(
-        True,
+        default=True,
         description="Whether to include cost analysis",
     )
 
@@ -390,7 +390,7 @@ class OptimizationArtifact(BaseModel):
         default_factory=datetime.now,
         description="Optimization date",
     )
-    version: str = Field("1.0", description="Artifact version")
+    version: str = Field(default="1.0", description="Artifact version")
     metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
     model_config = {

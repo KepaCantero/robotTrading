@@ -213,6 +213,10 @@ class SensitivityAnalyzer:
         Calculates elasticity: % change in performance / % change in parameter.
         """
         result = SensitivityResult(parameter_name=param_name, base_value=param_value)
+
+        backtest_fn = self.backtest_function
+        if backtest_fn is None:
+            raise ValueError("backtest_function must be provided")
         performances: dict[float, float] = {}
         varied_values: dict[float, float | int] = {}
 
@@ -240,7 +244,7 @@ class SensitivityAnalyzer:
 
             try:
                 # Run backtest with varied parameters
-                metrics = self.backtest_function(test_params)
+                metrics = backtest_fn(test_params)
                 perf_value = metrics.get(performance_metric, 0.0)
                 performances[variation_pct] = perf_value
 
@@ -275,7 +279,7 @@ class SensitivityAnalyzer:
 
         # Detect optimal value and plateau width
         if performances:
-            optimal_variation = max(performances, key=performances.get)
+            optimal_variation = max(performances, key=lambda variation: performances[variation])
             result.optimal_value = varied_values[optimal_variation]
             result.plateau_width = self._calculate_plateau_width(
                 performances, varied_values, base_perf
@@ -406,6 +410,10 @@ class SensitivityAnalyzer:
             f"Running Monte Carlo sensitivity for {param_name} ({n_simulations} simulations)"
         )
 
+        backtest_fn = self.backtest_function
+        if backtest_fn is None:
+            raise ValueError("backtest_function must be provided")
+
         results = []
 
         for _ in range(n_simulations):
@@ -426,7 +434,7 @@ class SensitivityAnalyzer:
             test_params[param_name] = varied_value
 
             try:
-                metrics = self.backtest_function(test_params)
+                metrics = backtest_fn(test_params)
                 perf_value = metrics.get(performance_metric, 0.0)
                 results.append(perf_value)
             except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:

@@ -11,7 +11,7 @@ significant changes in market regime that may require strategy adjustments.
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 from app.services.hurst_analysis.models import RegimeChange
 
@@ -67,7 +67,7 @@ class RegimeChangeDetector:
     def detect_change(
         self,
         symbol: str,
-        get_history_func: callable,
+        get_history_func: Callable,
         lookback_periods: int = 10,
     ) -> RegimeChange | None:
         """

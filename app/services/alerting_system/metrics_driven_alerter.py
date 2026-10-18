@@ -336,8 +336,9 @@ class MetricsDrivenAlerter:
             },
         )
 
-        # Trigger via alert manager
-        await self.alert_manager.trigger_alert(rule, event)
+        # Trigger via alert manager (trigger_alert es síncrono; el await previo
+        # provocaba TypeError en runtime)
+        self.alert_manager.trigger_alert(rule, event)
 
         return event
 

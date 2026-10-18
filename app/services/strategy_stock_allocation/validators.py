@@ -11,29 +11,11 @@ import logging
 from collections import defaultdict
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel
-
 if TYPE_CHECKING:
+    from app.services.strategy_stock_allocation.orchestrator import StockMetrics
     from app.shared.config.params.strategy_config import StockAllocationSettings
 
 logger = logging.getLogger(__name__)
-
-
-# Data model for type checking
-class StockMetrics(BaseModel):
-    """Metrics for a single stock."""
-
-    ticker: str
-    strategy: str | None = None
-    weight: float = 0.0
-    capital: float = 0.0
-    sps_score: float = 0.0
-    sortino_ratio: float | None = None
-    h_long: float | None = None
-    h_short: float | None = None
-    half_life_tau: float | None = None
-    garch_volatility: float | None = None
-    decision_log: str = ""
 
 
 class AllocationValidator:

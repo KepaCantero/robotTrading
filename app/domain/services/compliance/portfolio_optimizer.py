@@ -17,7 +17,7 @@ Date: 2026-02-03
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 import pandas as pd
@@ -27,6 +27,27 @@ from app.domain.services.compliance.service_registry import get_service_registry
 
 if TYPE_CHECKING:
     from decimal import Decimal
+    from typing import Protocol
+
+    import pandas as pd
+
+    from app.services.optimization_chan import OptimizationResult
+
+    class PortfolioOptimizerService(Protocol):
+        """Superficie de portfolio_optimizer usada por este checker."""
+
+        def optimize(self, returns: object, **kwargs: object) -> OptimizationResult: ...
+
+    class RegimeDetectorService(Protocol):
+        """Superficie de regime_detector usada por este checker."""
+
+        def detect_regimes(
+            self,
+            returns: object,
+            prices: object = None,
+            volume: object = None,
+        ) -> "pd.Series": ...
+
 
 logger = logging.getLogger(__name__)
 
@@ -147,7 +168,9 @@ class PortfolioComplianceOptimizer:
         Returns:
             True if optimization succeeded
         """
-        portfolio_optimizer = self._registry.get_service("portfolio_optimizer")
+        portfolio_optimizer = cast(
+            "PortfolioOptimizerService", self._registry.get_service("portfolio_optimizer")
+        )
         if portfolio_optimizer is None:
             logger.warning("Chan portfolio optimizer not available")
             return False
@@ -163,7 +186,7 @@ class PortfolioComplianceOptimizer:
 
             result.weights = weights_dict
             result.expected_return = float(optimization_result.expected_return)
-            result.expected_risk = float(optimization_result.risk)
+            result.expected_risk = float(optimization_result.volatility)
             result.sharpe_ratio = float(optimization_result.sharpe_ratio)
 
             return True
@@ -197,7 +220,9 @@ class PortfolioComplianceOptimizer:
         if not price_histories:
             return
 
-        regime_detector = self._registry.get_service("regime_detector")
+        regime_detector = cast(
+            "RegimeDetectorService", self._registry.get_service("regime_detector")
+        )
         if regime_detector is None:
             return
 

@@ -21,7 +21,7 @@ This filter now uses centralized configuration from config/indicators.yaml:
 from __future__ import annotations
 
 import logging
-from typing import Callable, ClassVar
+from typing import Callable, ClassVar, cast
 
 from ..base_filter import BaseFilter
 
@@ -35,7 +35,7 @@ HAS_CONFIG_LOADER = False
 try:
     from app.shared.config.centralized_config import get_config as _get_config
 
-    get_config = _get_config
+    get_config = cast("ConfigLoaderFunc", _get_config)
     HAS_CONFIG_LOADER = True
 except ImportError:
     pass  # get_config remains None, HAS_CONFIG_LOADER remains False

@@ -12,6 +12,10 @@ import json
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from asyncpg import Pool
 
 from .models import (
     AggregatedMetrics,
@@ -94,9 +98,10 @@ class QuestDBConnector:
         self._connection_string = (
             f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/qdb"
         )
-        self._connection_pool = None
+        self._connection_pool: Pool | _InMemoryPool | None = None
         self._is_connected = False
         self._pending_metrics: list[MetricPoint] = []
+        self._in_memory_storage: list[MetricPoint] = []
         self._retry_count = 0
         self._max_retries = 3
         self._retry_delay = 1  # seconds
@@ -119,12 +124,11 @@ class QuestDBConnector:
                 self._connection_pool = _InMemoryPool()
                 self._is_connected = True
                 self._use_real_db = False
-                self._in_memory_storage: list[MetricPoint] = []
                 logger.info("✅ Using in-memory metrics storage (install asyncpg for QuestDB)")
                 return True
 
             try:
-                self._connection_pool = await asyncpg.create_pool(
+                pool = await asyncpg.create_pool(
                     host=self.host,
                     port=self.port,
                     user=self.user,
@@ -134,9 +138,10 @@ class QuestDBConnector:
                     max_size=self.pool_size,
                     command_timeout=30,
                 )
+                self._connection_pool = pool
 
                 # Test connection and create table if needed
-                async with self._connection_pool.acquire() as conn:
+                async with pool.acquire() as conn:
                     # Create metrics table if not exists
                     await conn.execute("""
                         CREATE TABLE IF NOT EXISTS metrics (
@@ -158,7 +163,6 @@ class QuestDBConnector:
                 self._connection_pool = _InMemoryPool()
                 self._is_connected = True
                 self._use_real_db = False
-                self._in_memory_storage: list[MetricPoint] = []
                 return True
 
         except (asyncio.TimeoutError, OSError) as e:
@@ -260,8 +264,10 @@ class QuestDBConnector:
         self._pending_metrics.clear()
 
         try:
-            if getattr(self, "_use_real_db", False) and not isinstance(
-                self._connection_pool, _InMemoryPool
+            if (
+                getattr(self, "_use_real_db", False)
+                and self._connection_pool is not None
+                and not isinstance(self._connection_pool, _InMemoryPool)
             ):
                 # Real database insert using asyncpg
                 async with self._connection_pool.acquire() as conn:
@@ -272,7 +278,7 @@ class QuestDBConnector:
                             m.metric_type.value,
                             m.symbol or "",
                             float(m.value),
-                            str(m.metadata) if m.metadata else "",
+                            str(m.tags) if m.tags else "",
                         )
                         for m in metrics_to_flush
                     ]
@@ -332,8 +338,10 @@ class QuestDBConnector:
                 f"Querying {query.metric_type.value} from {query.start_time} to {query.end_time}"
             )
 
-            if getattr(self, "_use_real_db", False) and not isinstance(
-                self._connection_pool, _InMemoryPool
+            if (
+                getattr(self, "_use_real_db", False)
+                and self._connection_pool is not None
+                and not isinstance(self._connection_pool, _InMemoryPool)
             ):
                 # Real database query using asyncpg
                 async with self._connection_pool.acquire() as conn:
@@ -452,8 +460,10 @@ class QuestDBConnector:
             Latest metric value, or None if not found
         """
         try:
-            if getattr(self, "_use_real_db", False) and not isinstance(
-                self._connection_pool, _InMemoryPool
+            if (
+                getattr(self, "_use_real_db", False)
+                and self._connection_pool is not None
+                and not isinstance(self._connection_pool, _InMemoryPool)
             ):
                 async with self._connection_pool.acquire() as conn:
                     sql = """

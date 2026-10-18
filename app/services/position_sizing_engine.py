@@ -23,6 +23,7 @@ from decimal import Decimal
 import numpy as np
 
 from app.shared.config.centralized_config import get_config
+from app.shared.utils.safe_parse import cfg_dict
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +59,9 @@ class PositionSizingEngine:
         elif atr_multiplier is None:
             # Use centralized config for default ATR multiplier
             trading_config = get_config()
-            atr_multiplier = trading_config.trading_thresholds.atr_multiplier_default
+            atr_multiplier = getattr(
+                trading_config.trading_thresholds, "atr_multiplier_default", 2.0
+            )
 
         self.atr_multiplier = Decimal(str(atr_multiplier))
 
@@ -151,7 +154,7 @@ class PositionSizingEngine:
                 strategy_config = get_strategy_config()
                 risk_config = strategy_config.get_risk_config()
                 risk_per_trade_pct = float(
-                    risk_config.get("risk_per_trade", {}).get(
+                    cfg_dict(risk_config.get("risk_per_trade")).get(
                         "default", self._tt.risk_per_trade_default
                     )
                 )
@@ -207,7 +210,7 @@ class PositionSizingEngine:
         avg_win: float | Decimal,
         avg_loss: float | Decimal,
         capital: Decimal | None = None,
-    ) -> dict[str, Decimal | float]:
+    ) -> dict[str, Decimal | float | str]:
         """
         RULE-01-1.9: Calculate Kelly Criterion position size with Half-Kelly safety.
 
@@ -258,7 +261,7 @@ class PositionSizingEngine:
         # Convert to float for calculation
         win_rate_float = float(win_rate)
         avg_win_float = float(avg_win)
-        avg_loss_float = float(abs(avg_loss))  # Use absolute value for calculation
+        avg_loss_float = abs(float(avg_loss))  # Use absolute value for calculation
 
         # Check for NaN values
         import math
@@ -324,7 +327,7 @@ class PositionSizingEngine:
             )
 
         # Calculate position details
-        result = {
+        result: dict[str, Decimal | float | str] = {
             "kelly_fraction": Decimal(str(raw_kelly)),
             "half_kelly_fraction": Decimal(str(capped_kelly)),
             "position_percentage": Decimal(str(capped_kelly * 100)),
@@ -394,13 +397,13 @@ class PositionSizingEngine:
             win_rate_decimal = Decimal(str(win_rate))
 
         # Validate we have meaningful metrics
-        if float(avg_win) <= 0 or float(abs(avg_loss)) <= 0:
+        if float(avg_win) <= 0 or abs(float(avg_loss)) <= 0:
             logger.warning(
                 f"Insufficient backtest data for Kelly calculation. "
                 f"avg_win={avg_win}, avg_loss={avg_loss}. Using fallback {self._tt.kelly_fallback_fraction:.0%} rule."
             )
             # Fallback to configured % rule when Kelly metrics unavailable
-            fallback_result = {
+            fallback_result: dict[str, Decimal | float | str] = {
                 "kelly_fraction": Decimal(str(self._tt.kelly_fallback_fraction)),
                 "half_kelly_fraction": Decimal(str(self._tt.kelly_fallback_fraction)),
                 "position_percentage": Decimal(str(self._tt.kelly_fallback_fraction * 100)),
@@ -419,7 +422,7 @@ class PositionSizingEngine:
         return self.calculate_kelly_position_size(
             win_rate=win_rate_decimal,
             avg_win=Decimal(str(avg_win)),
-            avg_loss=Decimal(str(abs(avg_loss))),  # Use absolute value
+            avg_loss=Decimal(str(-avg_loss if avg_loss < 0 else avg_loss)),  # Use absolute value
             capital=capital,
         )
 

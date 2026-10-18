@@ -288,7 +288,7 @@ class ConfigurationPersistence:
         total_versions = sum(len(v) for v in self._versions.values())
 
         # Count by deployment status
-        status_counts = {}
+        status_counts: dict[str, int] = {}
         for config in self._configurations.values():
             status = config.deployment_status or "unknown"
             status_counts[status] = status_counts.get(status, 0) + 1

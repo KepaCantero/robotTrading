@@ -270,7 +270,9 @@ async def get_current_user_optional(
 
     # Try API key authentication
     if api_key:
-        username = store.verify_api_key(api_key)
+        # En llamadas directas sin FastAPI, api_key llega con el default
+        # _api_key_security sin resolver: tratarlo como "sin credencial".
+        username = store.verify_api_key(api_key) if isinstance(api_key, str) else None
         if username:
             user = store.get_user(username)
             if user and isinstance(user, User) and user.is_active:

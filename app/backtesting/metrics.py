@@ -16,7 +16,7 @@ from __future__ import annotations
 import logging
 from datetime import date, datetime, timezone
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 
@@ -312,7 +312,7 @@ class MetricsCalculator:
             win_rate = Decimal("0")
 
         # P&L metrics
-        total_pnl = sum((t.pnl or Decimal("0")) for t in closed_trades)
+        total_pnl: Decimal = sum((t.pnl or Decimal("0") for t in closed_trades), Decimal(0))
 
         # Validate initial_capital before division
         if initial_capital <= 0:
@@ -320,12 +320,8 @@ class MetricsCalculator:
 
         total_pnl_percentage = (total_pnl / initial_capital) * Decimal("100")
 
-        gross_profit = (
-            sum((t.pnl or Decimal("0")) for t in winning_trades) if winning_trades else Decimal("0")
-        )
-        gross_loss = (
-            sum((t.pnl or Decimal("0")) for t in losing_trades) if losing_trades else Decimal("0")
-        )
+        gross_profit = sum((t.pnl or Decimal("0") for t in winning_trades), Decimal(0))
+        gross_loss = sum((t.pnl or Decimal("0") for t in losing_trades), Decimal(0))
         net_profit = gross_profit + gross_loss
 
         # Risk metrics: date-stamped daily equity curve (P&L aggregated per
@@ -347,12 +343,12 @@ class MetricsCalculator:
 
         # Trade statistics
         avg_win = (
-            safe_mean([t.pnl or Decimal("0") for t in winning_trades])
+            cast("Decimal", safe_mean([t.pnl or Decimal("0") for t in winning_trades]))
             if winning_trades
             else Decimal("0")
         )
         avg_loss = (
-            safe_mean([t.pnl or Decimal("0") for t in losing_trades])
+            cast("Decimal", safe_mean([t.pnl or Decimal("0") for t in losing_trades]))
             if losing_trades
             else Decimal("0")
         )
@@ -675,8 +671,7 @@ class MetricsCalculator:
             # Calculate average win and average loss (absolute values)
             avg_win = safe_mean([abs(t.pnl or Decimal("0")) for t in wins])
             avg_loss = safe_mean([abs(t.pnl or Decimal("0")) for t in losses])
-
-            if avg_loss == 0:
+            if avg_win is None or avg_loss is None or avg_loss == 0:
                 return None
 
             # Risk/Reward = Avg Win / Avg Loss
@@ -765,13 +760,9 @@ def calculate_profit_factor(winning_trades: list[Trade], losing_trades: list[Tra
     if not winning_trades and not losing_trades:
         return Decimal("0")
 
-    gross_profit = (
-        sum((t.pnl or Decimal("0")) for t in winning_trades) if winning_trades else Decimal("0")
-    )
+    gross_profit = sum((t.pnl or Decimal("0") for t in winning_trades), Decimal(0))
     # If no losing trades, gross_loss is 0 (not 1)
-    gross_loss = (
-        abs(sum((t.pnl or Decimal("0")) for t in losing_trades)) if losing_trades else Decimal("0")
-    )
+    gross_loss = abs(sum((t.pnl or Decimal("0") for t in losing_trades), Decimal(0)))
 
     if gross_loss == 0:
         return Decimal("999")  # Perfect scenario

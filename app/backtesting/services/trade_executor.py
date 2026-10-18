@@ -32,6 +32,8 @@ from app.backtesting.shared.trade_utils import build_trade_reason as shared_buil
 if TYPE_CHECKING:
     from app.backtesting.services.pnl_calculator import ProfitAndLossCalculator
     from app.backtesting.services.position_manager import PositionManager
+    from app.backtesting.signal_diagnostic_logger import SignalDiagnosticLogger
+    from app.domain.models.market_data import Quote
     from app.domain.models.signal import Signal
 
 logger = logging.getLogger(__name__)
@@ -62,7 +64,7 @@ class TradeExecutor:
         config: BacktestConfig,
         position_manager: PositionManager,
         pnl_calculator: ProfitAndLossCalculator,
-        diagnostic_logger: object | None = None,
+        diagnostic_logger: SignalDiagnosticLogger | None = None,
         strategy: object | None = None,
         use_realistic_costs: bool = True,
         broker_type: BrokerType = BrokerType.INTERACTIVE_BROKERS,
@@ -112,7 +114,7 @@ class TradeExecutor:
     def execute_buy_signal(
         self,
         signal: Signal,
-        market_data: object,
+        market_data: Quote,
         capital: Decimal,
         close_position_func: Callable,
         validate_profitability_func: Callable,
@@ -322,7 +324,7 @@ class TradeExecutor:
     def execute_sell_signal(
         self,
         signal: Signal,
-        market_data: object,
+        market_data: Quote,
         capital: Decimal,
         trades: list[Trade],
     ) -> tuple[Trade | None, Decimal]:
@@ -561,7 +563,7 @@ class TradeExecutor:
         quantity: Decimal,
         price: Decimal,
         signal: Signal | None = None,
-        market_data: object | None = None,
+        market_data: Quote | None = None,
     ) -> TransactionCostResult:
         """
         Calculate transaction costs using TransactionCostModel.

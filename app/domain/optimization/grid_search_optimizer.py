@@ -54,7 +54,7 @@ from .base_optimizer import (
     OptimizerType,
     TrialResult,
 )
-from .bayesian_optimizer import ParameterType, SearchSpace
+from .bayesian_optimizer import ParameterType, ParamValue, SearchSpace
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable
@@ -205,32 +205,36 @@ class GridSearchOptimizer(BaseOptimizer[SearchSpace]):
 
         # Get grid values for each parameter
         param_names = search_space.get_parameter_names()
-        grid_values = []
+        grid_values: list[list[ParamValue]] = []
 
         for name in param_names:
             defn = search_space.get_parameter_def(name)
             param_type = defn.get("type", ParameterType.CONTINUOUS)
 
+            values: list[ParamValue]
             if param_type == ParameterType.CATEGORICAL:
-                values = defn.get("choices", [])
+                choices = defn.get("choices", [])
+                values = list(choices) if isinstance(choices, list) else []
             elif param_type == ParameterType.DISCRETE:
-                values = defn.get("values", [])
+                options = defn.get("values", [])
+                values = list(options) if isinstance(options, list) else []
             elif param_type == ParameterType.INTEGER:
-                min_val = int(defn.get("min", 0))
-                max_val = int(defn.get("max", 100))
-                step = int(defn.get("step", 1))
+                min_val = int(self._as_number(defn.get("min"), 0))
+                max_val = int(self._as_number(defn.get("max"), 100))
+                step = int(self._as_number(defn.get("step"), 1))
                 values = list(range(min_val, max_val + 1, step))
             elif param_type == ParameterType.CONTINUOUS:
-                min_val_float = float(defn.get("min", 0.0))
-                max_val_float = float(defn.get("max", 1.0))
-                step_float = float(defn.get("step", (max_val_float - min_val_float) / 10))
+                min_val_float = self._as_number(defn.get("min"), 0.0)
+                max_val_float = self._as_number(defn.get("max"), 1.0)
+                step_float = self._as_number(defn.get("step"), (max_val_float - min_val_float) / 10)
 
                 if step_float > 0:
                     num_steps = int((max_val_float - min_val_float) / step_float) + 1
-                    values = [min_val_float + i * step_float for i in range(num_steps)]
+                    float_values = [min_val_float + i * step_float for i in range(num_steps)]
                     # Ensure max is included
-                    if values[-1] < max_val_float:
-                        values.append(max_val_float)
+                    if float_values[-1] < max_val_float:
+                        float_values.append(max_val_float)
+                    values = [*float_values]
                 else:
                     # Default to 10 steps
                     values = [
@@ -242,11 +246,18 @@ class GridSearchOptimizer(BaseOptimizer[SearchSpace]):
             grid_values.append(values)
 
         # Generate all combinations
-        for values in product(*grid_values):
-            params = dict(zip(param_names, values))
+        for combo in product(*grid_values):
+            params = dict(zip(param_names, combo))
             combinations.append(params)
 
         return combinations
+
+    @staticmethod
+    def _as_number(value: object, default: float) -> float:
+        """Convierte un valor de ParamDef a float, con default si no es numérico."""
+        if isinstance(value, (int, float, str)):
+            return float(value)
+        return default
 
     async def _evaluate_combinations(
         self,
@@ -433,7 +444,7 @@ class GridSearchOptimizer(BaseOptimizer[SearchSpace]):
 
             # Handle results
             for result in batch_results:
-                if isinstance(result, Exception):
+                if not isinstance(result, TrialResult):
                     # Create failed trial result
                     results.append(
                         TrialResult(

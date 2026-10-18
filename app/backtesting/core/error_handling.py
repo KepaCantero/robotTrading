@@ -13,23 +13,14 @@ import multiprocessing
 from multiprocessing import Queue
 from typing import Callable, Protocol, TypeVar
 
-# SQLAlchemy exception types for database error handling
-try:
-    from sqlalchemy.exc import (
-        DatabaseError,
-        DataError,
-        IntegrityError,
-        OperationalError,
-        ProgrammingError,
-    )
-except ImportError:
-    # Fallback if SQLAlchemy is not available
-    DatabaseError = Exception
-    DataError = Exception
-    IntegrityError = Exception
-    OperationalError = Exception
-    ProgrammingError = Exception
-
+# SQLAlchemy exception types for database handling (dependencia dura del proyecto)
+from sqlalchemy.exc import (  # noqa: E402
+    DatabaseError,
+    DataError,
+    IntegrityError,
+    OperationalError,
+    ProgrammingError,
+)
 from tenacity import (
     before_sleep_log,
     retry,
@@ -57,10 +48,7 @@ class StrategyProtocol(Protocol):
         """Get the learning engine."""
         ...
 
-    @property
-    def __module__(self) -> str:
-        """Module name for subprocess imports."""
-        ...
+    # ``__module__`` existe en todo objeto Python; no hace falta declararlo.
 
 
 T = TypeVar("T")

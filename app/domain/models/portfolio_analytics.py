@@ -388,7 +388,7 @@ class PortfolioAllocation(BaseModel):
         default=None, description="Target allocation"
     )
     allocation_deviation: Optional[dict[str, Decimal]] = Field(
-        None, description="Allocation deviation from target"
+        default=None, description="Allocation deviation from target"
     )
 
     @field_validator(

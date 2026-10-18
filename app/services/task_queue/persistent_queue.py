@@ -732,7 +732,7 @@ class PersistentTaskQueue:
 
             await db.commit()
 
-        count = len(rows)
+        count = len(list(rows))
         if count > 0:
             self.logger.info(f"Reprocessed {count} stuck tasks")
 
@@ -872,7 +872,8 @@ class PersistentTaskQueue:
 
             # Get total tasks
             cursor = await db.execute("SELECT COUNT(*) FROM tasks")
-            total = (await cursor.fetchone())[0]
+            total_row = await cursor.fetchone()
+            total = total_row[0] if total_row is not None else 0
 
             return {
                 "total_tasks": total,

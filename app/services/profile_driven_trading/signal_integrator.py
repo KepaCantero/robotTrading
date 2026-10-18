@@ -8,6 +8,7 @@ using confidence-weighted voting and produces a unified signal set.
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import numpy as np
 
@@ -311,7 +312,7 @@ class SignalIntegrator:
 
         return filtered_set
 
-    def generate_signal_report(self, signal_set: SignalSet) -> dict[str, any]:
+    def generate_signal_report(self, signal_set: SignalSet) -> dict[str, Any]:
         """
         Generate comprehensive report on signal set.
 

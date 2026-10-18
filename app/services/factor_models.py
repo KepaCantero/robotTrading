@@ -540,7 +540,7 @@ class StatisticalArbitrage:
         Returns:
             Series of residual returns
         """
-        if not self.factor_model.fitted:
+        if not self.factor_model.fitted or self.factor_model.last_result is None:
             raise ValueError("Factor model must be fitted")
 
         # Calculate expected return from factors
@@ -618,11 +618,14 @@ class StatisticalArbitrage:
                 factor_returns.get("smb", 0),
                 factor_returns.get("hml", 0),
             )
+            last_result = self.factor_model.last_result
+            if last_result is None:
+                raise ValueError("Factor model fit failed")
             factor_loadings_list.append(
                 [
-                    self.factor_model.last_result.factor_loadings.beta_market,
-                    self.factor_model.last_result.factor_loadings.beta_smb,
-                    self.factor_model.last_result.factor_loadings.beta_hml,
+                    last_result.factor_loadings.beta_market,
+                    last_result.factor_loadings.beta_smb,
+                    last_result.factor_loadings.beta_hml,
                 ]
             )
 

@@ -1052,6 +1052,8 @@ def render(
                         track = StepTrack(on_click=lambda aid: open_details(aid))
 
                     result_container = ui.column().classes("w-full gap-md")
+                    portfolio_container = ui.column().classes("w-full gap-md")
+                    optimizer_container = ui.column().classes("w-full gap-md")
 
                     with ui.expansion("Technical detail", icon="terminal").classes("w-full panel"):
                         log = MissionLog()
@@ -1177,6 +1179,210 @@ def render(
         prog_fill.style(f"width: {completed * 10}%")
         prog_fill.classes(add="full") if status == "completed" else prog_fill.classes(remove="full")
 
+    def render_portfolio(run: Any) -> None:
+        results = getattr(run, "results", None) or {}
+        portfolio = extract_portfolio(results)
+        portfolio_container.clear()
+        if not portfolio["allocations"]:
+            return
+        with portfolio_container:
+            with ui.element("div").classes("panel q-pa-md w-full"):
+                ui.label("PORTFOLIO").classes("lbl q-mb-xs")
+                summary_bits = [
+                    bit
+                    for bit in (
+                        str(portfolio["method"] or "").replace("_", " "),
+                        (
+                            f"expected return {_fmt_short(portfolio['expected_return'])}%"
+                            if portfolio["expected_return"] is not None
+                            else None
+                        ),
+                        (
+                            f"Sharpe {_fmt_short(portfolio['expected_sharpe'])}"
+                            if portfolio["expected_sharpe"] is not None
+                            else None
+                        ),
+                    )
+                    if bit
+                ]
+                if summary_bits:
+                    ui.label(" · ".join(summary_bits)).classes("help q-mb-sm")
+                with ui.row().classes("w-full items-start gap-md no-wrap"):
+                    donut = build_allocation_chart(portfolio["allocations"])
+                    if donut is not None:
+                        ui.echart(donut).props(
+                            "role=img aria-label='Donut chart of portfolio weights'"
+                        ).classes("flex-1").style("min-width: 260px; height: 280px")
+                    with ui.column().classes("flex-1 gap-xs").style("min-width: 0"):
+                        ui.label("HOW YOUR CAPITAL IS SPREAD").classes("lbl")
+                        for alloc in portfolio["allocations"][:6]:
+                            with ui.row().classes("w-full items-center no-wrap gap-sm"):
+                                ui.label(alloc["module"]).classes("pstep-name")
+                                ui.label(
+                                    f"{alloc['weight']:.1f}% · €{alloc['capital']:,.0f}"
+                                ).classes("pstep-meta ok q-ml-auto")
+                            if alloc["rationale"]:
+                                ui.label(alloc["rationale"]).classes("help")
+                if portfolio["risk_applied"] and portfolio["adjusted"]:
+                    risk_chart = build_risk_adjustment_chart(portfolio["adjusted"])
+                    if risk_chart is not None:
+                        ui.label("RISK ADJUSTMENT").classes("lbl q-mt-md q-mb-xs")
+                        ui.label(
+                            "Weights after adapting to the market regime and "
+                            "volatility you selected."
+                        ).classes("help q-mb-sm")
+                        ui.echart(risk_chart).props(
+                            "role=img aria-label='Bar chart comparing base and risk-adjusted weights'"
+                        ).classes("w-full").style("height: 240px")
+                else:
+                    ui.label(
+                        "No risk adjustment was needed for the selected market conditions."
+                    ).classes("help q-mt-sm")
+
+    def render_optimizer_panel() -> None:
+        """4 · TUNE PARAMETERS: optimize, compare, adopt, restore."""
+        optimizer_container.clear()
+        with optimizer_container:
+            with ui.element("div").classes("panel q-pa-md w-full"):
+                ui.label("4 · TUNE PARAMETERS").classes("lbl q-mb-xs")
+                ui.label(
+                    "Run a grid search over the strategy's parameters with the real "
+                    "engine. If a combination beats the current one, adopt it with "
+                    "one click — every change is saved and reversible."
+                ).classes("help q-mb-sm")
+
+                with ui.row().classes("w-full items-center gap-md no-wrap"):
+                    optimize_button = (
+                        ui.button("Optimize parameters", icon="tune")
+                        .props("color=teal outline dense")
+                        .mark("optimize_button")
+                        .tooltip("Runs a grid search (~1-2 min) on your current config")
+                    )
+                    optimize_status = ui.label("").classes("help")
+                optimize_results = ui.column().classes("w-full gap-sm q-mt-sm")
+                param_history = ui.column().classes("w-full gap-xs q-mt-md")
+
+                async def refresh_param_history() -> None:
+                    if store is None:
+                        return
+                    try:
+                        sets = await store.list_param_sets()
+                    except Exception:
+                        return
+                    param_history.clear()
+                    if not sets:
+                        return
+                    with param_history:
+                        ui.label("PARAMETER HISTORY").classes("lbl q-mb-xs")
+                        for entry in sets[:8]:
+                            with ui.row().classes("w-full items-center no-wrap gap-sm"):
+                                active = "●" if entry["is_active"] else "○"
+                                ui.label(active).classes(
+                                    "term-good" if entry["is_active"] else "help"
+                                )
+                                ui.label(f"{entry['strategy']} · {entry['params']}").classes(
+                                    "help"
+                                ).style("min-width: 0; flex: 1")
+                                ui.label(entry["created_at"][:16]).classes("help")
+                                if not entry["is_active"]:
+                                    restore_btn = ui.button("Restore", icon="history").props(
+                                        "flat dense color=teal size=xs"
+                                    )
+                                    restore_btn.on_click(
+                                        lambda _, pid=entry["id"]: activate_param_set(pid)
+                                    )
+
+                async def activate_param_set(param_set_id: int) -> None:
+                    if store is None:
+                        return
+                    await store.activate_param_set(param_set_id)
+                    ui.notify("Parameter set restored", type="positive")
+                    await refresh_param_history()
+
+                async def run_optimize() -> None:
+                    if executor is None:
+                        ui.notify("Executor not available.", type="negative")
+                        return
+                    from app.services.agent_swarm.optimizer import optimize as run_grid
+
+                    optimize_button.disable()
+                    optimize_status.text = "Searching… (uses the real engine, may take 1-2 minutes)"
+                    symbols = [str(s).upper() for s in (universo.value or [])] or DEFAULT_UNIVERSE
+                    start_iso, end_iso = resolve_period(
+                        periodo.value,
+                        custom_start.value,
+                        custom_end.value,
+                        data_window(symbols),
+                    )
+                    try:
+                        result = await asyncio.to_thread(
+                            run_grid,
+                            estrategia.value,
+                            symbols,
+                            start_iso,
+                            end_iso,
+                            Decimal(str(capital.value or 100000)),
+                            12,
+                        )
+                    except Exception as exc:
+                        optimize_button.enable()
+                        optimize_status.text = f"Optimization failed: {exc}"
+                        return
+                    optimize_button.enable()
+                    optimize_status.text = ""
+
+                    optimize_results.clear()
+                    with optimize_results:
+                        with ui.row().classes("w-full gap-md no-wrap items-center"):
+                            _metric_tile("Current return %", result.baseline.get("return_pct"), 0)
+                            _metric_tile("Current Sharpe", result.baseline.get("sharpe"), 0.05)
+                            _metric_tile("Best return %", result.best.get("return_pct"), 0.1)
+                            _metric_tile("Best Sharpe", result.best.get("sharpe"), 0.15)
+                        ui.label(f"Best parameters: {result.best_params}").classes("help")
+                        if result.improved:
+                            ui.label(
+                                "The best combination improves on your current "
+                                "parameters — adopt it?"
+                            ).classes("pstep-name")
+                            adopt_btn = (
+                                ui.button("Adopt best parameters", icon="check_circle")
+                                .props("color=teal dense")
+                                .classes("q-mt-xs")
+                            )
+
+                            async def adopt() -> None:
+                                if store is None:
+                                    ui.notify("Store not available.", type="warning")
+                                    return
+                                await store.save_param_set(
+                                    strategy=result.strategy,
+                                    params=result.best_params,
+                                    metrics={
+                                        "return_pct": str(result.best.get("return_pct", "")),
+                                        "sharpe": str(result.best.get("sharpe", "")),
+                                        "trades": result.best.get("trades"),
+                                    },
+                                    source="optimizer",
+                                    note=f"grid search {result.start}→{result.end}",
+                                    activate=True,
+                                )
+                                ui.notify(
+                                    "Parameters adopted — future runs will use them",
+                                    type="positive",
+                                )
+                                await refresh_param_history()
+
+                            adopt_btn.on_click(adopt)
+                        else:
+                            ui.label(
+                                "Your current parameters are already the best in "
+                                "this search grid — nothing to change."
+                            ).classes("help")
+                    await refresh_param_history()
+
+                optimize_button.on_click(run_optimize)
+                ui.timer(0.1, refresh_param_history, once=True)
+
     def render_result(run: Any) -> None:
         results = getattr(run, "results", None) or {}
         metrics = extract_result_metrics(results)
@@ -1228,63 +1434,6 @@ def render(
                 if context_bits:
                     ui.label(f"Investor: {' · '.join(context_bits)}").classes("help q-mt-sm")
 
-                portfolio = extract_portfolio(results)
-                if portfolio["allocations"]:
-                    ui.separator().classes("q-mt-md q-mb-sm")
-                    ui.label("PORTFOLIO").classes("lbl q-mb-xs")
-                    summary_bits = [
-                        bit
-                        for bit in (
-                            str(portfolio["method"] or "").replace("_", " "),
-                            (
-                                f"expected return {_fmt_short(portfolio['expected_return'])}%"
-                                if portfolio["expected_return"] is not None
-                                else None
-                            ),
-                            (
-                                f"Sharpe {_fmt_short(portfolio['expected_sharpe'])}"
-                                if portfolio["expected_sharpe"] is not None
-                                else None
-                            ),
-                        )
-                        if bit
-                    ]
-                    if summary_bits:
-                        ui.label(" · ".join(summary_bits)).classes("help q-mb-sm")
-
-                    with ui.row().classes("w-full items-start gap-md no-wrap"):
-                        donut = build_allocation_chart(portfolio["allocations"])
-                        if donut is not None:
-                            ui.echart(donut).props(
-                                "role=img aria-label='Donut chart of portfolio weights'"
-                            ).classes("flex-1").style("min-width: 260px; height: 280px")
-                        with ui.column().classes("flex-1 gap-xs").style("min-width: 0"):
-                            ui.label("HOW YOUR CAPITAL IS SPREAD").classes("lbl")
-                            for alloc in portfolio["allocations"][:6]:
-                                with ui.row().classes("w-full items-center no-wrap gap-sm"):
-                                    ui.label(alloc["module"]).classes("pstep-name")
-                                    ui.label(
-                                        f"{alloc['weight']:.1f}% · €{alloc['capital']:,.0f}"
-                                    ).classes("pstep-meta ok q-ml-auto")
-                                if alloc["rationale"]:
-                                    ui.label(alloc["rationale"]).classes("help")
-
-                    if portfolio["risk_applied"] and portfolio["adjusted"]:
-                        risk_chart = build_risk_adjustment_chart(portfolio["adjusted"])
-                        if risk_chart is not None:
-                            ui.label("RISK ADJUSTMENT").classes("lbl q-mt-md q-mb-xs")
-                            ui.label(
-                                "Weights after adapting to the market regime and "
-                                "volatility you selected."
-                            ).classes("help q-mb-sm")
-                            ui.echart(risk_chart).props(
-                                "role=img aria-label='Bar chart comparing base and risk-adjusted weights'"
-                            ).classes("w-full").style("height: 240px")
-                    else:
-                        ui.label(
-                            "No risk adjustment was needed for the selected market conditions."
-                        ).classes("help q-mt-sm")
-
                 if metrics.get("reasons"):
                     ui.label("Why").classes("lbl q-mt-md q-mb-xs")
                     for reason in metrics["reasons"]:
@@ -1311,6 +1460,8 @@ def render(
         log.clear()
         chart_container.clear()
         result_container.clear()
+        portfolio_container.clear()
+        optimizer_container.clear()
         update_state(None)
 
     def drain_log(events: list, start: int) -> int:
@@ -1335,6 +1486,8 @@ def render(
         replay_last_btn.enable()
         if good:
             render_result(run)
+            render_portfolio(run)
+            render_optimizer_panel()
             option = build_duration_chart_option(run.agents)
             chart_container.clear()
             if option is not None:

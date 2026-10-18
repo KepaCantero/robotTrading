@@ -10,6 +10,7 @@ from __future__ import annotations
 import logging
 import math
 from decimal import Decimal
+from typing import cast
 
 from app.backtesting.metrics import bounded_drawdown_fraction, build_daily_equity_series
 from app.backtesting.models import BacktestConfig, PerformanceMetrics, Trade, TradeStatus
@@ -73,19 +74,19 @@ class PerformanceMetricsCalculator:
             return self._create_empty_metrics(capital)
 
         # Separate winning and losing trades
-        winning_trades = []
-        losing_trades = []
+        winning_pnls: list[Decimal] = []
+        losing_pnls: list[Decimal] = []
 
         for trade in trades:
             if trade.status == TradeStatus.CLOSED and trade.pnl is not None:
                 if trade.pnl > 0:
-                    winning_trades.append(trade)
+                    winning_pnls.append(trade.pnl)
                 else:
-                    losing_trades.append(trade)
+                    losing_pnls.append(trade.pnl)
 
-        total_trades = len(winning_trades) + len(losing_trades)
-        winning_count = len(winning_trades)
-        losing_count = len(losing_trades)
+        total_trades = len(winning_pnls) + len(losing_pnls)
+        winning_count = len(winning_pnls)
+        losing_count = len(losing_pnls)
 
         # Calculate win rate (ensure between 0-100)
         if total_trades > 0:
@@ -95,18 +96,16 @@ class PerformanceMetricsCalculator:
             win_rate = Decimal("0")
 
         # Calculate P&L metrics
-        total_pnl = sum(trade.pnl for trade in winning_trades + losing_trades)
-        gross_profit = (
-            sum(trade.pnl for trade in winning_trades) if winning_trades else Decimal("0")
-        )
-        gross_loss = sum(trade.pnl for trade in losing_trades) if losing_trades else Decimal("0")
+        total_pnl = sum(winning_pnls + losing_pnls, Decimal(0))
+        gross_profit = sum(winning_pnls, Decimal(0))
+        gross_loss = sum(losing_pnls, Decimal(0))
         net_profit = gross_profit + gross_loss
 
         # Calculate trade statistics
         avg_win = gross_profit / winning_count if winning_count > 0 else Decimal("0")
         avg_loss = gross_loss / losing_count if losing_count > 0 else Decimal("0")
-        largest_win = max(trade.pnl for trade in winning_trades) if winning_trades else Decimal("0")
-        largest_loss = min(trade.pnl for trade in losing_trades) if losing_trades else Decimal("0")
+        largest_win = max(winning_pnls) if winning_pnls else Decimal("0")
+        largest_loss = min(losing_pnls) if losing_pnls else Decimal("0")
 
         # Calculate Sharpe/Sortino ratios. Prefer the per-bar equity-curve series:
         # it has the correct time base (one observation per bar, not per trade),
@@ -124,7 +123,9 @@ class PerformanceMetricsCalculator:
             last_trade = max(trades, key=lambda t: t.exit_time or t.entry_time)
             last_time = last_trade.exit_time or last_trade.entry_time
             total_days = (last_time - first_trade.entry_time).days
-            avg_trade_duration = total_days / total_trades if total_trades > 0 else Decimal("0")
+            avg_trade_duration = (
+                cast("Decimal", total_days / total_trades) if total_trades > 0 else Decimal("0")
+            )
         else:
             total_days = 0
             avg_trade_duration = Decimal("0")
@@ -193,6 +194,8 @@ class PerformanceMetricsCalculator:
         # Calculate mean and standard deviation
         mean_return = safe_mean(returns)
         variance = safe_variance(returns)
+        if mean_return is None or variance is None:
+            return None
         std_dev = Decimal(str(math.sqrt(float(variance))))
 
         # CRITICAL FIX: Add volatility floor to prevent extreme Sharpe values
@@ -236,6 +239,8 @@ class PerformanceMetricsCalculator:
 
         mean_return = safe_mean(returns)
         variance = safe_variance(returns)
+        if mean_return is None or variance is None:
+            return None
         std_dev = Decimal(str(math.sqrt(float(variance))))
 
         MIN_ANNUAL_VOLATILITY = _backtest_config.min_annual_volatility
@@ -275,6 +280,8 @@ class PerformanceMetricsCalculator:
 
         MIN_ANNUAL_VOLATILITY = _backtest_config.min_annual_volatility
         mean_return = safe_mean(returns)
+        if mean_return is None:
+            return None
         annual_mean = mean_return * Decimal(str(_backtest_config.annual_trading_days))
         annual_downside = downside_dev * Decimal(
             str(math.sqrt(_backtest_config.annual_trading_days))
@@ -378,10 +385,11 @@ class PerformanceMetricsCalculator:
         Returns:
             Expectancy per trade
         """
-        closed_trades = [t for t in trades if t.status == TradeStatus.CLOSED and t.pnl is not None]
+        closed_pnls = [
+            t.pnl for t in trades if t.status == TradeStatus.CLOSED and t.pnl is not None
+        ]
 
-        if not closed_trades:
+        if not closed_pnls:
             return Decimal("0")
 
-        total_pnl = sum(t.pnl for t in closed_trades)
-        return total_pnl / len(closed_trades)
+        return cast("Decimal", sum(closed_pnls) / len(closed_pnls))

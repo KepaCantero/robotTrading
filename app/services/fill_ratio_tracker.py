@@ -62,7 +62,7 @@ class FillRatioTracker:
         """
         metrics = FillMetrics(order.id, order.symbol)
         metrics.requested_quantity = order.quantity
-        metrics.requested_price = order.price
+        metrics.requested_price = order.price if order.price is not None else Decimal("0")
         metrics.status = order.status
 
         self.fill_metrics.append(metrics)

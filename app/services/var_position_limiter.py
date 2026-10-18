@@ -14,7 +14,7 @@ Uses centralized configuration for all thresholds and parameters.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from decimal import Decimal
 from typing import TYPE_CHECKING
@@ -67,11 +67,7 @@ class ValidationResult:
     var_limit: Decimal
     excess_var: Decimal | None = None
     utilization_pct: Decimal = Decimal("0")
-    warnings: list[str] = None
-
-    def __post_init__(self):
-        if self.warnings is None:
-            self.warnings = []
+    warnings: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -286,7 +282,11 @@ class VaRPositionLimiter:
 
             # VaR = portfolio_value * sqrt(variance) * z_score
             std_dev = portfolio_variance**0.5
-            var = portfolio_value * to_decimal(str(std_dev)) * to_decimal(str(z_score))
+            var = (
+                portfolio_value
+                * (to_decimal(str(std_dev)) or Decimal("0"))
+                * (to_decimal(str(z_score)) or Decimal("0"))
+            )
 
             logger.debug(
                 f"Portfolio VaR ({confidence_level:.0%}): "
@@ -365,7 +365,9 @@ class VaRPositionLimiter:
 
             z_score = norm.ppf(confidence_level)
             incremental_var = (
-                portfolio_value * safe_decimal_sqrt(incremental_variance) * to_decimal(str(z_score))
+                portfolio_value
+                * (safe_decimal_sqrt(incremental_variance) or Decimal("0"))
+                * (to_decimal(str(z_score)) or Decimal("0"))
             )
 
             projected_var = current_var + incremental_var
@@ -597,7 +599,9 @@ class VaRPositionLimiter:
 
             # Solve for position_value: allowable_var = position_value * vol * z
             max_position_value = (
-                allowable_var / to_decimal(str(volatility)) / to_decimal(str(z_score))
+                allowable_var
+                / (to_decimal(str(volatility)) or Decimal("0"))
+                / (to_decimal(str(z_score)) or Decimal("0"))
             )
 
             # Calculate max quantity

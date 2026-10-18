@@ -16,7 +16,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 import pandas as pd
@@ -28,6 +28,11 @@ if TYPE_CHECKING:
     from app.backtesting.services.models import ProfileResult
 
 logger = logging.getLogger(__name__)
+
+
+def _num(value: object) -> float:
+    """Coerce un valor de métricas numérico a float (identidad para floats)."""
+    return float(cast("int | float", value))
 
 
 class ReportGenerationService:
@@ -152,7 +157,7 @@ class ReportGenerationService:
             },
             "best_overall": max(
                 results.items(),
-                key=lambda x: x[1].optimization_results.get("sharpe_ratio", 0),
+                key=lambda x: _num(x[1].optimization_results.get("sharpe_ratio", 0)),
                 default=(None, None),
             ),
             # Include fallback metrics in summary
@@ -281,9 +286,9 @@ class ReportGenerationService:
                         grouped[key] = r
                     else:
                         # Keep best Sharpe
-                        if r.optimization_results.get("sharpe_ratio", 0) > grouped[
-                            key
-                        ].optimization_results.get("sharpe_ratio", 0):
+                        if _num(r.optimization_results.get("sharpe_ratio", 0)) > _num(
+                            grouped[key].optimization_results.get("sharpe_ratio", 0)
+                        ):
                             grouped[key] = r
 
                 best_by_objective.append(

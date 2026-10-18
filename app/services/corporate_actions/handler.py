@@ -897,11 +897,11 @@ class CorporateActionsHandler:
     def _get_position_id(self, position: object) -> str:
         """Extract position ID from position object."""
         if hasattr(position, "position_id"):
-            return str(position.position_id)
+            return str(getattr(position, "position_id", ""))
         elif hasattr(position, "id"):
-            return str(position.id)
+            return str(getattr(position, "id", ""))
         elif isinstance(position, dict):
-            return position.get("position_id", position.get("id", ""))
+            return str(position.get("position_id") or position.get("id") or "")
         return ""
 
     # ==========================================================================

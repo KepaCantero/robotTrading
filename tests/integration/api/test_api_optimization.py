@@ -38,7 +38,7 @@ class TestOptimizationAPI:
     @pytest.fixture
     def client(self):
         """Create test client."""
-        return TestClient(app)
+        return TestClient(app, headers={"X-API-Key": "test-integration-key-1"})
 
     @pytest.fixture
     def sample_parameters(self):

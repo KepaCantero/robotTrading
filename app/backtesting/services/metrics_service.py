@@ -15,7 +15,7 @@ Responsibilities:
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Mapping
 
 import pandas as pd
 
@@ -144,7 +144,10 @@ class MetricsCalculationService:
         return ((optimized - baseline) / abs(baseline)) * 100
 
     def generate_comparison(
-        self, baseline: MetricsDict, optimized: MetricsDict, optuna_results: ConfigDict
+        self,
+        baseline: MetricsDict,
+        optimized: MetricsDict,
+        optuna_results: Mapping[str, Any],
     ) -> BaselineOptimizationComparison:
         """
         Generate baseline vs optimization comparison.

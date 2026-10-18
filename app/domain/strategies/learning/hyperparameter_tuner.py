@@ -25,7 +25,6 @@ try:
     OPTUNA_AVAILABLE = True
 except ImportError:
     OPTUNA_AVAILABLE = False
-    optuna = None
 
 try:
     import torch
@@ -33,7 +32,6 @@ try:
     PYTORCH_AVAILABLE = True
 except ImportError:
     PYTORCH_AVAILABLE = False
-    torch = None
 
 
 class EarlyStoppingAdaptive:

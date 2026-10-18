@@ -27,6 +27,10 @@ from fastapi.testclient import TestClient
 
 # Set Numba cache directory to a writable location
 os.environ["NUMBA_CACHE_DIR"] = "/tmp/numba_cache_test"
+# El teardown del scheduler paralelo de numba (@njit(parallel=True)) segfaultea
+# el intérprete en procesos de larga duración (suite completa). Un solo hilo
+# lo elimina sin afectar la corrección de lo testeado.
+os.environ["NUMBA_NUM_THREADS"] = "1"
 try:
     os.makedirs("/tmp/numba_cache_test", exist_ok=True)
 except (OSError, PermissionError):

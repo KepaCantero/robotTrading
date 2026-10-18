@@ -176,6 +176,9 @@ class CostAnalysisService:
 
             # Calculate Cost Impact Ratio (CIR)
             gross_profit = trade.pnl if trade.pnl else Decimal("0")
+            gross_profit = (
+                gross_profit if isinstance(gross_profit, Decimal) else Decimal(str(gross_profit))
+            )
             cost_impact_ratio = (
                 (total_cost / gross_profit) * 100 if gross_profit > 0 else Decimal("0")
             )
@@ -255,7 +258,7 @@ class CostAnalysisService:
             )
 
             # Calculate profitability metrics
-            gross_profit = sum(trade.pnl for trade in trades if trade.pnl)
+            gross_profit = sum((trade.pnl for trade in trades if trade.pnl), Decimal("0"))
             net_profit = gross_profit - total_costs
 
             # Calculate Cost Impact Ratio (CIR)
@@ -279,7 +282,10 @@ class CostAnalysisService:
                 strategy_name=strategy_name,
                 analysis_period=(
                     min(t.entry_time for t in trades),
-                    max(t.exit_time for t in trades),
+                    max(
+                        (t.exit_time for t in trades if t.exit_time is not None),
+                        default=min(t.entry_time for t in trades),
+                    ),
                 ),
                 total_trades=len(cost_breakdowns),
                 total_commission=total_commission,
@@ -662,6 +668,8 @@ class CostAnalysisService:
             # Only short positions have borrowing costs
             if trade.side.lower() == "sell" and trade.quantity > 0:
                 # Calculate borrowing cost based on position duration
+                if trade.exit_time is None:
+                    return Decimal("0")
                 duration_days = (trade.exit_time - trade.entry_time).days
                 if duration_days <= 0:
                     duration_days = 1

@@ -34,7 +34,7 @@ class TrialResult:
     params: dict[str, Any]
     objective_value: float
     status: TrialStatus = TrialStatus.COMPLETED
-    metrics: dict[str, float] = field(default_factory=dict)
+    metrics: dict[str, float | list[float]] = field(default_factory=dict)
     start_time: datetime | None = None
     end_time: datetime | None = None
     duration_seconds: float = 0.0

@@ -10,7 +10,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -134,7 +134,7 @@ class QlibConnector:
 
         fields = fields or ["open", "high", "low", "close", "volume"]
 
-        data = {}
+        data: dict[str, Any] = {}
         try:
             # In production: actual Qlib API call
             # data = D.features(symbols, start_date, end_date, fields)
@@ -198,7 +198,7 @@ class QlibConnector:
         Returns:
             Engineered features
         """
-        engineered = {}
+        engineered: dict[str, Any] = {}
         try:
             # In production: use Qlib's feature engineering utilities
             logger.info("✅ Applied feature engineering to data")

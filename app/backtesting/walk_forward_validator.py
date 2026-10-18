@@ -36,13 +36,20 @@ from app.backtesting.backtesting_compliance import (
     create_backtesting_compliance,
 )
 from app.backtesting.engine import SimpleBacktester
+from app.backtesting.models import BacktestResult, PerformanceMetrics
 from app.backtesting.realistic_data_generator import MarketRegime, RealisticDataGenerator
 
 if TYPE_CHECKING:
     from app.backtesting.models import BacktestConfig
     from app.domain.models.market_data import Quote
+from app.domain.models.signal import Signal
 
 logger = logging.getLogger(__name__)
+
+
+def _performance_of(backtest_result: BacktestResult) -> PerformanceMetrics:
+    """Narrowa ``BacktestResult.performance``: el engine siempre lo puebla."""
+    return cast("PerformanceMetrics", backtest_result.performance)
 
 
 # ============================================================================
@@ -111,7 +118,7 @@ class WalkForwardValidationParams:
     """Parameters for walk-forward strategy validation."""
 
     quotes: list[Quote]
-    signals: list[object]
+    signals: list[Signal]
     config: BacktestConfig
     start_date: datetime
     end_date: datetime
@@ -122,7 +129,7 @@ class CrossValidationParams:
     """Parameters for temporal cross-validation."""
 
     quotes: list[Quote]
-    signals: list[object]
+    signals: list[Signal]
     config: BacktestConfig
     start_date: datetime
     end_date: datetime
@@ -135,7 +142,7 @@ class FullValidationParams:
     strategy: object
     strategy_name: str
     quotes: list[Quote]
-    signals: list[object]
+    signals: list[Signal]
     backtest_config: BacktestConfig
     start_date: datetime
     end_date: datetime
@@ -846,12 +853,12 @@ class WalkForwardValidator:
                     )
                     is_metrics = {
                         "total_return": float(train_result.total_return),
-                        "sharpe_ratio": float(train_result.performance.sharpe_ratio or 0),
+                        "sharpe_ratio": float(_performance_of(train_result).sharpe_ratio or 0),
                         "max_drawdown": float(
-                            train_result.performance.max_drawdown_percentage or 0
+                            _performance_of(train_result).max_drawdown_percentage or 0
                         ),
-                        "total_trades": train_result.performance.total_trades,
-                        "win_rate": float(train_result.performance.win_rate),
+                        "total_trades": _performance_of(train_result).total_trades,
+                        "win_rate": float(_performance_of(train_result).win_rate),
                     }
                 except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                     logger.warning(f"Window {i + 1}: IS backtest failed: {e}")
@@ -872,11 +879,11 @@ class WalkForwardValidator:
                 validate_start=window["validate_start"],
                 validate_end=window["validate_end"],
                 total_return=float(result.total_return),
-                sharpe_ratio=float(result.performance.sharpe_ratio or 0),
-                max_drawdown=float(result.performance.max_drawdown_percentage or 0),
-                total_trades=result.performance.total_trades,
-                win_rate=float(result.performance.win_rate),
-                passed=result.performance.total_trades >= self.min_trades_per_window,
+                sharpe_ratio=float(_performance_of(result).sharpe_ratio or 0),
+                max_drawdown=float(_performance_of(result).max_drawdown_percentage or 0),
+                total_trades=_performance_of(result).total_trades,
+                win_rate=float(_performance_of(result).win_rate),
+                passed=_performance_of(result).total_trades >= self.min_trades_per_window,
                 # IS metrics (Req #2)
                 is_total_return=is_metrics["total_return"],
                 is_sharpe_ratio=is_metrics["sharpe_ratio"],
@@ -1226,10 +1233,10 @@ class CrossValidationTemporal:
                     },
                     "result": {
                         "total_return": float(result.total_return),
-                        "sharpe_ratio": float(result.performance.sharpe_ratio or 0),
-                        "max_drawdown": float(result.performance.max_drawdown_percentage or 0),
-                        "total_trades": result.performance.total_trades,
-                        "win_rate": float(result.performance.win_rate),
+                        "sharpe_ratio": float(_performance_of(result).sharpe_ratio or 0),
+                        "max_drawdown": float(_performance_of(result).max_drawdown_percentage or 0),
+                        "total_trades": _performance_of(result).total_trades,
+                        "win_rate": float(_performance_of(result).win_rate),
                     },
                 }
             )
@@ -1500,7 +1507,7 @@ class StressTester:
         result = backtester.run_backtest(quotes, signals, start_date, end_date)
 
         total_return = float(result.total_return)
-        max_dd = float(result.performance.max_drawdown_percentage or 0)
+        max_dd = float(_performance_of(result).max_drawdown_percentage or 0)
         final_capital = float(result.final_capital)
         initial_capital = float(backtest_config.initial_capital)
 
@@ -1512,12 +1519,12 @@ class StressTester:
             survived=max_dd > self.thresholds.get("max_scenario_drawdown", -0.30),
             recovered=final_capital >= initial_capital * 0.9,
             final_capital=final_capital,
-            trades_executed=result.performance.total_trades,
+            trades_executed=_performance_of(result).total_trades,
         )
 
-    def _generate_strategy_signals(self, strategy: object, quotes: list[Quote]) -> list[object]:
+    def _generate_strategy_signals(self, strategy: object, quotes: list[Quote]) -> list[Signal]:
         """Generate signals from strategy for a list of quotes."""
-        signals: list[object] = []
+        signals: list[Signal] = []
         for quote in quotes:
             try:
                 analyze_fn = getattr(strategy, "analyze", None)

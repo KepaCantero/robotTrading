@@ -154,10 +154,10 @@ class ForexDataFetcher:
 
         # Check cache
         if self.correlation_cache:
-            correlations, cached_at = self.correlation_cache
+            cached_correlations, cached_at = self.correlation_cache
             if utc_now() - cached_at < self.correlation_cache_duration:
                 logger.debug("Using cached correlations")
-                return correlations.copy()
+                return cached_correlations.copy()
 
         # Try to fetch from API with reconnection manager (not implemented - would call OANDA/FXCM)
         try:
@@ -166,7 +166,7 @@ class ForexDataFetcher:
                 """Internal fetch function."""
                 return self._fetch_correlations_from_api(base_currency)
 
-            correlations = asyncio.run(
+            correlations: dict[str, Decimal] | None = asyncio.run(
                 self.reconnection_manager.connect_with_backoff(_fetch_correlations)
             )
             # Function returns None if API not configured
@@ -212,10 +212,12 @@ class ForexDataFetcher:
                     """Internal fetch function."""
                     return self._fetch_rate_from_api(p)
 
-                rate = asyncio.run(self.reconnection_manager.connect_with_backoff(_fetch_rate))
-                if rate:
-                    self.rate_cache[pair] = (rate, utc_now())
-                    rates[pair] = rate
+                fetched_rate: Decimal | None = asyncio.run(
+                    self.reconnection_manager.connect_with_backoff(_fetch_rate)
+                )
+                if fetched_rate:
+                    self.rate_cache[pair] = (fetched_rate, utc_now())
+                    rates[pair] = fetched_rate
                     continue
             except NotImplementedError:
                 # Expected when API is not implemented
@@ -278,6 +280,7 @@ class ForexDataFetcher:
         # 2. Historical price data endpoints
         # 3. Correlation calculation using pandas/numpy
         # For now, implicitly return None to trigger fallback to DEFAULT_CORRELATIONS
+        return None
 
     def _fetch_rate_from_api(self, pair: str) -> Decimal | None:
         """
@@ -298,6 +301,7 @@ class ForexDataFetcher:
         # 2. Real-time price endpoints
         # 3. Rate limiting and error handling
         # For now, implicitly return None to trigger fallback to default rates
+        return None
 
     def _get_fallback_rate(self, pair: str) -> Decimal:
         """

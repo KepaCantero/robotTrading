@@ -256,7 +256,9 @@ class TransactionCostModel:
         # Use config value for BPS multiplier
         tt = get_config().trading_thresholds
         cost_as_bps = (
-            float(total_cost / trade_value * tt.bps_multiplier) if trade_value > 0 else 0.0
+            float(total_cost / trade_value * Decimal(str(tt.bps_multiplier)))
+            if trade_value > 0
+            else 0.0
         )
 
         # Estimate execution duration

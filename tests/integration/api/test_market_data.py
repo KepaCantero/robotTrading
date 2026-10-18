@@ -39,7 +39,7 @@ class TestMarketDataAPIEndpoints:
     @pytest.fixture
     def client(self, app):
         """Create test client."""
-        return TestClient(app)
+        return TestClient(app, headers={"X-API-Key": "test-integration-key-1"})
 
     @pytest.fixture
     def mock_service(self, app):
@@ -372,7 +372,7 @@ class TestErrorHandling:
     @pytest.fixture
     def client(self, app):
         """Create test client."""
-        return TestClient(app)
+        return TestClient(app, headers={"X-API-Key": "test-integration-key-1"})
 
     @pytest.fixture
     def mock_service(self, app):

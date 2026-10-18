@@ -151,15 +151,20 @@ class ICCalculator:
         if np.isnan(ic_rank_value):
             ic_rank_value = 0.0
 
-        # Convert to Decimal
-        ic = to_decimal(str(round(ic_value, 4)))
-        ic_rank = to_decimal(str(round(ic_rank_value, 4)))
+        # Convert to Decimal (to_decimal devuelve None solo con input inválido;
+        # aquí round(...) siempre produce un str válido)
+        ic_raw = to_decimal(str(round(ic_value, 4)))
+        ic = ic_raw if ic_raw is not None else Decimal("0")
+        ic_rank_raw = to_decimal(str(round(ic_rank_value, 4)))
+        ic_rank = ic_rank_raw if ic_rank_raw is not None else Decimal("0")
 
         # Calculate confidence interval
         n = len(forecasts_clean)
         confidence_interval = self.calculate_confidence_interval(ic_value, n, confidence=0.95)
-        ci_lower = to_decimal(str(round(confidence_interval[0], 4)))
-        ci_upper = to_decimal(str(round(confidence_interval[1], 4)))
+        ci_lower_raw = to_decimal(str(round(confidence_interval[0], 4)))
+        ci_lower = ci_lower_raw if ci_lower_raw is not None else Decimal("0")
+        ci_upper_raw = to_decimal(str(round(confidence_interval[1], 4)))
+        ci_upper = ci_upper_raw if ci_upper_raw is not None else Decimal("0")
 
         # Return metrics (ic_decay is empty for single calculation)
         from app.domain.analysis.fundamental_law.models import ICMetrics

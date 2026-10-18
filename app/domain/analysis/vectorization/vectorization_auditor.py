@@ -49,7 +49,7 @@ class VectorizationAuditor:
     """
 
     # Default directories to exclude
-    DEFAULT_EXCLUDE_DIRS: ClassVar[dict] = {
+    DEFAULT_EXCLUDE_DIRS: ClassVar[set[str]] = {
         "__pycache__",
         ".git",
         ".venv",

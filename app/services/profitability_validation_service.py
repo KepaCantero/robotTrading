@@ -161,7 +161,11 @@ class ProfitabilityCalculator:
 
         # Calcular win rate
         total_trades = len(trades_data)
-        win_rate = (len(winning_trades) / total_trades * 100) if total_trades > 0 else Decimal("0")
+        win_rate = (
+            Decimal(str(len(winning_trades) / total_trades * 100))
+            if total_trades > 0
+            else Decimal("0")
+        )
 
         # Calcular profit factor
         total_wins = sum(winning_trades) if winning_trades else Decimal("0")
@@ -501,7 +505,7 @@ class ProfitabilityValidationService:
         # Análisis histórico por estrategia
         historical_analysis = None
         if include_historical:
-            strategy_groups = {}
+            strategy_groups: dict[str, list[ProfitabilityValidation]] = {}
             for validation in validations:
                 if validation.strategy_name not in strategy_groups:
                     strategy_groups[validation.strategy_name] = []
@@ -553,15 +557,17 @@ class ProfitabilityValidationService:
             raise ValueError("Cannot calculate average metrics for empty list")
 
         # Sumar todas las métricas
-        total_gross_profit = sum(v.metrics.gross_profit for v in validations)
-        total_net_profit = sum(v.metrics.net_profit for v in validations)
-        total_costs = sum(v.metrics.total_costs for v in validations)
-        total_profit_margin = sum(v.metrics.profit_margin for v in validations)
-        total_roi = sum(v.metrics.return_on_investment for v in validations)
-        total_max_drawdown = sum(v.metrics.max_drawdown for v in validations)
-        total_win_rate = sum(v.metrics.win_rate for v in validations)
-        total_profit_factor = sum(v.metrics.profit_factor for v in validations)
-        total_cost_impact_ratio = sum(v.metrics.cost_impact_ratio for v in validations)
+        total_gross_profit = sum((v.metrics.gross_profit for v in validations), Decimal("0"))
+        total_net_profit = sum((v.metrics.net_profit for v in validations), Decimal("0"))
+        total_costs = sum((v.metrics.total_costs for v in validations), Decimal("0"))
+        total_profit_margin = sum((v.metrics.profit_margin for v in validations), Decimal("0"))
+        total_roi = sum((v.metrics.return_on_investment for v in validations), Decimal("0"))
+        total_max_drawdown = sum((v.metrics.max_drawdown for v in validations), Decimal("0"))
+        total_win_rate = sum((v.metrics.win_rate for v in validations), Decimal("0"))
+        total_profit_factor = sum((v.metrics.profit_factor for v in validations), Decimal("0"))
+        total_cost_impact_ratio = sum(
+            (v.metrics.cost_impact_ratio for v in validations), Decimal("0")
+        )
 
         # Calcular promedios
         count = len(validations)

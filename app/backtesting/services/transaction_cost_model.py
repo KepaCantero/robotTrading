@@ -23,7 +23,7 @@ import logging
 from dataclasses import dataclass, field
 from decimal import ROUND_HALF_UP, Decimal
 from enum import Enum
-from typing import Any, ClassVar
+from typing import Any, ClassVar, cast
 
 # SINGLE SOURCE OF TRUTH: Import CentralizedConfig for all values
 from app.shared.config.centralized_config import get_config
@@ -319,9 +319,9 @@ class TransactionCostModel:
         - $1.00 minimum
         - 0.5% of trade value maximum
         """
-        per_share = quantity * self.config.commission_per_share
-        minimum = self.config.commission_minimum
-        maximum = trade_value * self.config.commission_maximum
+        per_share = quantity * cast("Decimal", self.config.commission_per_share)
+        minimum = cast("Decimal", self.config.commission_minimum)
+        maximum = trade_value * cast("Decimal", self.config.commission_maximum)
 
         # Apply min/max
         commission = max(per_share, minimum)
@@ -350,11 +350,11 @@ class TransactionCostModel:
     def _get_spread_bps(self, market_cap_category: str) -> Decimal:
         """Get bid-ask spread in basis points based on market cap."""
         if market_cap_category == "large_cap":
-            return self.config.large_cap_spread_bps
+            return cast("Decimal", self.config.large_cap_spread_bps)
         elif market_cap_category == "small_cap":
-            return self.config.small_cap_spread_bps
+            return cast("Decimal", self.config.small_cap_spread_bps)
         else:
-            return self.config.default_spread_bps
+            return cast("Decimal", self.config.default_spread_bps)
 
     def _calculate_market_impact(
         self,
@@ -382,7 +382,9 @@ class TransactionCostModel:
         participation_rate = trade_value / daily_volume_value
 
         # Cap participation rate
-        participation_rate = min(participation_rate, self.config.max_participation_rate)
+        participation_rate = min(
+            participation_rate, cast("Decimal", self.config.max_participation_rate)
+        )
 
         # Volatility adjustment (use default if not provided)
         vol = volatility or _backtest_config.default_annual_volatility

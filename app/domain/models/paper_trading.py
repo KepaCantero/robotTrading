@@ -89,7 +89,7 @@ class PaperTrade(BaseModel):
 
     @field_validator("quantity", "price", "filled_quantity", "filled_price")
     @classmethod
-    def validate_positive_fields(cls, v) -> Decimal:
+    def validate_positive_fields(cls, v) -> Decimal | None:
         """Validate positive numeric fields."""
         if v is None:
             return v
@@ -106,7 +106,7 @@ class PaperTrade(BaseModel):
 
     @field_validator("filled_quantity")
     @classmethod
-    def validate_filled_quantity(cls, v, info) -> Decimal:
+    def validate_filled_quantity(cls, v, info) -> Decimal | None:
         """Validate filled quantity doesn't exceed order quantity."""
         if v is None:
             return v

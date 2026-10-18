@@ -126,7 +126,7 @@ class DataValidationService:
             },
         )
 
-        issues = []
+        issues: list[DataQualityIssue] = []
 
         for i in range(1, len(data)):
             prev_close = data[i - 1].close
@@ -194,7 +194,7 @@ class DataValidationService:
             },
         )
 
-        issues = []
+        issues: list[DataQualityIssue] = []
 
         if len(data) < 10:
             # Need at least 10 data points for meaningful z-score calculation

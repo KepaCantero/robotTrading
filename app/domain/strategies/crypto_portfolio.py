@@ -405,10 +405,14 @@ class CryptoPortfolioConstructor:
         adjusted_allocation = base_allocation * liq_adjustment
 
         # Adjust for volatility (higher vol = smaller position)
-        vol_adjustment = max(
-            Decimal("0.5"),
-            min(Decimal("1.0"), Decimal("100") / asset.volatility_90d),
-        )
+        vol_adjustment: Decimal
+        if asset.volatility_90d is not None and asset.volatility_90d > 0:
+            vol_adjustment = max(
+                Decimal("0.5"),
+                min(Decimal("1.0"), Decimal("100") / asset.volatility_90d),
+            )
+        else:
+            vol_adjustment = Decimal("1.0")
         final_allocation = adjusted_allocation * vol_adjustment
 
         # Apply max position limit

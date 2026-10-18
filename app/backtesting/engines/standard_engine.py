@@ -19,7 +19,7 @@ import contextlib
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Any, Union, cast
 from uuid import uuid4
 
 import pandas as pd
@@ -27,6 +27,7 @@ import pandas as pd
 from app.backtesting.base_engine import BaseBacktestEngine, EngineType
 
 if TYPE_CHECKING:
+    from app.domain.strategies.learning.base_learning_engine import BaseLearningEngine
     from app.services.dynamic_capital_reallocation import DynamicCapitalReallocationEngine
 
 from app.backtesting.liquidity_validator import LiquidityValidator
@@ -187,8 +188,8 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
 
     def run_backtest(
         self,
-        market_data: list[MarketDataPoint],
-        signals: list[Signal],
+        market_data: list[object] | object,
+        signals: list[Any] | None = None,
         start_date: datetime | None = None,
         end_date: datetime | None = None,
         **kwargs,
@@ -205,6 +206,9 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
         Returns:
             BacktestResult with complete backtest analysis
         """
+        market_data = cast("list[MarketDataPoint]", market_data)
+        signals = cast("list[Signal]", signals)
+
         # Filter data by date range
         if start_date:
             market_data = [md for md in market_data if md.timestamp >= start_date]
@@ -215,6 +219,8 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
 
         # Sort data by timestamp
         market_data, signals = self._sort_data_by_timestamp(market_data, signals)
+        market_data = cast("list[MarketDataPoint]", market_data)
+        signals = cast("list[Signal]", signals)
 
         logger.info(
             f"Backtest starting: {len(market_data)} market_data points, {len(signals)} signals"
@@ -310,7 +316,7 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
         # Update reallocation engine with strategy performance after backtest
         self._update_reallocation_engine(performance, total_return, market_data)
 
-        return self._create_result(
+        return self._build_result(
             performance=performance,
             trades=self.state.trades,
             equity_curve=self.equity_tracker.get_equity_curve(),
@@ -321,7 +327,11 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
             annualized_return=annualized_return,
         )
 
-    def _create_result(
+    def _create_result(self, **kwargs: Any) -> BacktestResult:
+        """Create the engine result (Liskov-compatible with the base engine)."""
+        return self._build_result(**kwargs)
+
+    def _build_result(
         self,
         performance: PerformanceMetrics,
         trades: list[Trade],
@@ -823,12 +833,14 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
 
         if not hasattr(self.strategy, "_learning_updater"):
             self.strategy._learning_updater = LearningEngineUpdater(
-                learning_engine=self.strategy.learning_engine, rebalance_frequency_days=7
+                learning_engine=cast("BaseLearningEngine", self.strategy.learning_engine),
+                rebalance_frequency_days=7,
             )
+        learning_updater = self.strategy._learning_updater
 
         if hasattr(market_data, "close") or hasattr(market_data, "bid"):
             price = float(self._get_price(market_data))
-            self.strategy._learning_updater.add_market_data(
+            learning_updater.add_market_data(
                 market_data={
                     "price": price,
                     "volume": float(getattr(market_data, "volume", 0)),
@@ -887,9 +899,9 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
                     "symbol": signal.symbol,
                     "entry_time": trade.entry_time,
                     "exit_time": trade.exit_time,
-                    "entry_price": float(trade.entry_price),
-                    "exit_price": float(trade.exit_price),
-                    "quantity": float(trade.quantity),
+                    "entry_price": float(cast("Decimal", trade.entry_price)),
+                    "exit_price": float(cast("Decimal", trade.exit_price)),
+                    "quantity": float(cast("Decimal", trade.quantity)),
                     "pnl": float(trade.pnl) if trade.pnl else 0,
                     "side": "sell",
                 },

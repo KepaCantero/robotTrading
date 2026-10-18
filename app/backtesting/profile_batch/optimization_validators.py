@@ -39,14 +39,16 @@ ConfigDict = dict[str, object]
 ValidationResultDict = dict[str, Union[bool, int, float, str, object]]
 
 
-def _safe_float(value: float | int | str | bool | None, default: float = 0.0) -> float:
+def _safe_float(
+    value: float | int | str | bool | list | dict | None, default: float = 0.0
+) -> float:
     """Extract a float from a MetricsDict value, returning default if not numeric."""
     if isinstance(value, (int, float)) and not isinstance(value, bool):
         return float(value)
     return default
 
 
-def _safe_int(value: float | int | str | bool | None, default: int = 0) -> int:
+def _safe_int(value: float | int | str | bool | list | dict | None, default: int = 0) -> int:
     """Extract an int from a MetricsDict value, returning default if not numeric."""
     if isinstance(value, (int, float)) and not isinstance(value, bool):
         return int(value)

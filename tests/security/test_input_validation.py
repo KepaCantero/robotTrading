@@ -26,10 +26,9 @@ class TestInputSanitizer:
         assert result == "Hello World"
 
     def test_sanitize_string_html(self):
-        """Test HTML escaping."""
-        result = InputSanitizer.sanitize_string("<script>alert('xss')</script>")
-        assert "&lt;script&gt;" in result
-        assert "<script>" not in result
+        """Test HTML/script payloads are rejected (contrato endurecido)."""
+        with pytest.raises(ValidationError):
+            InputSanitizer.sanitize_string("<script>alert('xss')</script>")
 
     def test_sanitize_string_sql_injection(self):
         """Test SQL injection detection."""

@@ -46,7 +46,7 @@ class TestAssetAPI:
     @pytest.fixture
     def client(self):
         """FastAPI test client."""
-        return TestClient(app)
+        return TestClient(app, headers={"X-API-Key": "test-integration-key-1"})
 
     def _override_service(self, mock_service):
         """Helper to override the service dependency."""
@@ -455,7 +455,7 @@ class TestAssetAPIEdgeCases:
     @pytest.fixture
     def client(self):
         """FastAPI test client."""
-        return TestClient(app)
+        return TestClient(app, headers={"X-API-Key": "test-integration-key-1"})
 
     def _override_service(self, mock_service):
         """Helper to override the service dependency."""

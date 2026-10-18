@@ -19,7 +19,7 @@ import logging
 import math
 from decimal import Decimal
 
-from .models import CallOption, OptionGreeks
+from .models import AssignmentProbability, CallOption, OptionGreeks
 
 logger = logging.getLogger(__name__)
 
@@ -83,11 +83,14 @@ class BlackScholesGreeks:
             ValueError: Si faltan parámetros requeridos
         """
         # Obtener parámetros
-        S = float(underlying_price or option.underlying_price)
+        price_raw = underlying_price if underlying_price is not None else option.underlying_price
+        if price_raw is None:
+            raise ValueError("Precio del subyacente requerido para calcular Greeks")
+        S = float(price_raw)
         K = float(option.strike)
         T = option.days_to_expiry / 365.0  # Convertir a años
 
-        if S is None or S <= 0:
+        if S <= 0:
             raise ValueError(f"Precio del subyacente inválido: {S}")
 
         if K <= 0:
@@ -307,7 +310,10 @@ class BlackScholesGreeks:
         Raises:
             ValueError: Si no converge
         """
-        S = float(underlying_price or option.underlying_price)
+        price_raw = underlying_price if underlying_price is not None else option.underlying_price
+        if price_raw is None:
+            raise ValueError("Precio del subyacente requerido para calcular IV")
+        S = float(price_raw)
         K = float(option.strike)
         T = option.days_to_expiry / 365.0
 
@@ -376,7 +382,7 @@ class BlackScholesGreeks:
         self,
         option: CallOption,
         current_price: Decimal | None = None,
-    ) -> str:
+    ) -> AssignmentProbability:
         """
         Estimar probabilidad de assignment.
 
@@ -394,11 +400,11 @@ class BlackScholesGreeks:
         """
         from .models import AssignmentProbability
 
-        S = float(current_price or option.underlying_price)
-        K = float(option.strike)
-
-        if S is None:
+        price_raw = current_price if current_price is not None else option.underlying_price
+        if price_raw is None:
             return AssignmentProbability.MODERATE
+        S = float(price_raw)
+        K = float(option.strike)
 
         # Calcular ITM %
         itm_pct = (S - K) / S if S > K else 0
@@ -497,7 +503,7 @@ class GreeksCalculator:
         self,
         option: CallOption,
         current_price: Decimal | None = None,
-    ) -> str:
+    ) -> AssignmentProbability:
         """
         Estimar probabilidad de assignment.
 

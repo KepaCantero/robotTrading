@@ -411,7 +411,9 @@ class DailyReconciler:
         if broker_pos is None and internal_pos is None:
             return {"symbol": symbol, "delta_quantity": Decimal("0"), "delta_value": Decimal("0")}
 
-        if broker_pos is None and internal_pos is not None:
+        if broker_pos is None:
+            # (ambos-None ya devueltos arriba; aquí internal_pos no es None)
+            assert internal_pos is not None
             return {
                 "symbol": symbol,
                 "delta_quantity": -internal_pos.quantity,

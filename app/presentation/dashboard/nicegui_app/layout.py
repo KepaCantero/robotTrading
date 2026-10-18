@@ -80,23 +80,30 @@ class AppShell:
 
     @classmethod
     def build_home(cls) -> None:
-        """Render the home page (shell + Backtest Runner) for root mode."""
+        """Render the home page (shell + Agent Swarm) for root mode."""
         cls._build_shell()
-        from app.presentation.dashboard.nicegui_app.pages.backtest_runner import render
+        from app.presentation.dashboard.nicegui_app.pages.swarm import render
 
-        render(cls._store, cls._runner, cls._profitability)
+        render(cls._swarm_executor, cls._swarm_store)
 
     @classmethod
     def setup(cls) -> None:
         """Register every page, each with its own shell (menu on all routes)."""
 
         # ── Page Routes ────────────────────────────────────────────────────
-        @ui.page("/")
-        def page_backtest_runner():
+        def _render_swarm() -> None:
             cls._build_shell()
-            from app.presentation.dashboard.nicegui_app.pages.backtest_runner import render
+            from app.presentation.dashboard.nicegui_app.pages.swarm import render
 
-            render(cls._store, cls._runner, cls._profitability)
+            render(cls._swarm_executor, cls._swarm_store)
+
+        @ui.page("/")
+        def page_agent_swarm():
+            _render_swarm()
+
+        @ui.page("/swarm")
+        def page_agent_swarm_alias():
+            _render_swarm()
 
         @ui.page("/results")
         def page_results():
@@ -132,10 +139,3 @@ class AppShell:
             from app.presentation.dashboard.nicegui_app.pages.profitability import render
 
             render(cls._store, cls._profitability)
-
-        @ui.page("/swarm")
-        def page_swarm():
-            cls._build_shell()
-            from app.presentation.dashboard.nicegui_app.pages.swarm import render
-
-            render(cls._swarm_executor, cls._swarm_store)

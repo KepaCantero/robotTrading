@@ -111,7 +111,7 @@ class TALibWrapper:
         sma_values = []
         for i in range(period - 1, len(prices)):
             window = prices[i - period + 1 : i + 1]
-            sma = sum(window) / period
+            sma = sum(window, Decimal("0")) / period
             sma_values.append(sma)
 
         return sma_values
@@ -138,7 +138,7 @@ class TALibWrapper:
         ema_values = []
 
         # Initialize with SMA
-        ema = sum(prices[:period]) / period
+        ema = sum(prices[:period], Decimal("0")) / period
         ema_values.append(ema)
 
         # Calculate EMA
@@ -178,8 +178,8 @@ class TALibWrapper:
 
         # Calculate RSI
         for i in range(period, len(gains)):
-            avg_gain = sum(gains[i - period : i]) / period
-            avg_loss = sum(losses[i - period : i]) / period
+            avg_gain = sum(gains[i - period : i], Decimal("0")) / period
+            avg_loss = sum(losses[i - period : i], Decimal("0")) / period
 
             if avg_loss == 0:
                 rsi = Decimal("100")
@@ -226,7 +226,7 @@ class TALibWrapper:
 
         # Calculate ATR
         atr_values = []
-        atr = sum(tr_values[:period]) / period
+        atr = sum(tr_values[:period], Decimal("0")) / period
         atr_values.append(atr)
 
         for tr in tr_values[period:]:
@@ -299,7 +299,7 @@ class TALibWrapper:
             return [], [], []
 
         middle_band = await self.calculate_sma(prices, period)
-        bands = {
+        bands: dict[str, list[Decimal]] = {
             "upper": [],
             "lower": [],
         }
@@ -307,8 +307,8 @@ class TALibWrapper:
         # Calculate standard deviation
         for i in range(period - 1, len(prices)):
             window = prices[i - period + 1 : i + 1]
-            mean = sum(window) / period
-            variance = sum((p - mean) ** 2 for p in window) / period
+            mean = sum(window, Decimal("0")) / period
+            variance = sum(((p - mean) ** 2 for p in window), Decimal("0")) / period
             std_dev = Decimal(str(variance)) ** Decimal("0.5")
 
             upper = middle_band[i - (period - 1)] + (std_dev * Decimal(str(std_dev_multiplier)))

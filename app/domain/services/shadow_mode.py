@@ -76,7 +76,7 @@ from app.sre.data_integrity.sanity_layer import DataSanityLayer, SanityCheckResu
 from app.sre.state_machine.wal_persistence import OrderLog, OrderState, OrderStateMachine
 
 if TYPE_CHECKING:
-    from app.shared.interfaces.broker_base import Order
+    from app.shared.interfaces.broker_base import IBroker, Order
 
 logger = logging.getLogger(__name__)
 
@@ -96,13 +96,13 @@ class ShadowModeConfig:
     enabled: bool = False
     shadow_type: ShadowModeType = ShadowModeType.DRY_RUN
     fill_simulation_model: str = "realistic"  # 'instant', 'realistic', 'slippage_model'
-    slippage_bps: int = None  # Will be loaded from centralized config
-    fill_delay_ms: int = None  # Will be loaded from centralized config
-    partial_fill_probability: float = None  # Will be loaded from centralized config
-    rejection_probability: float = None  # Will be loaded from centralized config
+    slippage_bps: int | None = None  # Will be loaded from centralized config
+    fill_delay_ms: int | None = None  # Will be loaded from centralized config
+    partial_fill_probability: float | None = None  # Will be loaded from centralized config
+    rejection_probability: float | None = None  # Will be loaded from centralized config
     enable_comparison: bool = True  # Track shadow vs real comparisons
-    comparison_window_minutes: int = None  # Will be loaded from centralized config
-    max_shadow_orders_per_day: int = None  # Will be loaded from centralized config
+    comparison_window_minutes: int | None = None  # Will be loaded from centralized config
+    max_shadow_orders_per_day: int | None = None  # Will be loaded from centralized config
     audit_log_path: str | None = None  # Path to audit log file
 
     def __post_init__(self):
@@ -220,7 +220,7 @@ class ShadowModeExecutor:
 
     def __init__(
         self,
-        broker_client: object,
+        broker_client: IBroker,
         wal_manager: OrderStateMachine,
         sanity_layer: DataSanityLayer | None = None,
         config: ShadowModeConfig | None = None,
@@ -318,10 +318,11 @@ class ShadowModeExecutor:
             date_key = today.isoformat()
             self.daily_order_count[date_key] += 1
 
-            if self.daily_order_count[date_key] > self.config.max_shadow_orders_per_day:
+            max_orders = self.config.max_shadow_orders_per_day
+            if max_orders is not None and self.daily_order_count[date_key] > max_orders:
                 raise RuntimeError(
                     f"Daily shadow order limit exceeded: "
-                    f"{self.daily_order_count[date_key]} > {self.config.max_shadow_orders_per_day}"
+                    f"{self.daily_order_count[date_key]} > {max_orders}"
                 )
 
             # Step 3: Validate price with Data Sanity Layer
@@ -512,14 +513,27 @@ class ShadowModeExecutor:
         # Get centralized config for simulation parameters
         config = get_config().shadow_mode
 
+        # __post_init__ rellena estos valores desde la config centralizada;
+        # el fallback explícito mantiene el narrowing para mypy.
+        fill_delay_ms = (
+            self.config.fill_delay_ms
+            if self.config.fill_delay_ms is not None
+            else config.fill_delay_ms
+        )
+
         # Simulate fill delay with jitter from centralized config
-        delay_ms = self.config.fill_delay_ms + random.randint(
+        delay_ms = fill_delay_ms + random.randint(
             config.fill_delay_jitter_min_ms, config.fill_delay_jitter_max_ms
         )
         await asyncio.sleep(delay_ms / 1000.0)
 
         # Check for rejection
-        if random.random() < self.config.rejection_probability:
+        rejection_probability = (
+            self.config.rejection_probability
+            if self.config.rejection_probability is not None
+            else config.rejection_probability
+        )
+        if random.random() < rejection_probability:
             return ShadowExecutionResult(
                 order_id=shadow_order_id,
                 shadow_order_id=shadow_order_id,
@@ -538,6 +552,7 @@ class ShadowModeExecutor:
             )
 
         # Calculate fill price
+        base_price: Decimal | None
         if order_type.upper() == "MARKET":
             # For market orders, get current price from broker
             try:
@@ -569,8 +584,16 @@ class ShadowModeExecutor:
             if base_price is None:
                 raise ValueError("LIMIT orders require a price")
 
+        if base_price is None:
+            # Inalcanzable: ambas ramas garantizan un precio o lanzan error
+            raise ValueError(f"Cannot determine price for {symbol}")
+
         # Apply slippage
-        slippage_bps = self.config.slippage_bps
+        slippage_bps = (
+            self.config.slippage_bps
+            if self.config.slippage_bps is not None
+            else config.slippage_bps
+        )
         slippage_multiplier = Decimal("1") + (Decimal(slippage_bps) / Decimal("10000"))
 
         if side == "BUY":
@@ -582,7 +605,12 @@ class ShadowModeExecutor:
         fill_quantity = quantity
         is_partial = False
 
-        if random.random() < self.config.partial_fill_probability:
+        partial_fill_probability = (
+            self.config.partial_fill_probability
+            if self.config.partial_fill_probability is not None
+            else config.partial_fill_probability
+        )
+        if random.random() < partial_fill_probability:
             # Partial fill: use configured min/max percentages
             fill_pct = random.uniform(config.partial_fill_min_pct, config.partial_fill_max_pct)
             fill_quantity = quantity * Decimal(str(fill_pct)).quantize(Decimal("0.01"))
@@ -682,7 +710,9 @@ class ShadowModeExecutor:
         # Validation 2: WAL consistency
         try:
             pending_orders = await self.wal.get_pending_orders()
-            shadow_pending = [o for o in pending_orders if o.metadata.get("shadow_mode")]
+            shadow_pending = [
+                o for o in pending_orders if o.metadata and o.metadata.get("shadow_mode")
+            ]
 
             if len(shadow_pending) > len(recent_results) * 0.1:
                 report["errors"].append(
@@ -885,7 +915,7 @@ class ShadowModeAwareBroker:
 
     def __init__(
         self,
-        real_broker: object,
+        real_broker: IBroker,
         shadow_executor: ShadowModeExecutor,
     ):
         """

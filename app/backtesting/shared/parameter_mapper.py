@@ -13,7 +13,7 @@ and the nested YAML configuration structure used by strategies.
 from __future__ import annotations
 
 import copy
-from typing import ClassVar, Union
+from typing import ClassVar, Union, cast
 
 from app.backtesting.shared.types import ConfigKeys
 
@@ -106,7 +106,8 @@ class ParameterMappingService:
         """
         # Deep copy base config to avoid mutations
         config: ConfigDict = copy.deepcopy(base_config) if base_config else {}
-        strategy = config.get(ConfigKeys.STRATEGY, {})
+        strategy_raw = config.get(ConfigKeys.STRATEGY, {})
+        strategy: ConfigDict = strategy_raw if isinstance(strategy_raw, dict) else {}
 
         # Ensure modules structure exists
         if ConfigKeys.MODULES not in strategy:
@@ -146,11 +147,11 @@ class ParameterMappingService:
         contexts = mapping.get("contexts")
 
         # Navigate/create path
-        current = strategy
+        current: ConfigDict = strategy
         for path_part in path:
             if path_part not in current:
                 current[path_part] = {}
-            current = current[path_part]
+            current = cast("ConfigDict", current[path_part])
 
         # Set value(s)
         if contexts:
@@ -158,10 +159,11 @@ class ParameterMappingService:
             for context in contexts:
                 if context not in current:
                     current[context] = {}
-                current[context][key] = value
+                context_dict = cast("ConfigDict", current[context])
+                context_dict[cast("str", key)] = value
         else:
             # Set single value
-            current[key] = value
+            current[cast("str", key)] = value
 
     @classmethod
     def map_rsi_threshold(cls, strategy: ConfigDict, rsi_threshold: float) -> None:

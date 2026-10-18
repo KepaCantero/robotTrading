@@ -309,7 +309,9 @@ class StrategyLogger:
         Returns:
             Diccionario con métricas de todas las estrategias
         """
-        strategies = {log.get("strategy") for log in self.logs if log.get("strategy")}
+        strategies = {
+            strategy for log in self.logs if (strategy := log.get("strategy")) is not None
+        }
 
         metrics = {}
         for strategy_name in strategies:

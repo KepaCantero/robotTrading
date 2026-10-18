@@ -10,12 +10,13 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 from uuid import uuid4
 
 from sqlalchemy import (
     JSON,
     Column,
+    ColumnElement,
     DateTime,
     ForeignKey,
     Index,
@@ -442,8 +443,8 @@ class TradePersistenceManager:
                     select(TradeRecord)
                     .where(
                         and_(
-                            TradeRecord.execution_time >= start_date,
-                            TradeRecord.execution_time <= end_date,
+                            cast("ColumnElement[bool]", TradeRecord.execution_time >= start_date),
+                            cast("ColumnElement[bool]", TradeRecord.execution_time <= end_date),
                         )
                     )
                     .order_by(desc(TradeRecord.execution_time))
@@ -545,6 +546,7 @@ class TradePersistenceManager:
                 if not order:
                     return False
 
+                # setattr: columnas legadas Column[...] tipan como Column, no valor plano
                 order.status = status
                 if executed_at:
                     order.executed_at = executed_at

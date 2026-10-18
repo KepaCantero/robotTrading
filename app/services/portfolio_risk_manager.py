@@ -410,7 +410,7 @@ class PortfolioRiskManager:
         Phase 2.4: Uses CorrelationAnalyzer for real correlation from historical prices.
         Falls back to simulated correlation if analyzer not available or data unavailable.
         """
-        correlations = {}
+        correlations: dict[str, Any] = {}
 
         positions = list(portfolio.positions)
         if new_position:
@@ -627,6 +627,7 @@ class PortfolioRiskManager:
 
         # Get thresholds from config
         try:
+            # currency_hedging es sección de primer nivel de CentralizedConfig
             hedging_config = self.config.currency_hedging
             total_fx_max = hedging_config.total_fx_max
         except (AttributeError, KeyError):

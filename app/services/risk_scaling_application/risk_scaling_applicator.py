@@ -25,8 +25,6 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 
-import numpy as np
-
 from .limit_adjuster import LimitAdjuster
 from .models import RiskAdjustedPortfolio, RiskScalingRequest
 from .realtime_monitor import RealTimeMonitor
@@ -217,7 +215,7 @@ class RiskScalingApplication:
                 if s.risk_scaling_applied and s.success
             ]
             if factors:
-                avg_scaling_factor = Decimal(str(np.mean(factors)))
+                avg_scaling_factor = sum(factors, Decimal("0")) / len(factors)
 
         return {
             "total_scalings": total,

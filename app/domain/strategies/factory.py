@@ -8,9 +8,12 @@ permitiendo registro y creación de estrategias sin modificar código.
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 from .base import BaseStrategy
+
+if TYPE_CHECKING:
+    from app.engines.strategy_engines.ensemble import BaseStrategyEnsemble
 
 logger = logging.getLogger(__name__)
 
@@ -139,14 +142,12 @@ class StrategyFactory:
             # Importar estrategias por defecto (legacy)
             from .mean_reversion import MeanReversionStrategy
             from .momentum import MomentumStrategy
-            from .pairs_trading import PairsTradingStrategy
 
             # Registrar estrategias legacy
             self.register_strategy("mean_reversion", MeanReversionStrategy)
             self.register_strategy("momentum", MomentumStrategy)
-            self.register_strategy("pairs_trading", PairsTradingStrategy)
 
-            logger.info("Registered default strategies: mean_reversion, momentum, pairs_trading")
+            logger.info("Registered default strategies: mean_reversion, momentum")
 
         except ImportError as e:
             logger.warning(f"Could not import default strategies: {e}")
@@ -258,8 +259,8 @@ class StrategyFactory:
             # Crear sub-estrategia
             sub_strategy = self.create_strategy(strategy_name, strategy_config)
 
-            # Añadir al ensemble
-            ensemble.add_strategy(
+            # Añadir al ensemble (add_strategy es de BaseStrategyEnsemble)
+            cast("BaseStrategyEnsemble", ensemble).add_strategy(
                 name=f"{strategy_name}_{idx}",
                 strategy=sub_strategy,
                 weight=strategy_weight,

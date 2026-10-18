@@ -20,18 +20,18 @@ from .base_optimizer import BaseOptimizer, OptimizationConfig, OptimizationResul
 from .models import ParameterGrid, ParameterRange, ParameterScale, ParameterType
 from .trial import TrialHistory, TrialResult, TrialStatus
 
-# Try to import Optuna (optional dependency)
+# Try to import Optuna (optional dependency).
+# Cuando no está instalado, los nombres del módulo quedan sin ligar y todo
+# acceso está protegido por comprobaciones de OPTUNA_AVAILABLE.
+OPTUNA_AVAILABLE: bool
 try:
     import optuna
     from optuna.pruners import HyperbandPruner, MedianPruner, SuccessiveHalvingPruner
     from optuna.samplers import CmaEsSampler, RandomSampler, TPESampler
-    from optuna.study import Study
 
     OPTUNA_AVAILABLE = True
 except ImportError:
     OPTUNA_AVAILABLE = False
-    optuna = None
-    Study = None
     logger = logging.getLogger(__name__)
     logger.warning(
         "Optuna not installed. Bayesian optimizer will fall back to random search. "
@@ -354,12 +354,18 @@ class BayesianOptimizer(BaseOptimizer):
         if param.parameter_type == ParameterType.CATEGORICAL:
             if param.values is None:
                 raise ValueError(f"Categorical parameter '{param.name}' has no values")
-            return trial.suggest_categorical(param.name, param.values)
+            choices = [
+                v for v in param.values if v is None or isinstance(v, (bool, int, float, str))
+            ]
+            return trial.suggest_categorical(param.name, choices)
 
         elif param.parameter_type == ParameterType.DISCRETE:
             if param.values is None:
                 raise ValueError(f"Discrete parameter '{param.name}' has no values")
-            return trial.suggest_categorical(param.name, param.values)
+            discrete_choices = [
+                v for v in param.values if v is None or isinstance(v, (bool, int, float, str))
+            ]
+            return trial.suggest_categorical(param.name, discrete_choices)
 
         elif param.parameter_type == ParameterType.INTEGER:
             if param.min_value is None or param.max_value is None:
@@ -425,7 +431,11 @@ class BayesianOptimizer(BaseOptimizer):
                     else (float("-inf") if self.config.maximize else float("inf"))
                 ),
                 status=status,
-                start_time=datetime.fromtimestamp(trial.datetime_start.timestamp()),
+                start_time=(
+                    datetime.fromtimestamp(trial.datetime_start.timestamp())
+                    if trial.datetime_start is not None
+                    else None
+                ),
                 end_time=(
                     datetime.fromtimestamp(trial.datetime_complete.timestamp())
                     if trial.datetime_complete
@@ -534,7 +544,10 @@ class MultiObjectiveBayesianOptimizer(BaseOptimizer):
         if param.parameter_type == ParameterType.CATEGORICAL:
             if param.values is None:
                 raise ValueError(f"Categorical parameter '{param.name}' has no values")
-            return trial.suggest_categorical(param.name, param.values)
+            choices = [
+                v for v in param.values if v is None or isinstance(v, (bool, int, float, str))
+            ]
+            return trial.suggest_categorical(param.name, choices)
         elif param.parameter_type == ParameterType.INTEGER:
             if param.min_value is None or param.max_value is None:
                 raise ValueError(f"Integer parameter '{param.name}' missing min/max values")

@@ -50,7 +50,9 @@ class PerformanceMetrics:
         """Calculate return/drawdown ratio (risk-adjusted metric)."""
         if self.max_drawdown == 0:
             return 0.0
-        avg_return = float(np.mean(self.returns)) if self.returns else 0.0
+        avg_return = (
+            float(sum(self.returns, Decimal("0")) / len(self.returns)) if self.returns else 0.0
+        )
         return avg_return / abs(self.max_drawdown) if self.max_drawdown != 0 else 0.0
 
     @property
@@ -271,10 +273,10 @@ class DynamicCapitalReallocationEngine:
             total_trades_sum += metrics.total_trades
 
         # Calculate aggregated metrics
-        avg_sharpe = np.mean(sharpe_ratios) if sharpe_ratios else None
+        avg_sharpe = float(np.mean(sharpe_ratios)) if sharpe_ratios else None
         worst_drawdown = min(max_drawdowns) if max_drawdowns else 0.0
-        avg_win_rate = np.mean(win_rates) if win_rates else 0.0
-        avg_volatility = np.mean(volatilities) if volatilities else 0.0
+        avg_win_rate = float(np.mean(win_rates)) if win_rates else 0.0
+        avg_volatility = float(np.mean(volatilities)) if volatilities else 0.0
 
         return PerformanceMetrics(
             returns=all_returns,

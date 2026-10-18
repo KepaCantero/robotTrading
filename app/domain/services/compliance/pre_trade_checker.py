@@ -19,13 +19,79 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from app.domain.services.compliance.results import PreTradeCheckResult
 from app.domain.services.compliance.service_registry import get_service_registry
 
 if TYPE_CHECKING:
+    from typing import Protocol
+
     import pandas as pd
+
+    from app.domain.market_analysis.microstructure.liquidity import DepthProfile
+    from app.domain.strategies.alpha_models import AlphaSignal
+    from app.engines.execution_engine.microstructure.harris_integration import (
+        PreTradeCheckResult as HarrisPreTradeCheckResult,
+    )
+
+    class HarrisService(Protocol):
+        """Superficie de harris_integrator usada por este checker."""
+
+        def pre_trade_check(
+            self,
+            symbol: str,
+            side: str,
+            quantity: Decimal,
+            current_price: Decimal,
+            order_book: object = None,
+            price_history: "pd.DataFrame | None" = None,
+            adv: Decimal | None = None,
+            urgency: float = 0.5,
+            signal_time: datetime | None = None,
+        ) -> HarrisPreTradeCheckResult: ...
+
+    class LiquidityService(Protocol):
+        """Superficie de liquidity_analyzer usada por este checker."""
+
+        def measure_market_depth(
+            self, order_book: object, target_size: Decimal | None = None
+        ) -> DepthProfile: ...
+
+        def calculate_liquidity_score(
+            self,
+            spread_bps: float,
+            depth: Decimal,
+            volatility: float,
+            volume: float,
+        ) -> float: ...
+
+        def classify_liquidity_regime(self, liquidity_score: float) -> str: ...
+
+    class RegimeDetectorService(Protocol):
+        """Superficie de regime_detector usada por este checker."""
+
+        def detect_regimes(
+            self,
+            returns: object,
+            prices: object = None,
+            volume: object = None,
+        ) -> "pd.Series": ...
+
+    class AlphaModelService(Protocol):
+        """Superficie de alpha_model usada por este checker."""
+
+        def generate_alpha(
+            self, symbol: str, market_data: "pd.DataFrame", timestamp: datetime
+        ) -> AlphaSignal | None: ...
+
+    class VarCalculatorService(Protocol):
+        """Superficie de var_calculator usada por este checker."""
+
+        def calculate_var(
+            self, returns: object, portfolio_value: float | None = None
+        ) -> dict[str, object]: ...
+
 
 logger = logging.getLogger(__name__)
 
@@ -189,7 +255,7 @@ class PreTradeComplianceChecker:
         reasons: list[str],
     ) -> None:
         """Check Harris microstructure analysis."""
-        harris = self._registry.get_service("harris_integrator")
+        harris = cast("HarrisService", self._registry.get_service("harris_integrator"))
         if harris is None:
             return
 
@@ -236,7 +302,9 @@ class PreTradeComplianceChecker:
         if price_history is None:
             return
 
-        liquidity_analyzer = self._registry.get_service("liquidity_analyzer")
+        liquidity_analyzer = cast(
+            "LiquidityService", self._registry.get_service("liquidity_analyzer")
+        )
         if liquidity_analyzer is None:
             return
 
@@ -247,19 +315,22 @@ class PreTradeComplianceChecker:
                     order_book=order_book,
                     target_size=quantity,
                 )
+                # DepthProfile expone total_bid_depth/total_ask_depth (sin total_depth)
+                total_depth = depth_profile.total_bid_depth + depth_profile.total_ask_depth
                 result.liquidity_score = liquidity_analyzer.calculate_liquidity_score(
                     spread_bps=5.0,
-                    depth=float(depth_profile.total_depth),
+                    depth=total_depth,
                     volatility=0.02,
                     volume=1_000_000,
                 )
 
-                regime = liquidity_analyzer.classify_liquidity_regime(result.liquidity_score)
-                result.liquidity_regime = regime.value
+                # classify_liquidity_regime devuelve directamente el string
+                regime_str = liquidity_analyzer.classify_liquidity_regime(result.liquidity_score)
+                result.liquidity_regime = regime_str
 
-                if regime.value in ["LOW", "POOR"]:
+                if regime_str in ["LOW", "POOR"]:
                     result.confidence -= 0.2
-                    reasons.append(f"Low liquidity regime: {regime.value}")
+                    reasons.append(f"Low liquidity regime: {regime_str}")
 
         except Exception as e:
             logger.warning("O'Hara liquidity analysis error: %s", e)
@@ -274,7 +345,9 @@ class PreTradeComplianceChecker:
         if price_history is None:
             return
 
-        regime_detector = self._registry.get_service("regime_detector")
+        regime_detector = cast(
+            "RegimeDetectorService", self._registry.get_service("regime_detector")
+        )
         if regime_detector is None:
             return
 
@@ -306,7 +379,7 @@ class PreTradeComplianceChecker:
         if price_history is None:
             return
 
-        alpha_model = self._registry.get_service("alpha_model")
+        alpha_model = cast("AlphaModelService", self._registry.get_service("alpha_model"))
         if alpha_model is None:
             return
 
@@ -316,6 +389,8 @@ class PreTradeComplianceChecker:
                 market_data=price_history,
                 timestamp=datetime.now(),
             )
+            if alpha_signal is None:
+                return
 
             result.alpha_signal = float(alpha_signal.confidence)
             result.alpha_decay_rate = 0.01  # Default decay
@@ -339,14 +414,18 @@ class PreTradeComplianceChecker:
         if price_history is None:
             return
 
-        var_calculator = self._registry.get_service("var_calculator")
+        var_calculator = cast("VarCalculatorService", self._registry.get_service("var_calculator"))
         if var_calculator is None:
             return
 
         try:
             # Calculate VaR
             returns = price_history["close"].pct_change().dropna()
-            var_95 = var_calculator.calculate_var(returns, confidence=0.95)
+            var_result = var_calculator.calculate_var(returns)
+            var_95 = var_result.get("var")
+            if not isinstance(var_95, (int, float)):
+                return
+
             result.var_1d_95 = float(var_95)
 
             # Risk limits

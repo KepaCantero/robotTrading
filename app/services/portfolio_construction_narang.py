@@ -120,12 +120,12 @@ class PortfolioWeights:
     @property
     def long_exposure(self) -> Decimal:
         """Total long exposure."""
-        return sum(w for w in self.weights.values() if w > 0)
+        return sum((w for w in self.weights.values() if w > 0), Decimal("0"))
 
     @property
     def short_exposure(self) -> Decimal:
         """Total short exposure."""
-        return sum(abs(w) for w in self.weights.values() if w < 0)
+        return sum((abs(w) for w in self.weights.values() if w < 0), Decimal("0"))
 
     @property
     def gross_exposure(self) -> Decimal:
@@ -135,7 +135,7 @@ class PortfolioWeights:
     @property
     def net_exposure(self) -> Decimal:
         """Net exposure (long - short)."""
-        return sum(self.weights.values())
+        return sum(self.weights.values(), Decimal("0"))
 
 
 @dataclass
@@ -268,7 +268,7 @@ class PortfolioConstructor:
 
     def _filter_by_constraints(self, alpha_views: list[AlphaView]) -> list[AlphaView]:
         """Filter alpha views by constraints."""
-        valid = []
+        valid: list[AlphaView] = []
 
         for view in alpha_views:
             # Check confidence threshold

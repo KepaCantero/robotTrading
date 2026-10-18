@@ -56,7 +56,7 @@ class OrderTranche(BaseModel):
     )
     execution_time: datetime = Field(..., description="Scheduled execution time")
     execution_window: TimeWindow | None = Field(
-        None, description="Time window constraints for execution"
+        default=None, description="Time window constraints for execution"
     )
     target_price: Decimal | None = Field(
         default=None, description="Target execution price (optional)"
@@ -65,7 +65,7 @@ class OrderTranche(BaseModel):
         default="pending", description="pending | submitted | filled | partial | rejected"
     )
     actual_price: Decimal | None = Field(
-        None, description="Actual execution price (filled after execution)"
+        default=None, description="Actual execution price (filled after execution)"
     )
     actual_size: Decimal = Field(
         default=Decimal("0"), ge=Decimal("0"), description="Actual executed size"
@@ -126,13 +126,13 @@ class ExecutionPlan(BaseModel):
         ..., description="Execution strategy: vwap | twap | poi | intraday_phased"
     )
     cost_budget: Decimal | None = Field(
-        None, ge=Decimal("0"), description="Max allowed execution cost in €"
+        default=None, ge=Decimal("0"), description="Max allowed execution cost in €"
     )
     max_execution_time_ms: int = Field(
         default=300_000, gt=0, description="Max execution time in milliseconds"
     )
     estimated_avg_price: Decimal | None = Field(
-        None, gt=Decimal("0"), description="Estimated average fill price"
+        default=None, gt=Decimal("0"), description="Estimated average fill price"
     )
     constraints: dict[str, Decimal] = Field(
         default_factory=dict, description="Execution constraints (max_per_tranche, max_spread, etc)"
@@ -166,7 +166,7 @@ class ExecutionPlan(BaseModel):
                 )
         return self
 
-    def validate(self) -> tuple[bool, str]:
+    def validate_consistency(self) -> tuple[bool, str]:
         """
         Comprehensive validation of execution plan.
 
@@ -295,7 +295,7 @@ class ExecutionMonitoring(BaseModel):
             return None
         return self.completed_at - self.started_at
 
-    def validate(self) -> tuple[bool, str]:
+    def validate_consistency(self) -> tuple[bool, str]:
         """Validate monitoring data consistency."""
         if self.tranches_completed > self.tranches_total:
             return False, "tranches_completed exceeds tranches_total"

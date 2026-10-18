@@ -51,13 +51,13 @@ class ExecutionCostAnalyzer:
             base_slippage = Decimal("0.001")
         if commission_per_trade is None:
             commission_per_trade = Decimal("15")
-        self.slippage_history = deque(maxlen=lookback_days)
+        self.slippage_history: deque = deque(maxlen=lookback_days)
         self.max_cost_ratio = max_cost_ratio
         self.base_slippage = base_slippage
         self.commission_per_trade = commission_per_trade
 
         # Cost regime detection
-        self.cost_regime_history = deque(maxlen=lookback_days)
+        self.cost_regime_history: deque = deque(maxlen=lookback_days)
         self.current_cost_regime = "normal"  # normal | elevated | extreme
 
     def add_trade_slippage(self, slippage_pct: Decimal, timestamp: str | None = None):

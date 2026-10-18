@@ -218,7 +218,8 @@ class BreadthCalculator:
         # Clamp to valid range [0, 1]
         independence_factor = max(0.0, min(1.0, independence_factor))
 
-        return to_decimal(str(round(independence_factor, 4)))
+        independence_factor_dec = to_decimal(str(round(independence_factor, 4)))
+        return independence_factor_dec if independence_factor_dec is not None else Decimal("1.0")
 
     def calculate_from_returns(
         self,

@@ -33,7 +33,7 @@ class PlotlyChart:
     chart_id: str
     title: str
     chart_type: str  # "line", "scatter", "bar", "heatmap", "waterfall"
-    data: dict[str, Any]  # Plotly data structure
+    data: dict[str, Any] | list[Any]  # Plotly data structure
     layout: dict[str, Any]  # Plotly layout structure
     config: dict[str, Any]  # Plotly config for interactivity
 

@@ -17,6 +17,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
+from types import ModuleType
 from typing import Any
 
 import numpy as np
@@ -36,11 +37,13 @@ try:
     import seaborn as sns
 
     HAS_MATPLOTLIB = True
+    plt_module: ModuleType | None = plt
+    sns_module: ModuleType | None = sns
 except Exception:
     # Matplotlib may fail due to numpy version incompatibility
     HAS_MATPLOTLIB = False
-    plt = None
-    sns = None
+    plt_module = None
+    sns_module = None
 
 logger = logging.getLogger(__name__)
 
@@ -212,7 +215,7 @@ class BacktestMetaAnalyzer:
         # Filtrar métricas disponibles
         available_metrics = [m for m in metrics if m in df_copy.columns]
 
-        analysis = {
+        analysis: dict[str, Any] = {
             "summary_stats": {},
             "performance_by_category": {},
             "correlations": {},
@@ -273,7 +276,7 @@ class BacktestMetaAnalyzer:
         self, df: pd.DataFrame, category_col: str, metrics: list[str]
     ) -> dict[str, Any]:
         """Analizar métricas por categoría (thread-safe with df copy)."""
-        category_analysis = {}
+        category_analysis: dict[str, Any] = {}
 
         for category in df[category_col].dropna().unique():
             category_data = df[df[category_col] == category]
@@ -458,7 +461,9 @@ class BacktestMetaAnalyzer:
 
         return [s["row"] for s in suggestions]
 
-    def export_report(self, output_path: str | None = None, output_format: str = "json") -> str:
+    def export_report(
+        self, output_path: str | Path | None = None, output_format: str = "json"
+    ) -> str:
         """
         Exportar reporte completo de análisis.
 
@@ -508,7 +513,7 @@ class BacktestMetaAnalyzer:
     def _generate_visualizations(self) -> None:
         """Generar visualizaciones de análisis (thread-safe)."""
         # Check if required dependencies are available
-        if not HAS_MATPLOTLIB or plt is None:
+        if not HAS_MATPLOTLIB or plt_module is None:
             logger.warning("matplotlib not available, skipping visualizations")
             return
 
@@ -525,7 +530,7 @@ class BacktestMetaAnalyzer:
         try:
             # Configurar estilo
             plt.style.use("seaborn-v0_8-darkgrid")
-            if sns is not None:
+            if sns_module is not None:
                 sns.set_palette("husl")
 
             # 1. Distribución de Sharpe Ratio
@@ -562,7 +567,7 @@ class BacktestMetaAnalyzer:
                 numeric_cols = df_copy.select_dtypes(include=[np.number]).columns[:10]  # Top 10
                 corr = df_copy[numeric_cols].corr()
                 _fig, ax = plt.subplots(figsize=(10, 8))
-                if sns is not None:
+                if sns_module is not None:
                     sns.heatmap(corr, annot=True, fmt=".2", cmap="coolwarm", center=0, ax=ax)
                 else:
                     # Fallback if seaborn is not available
@@ -621,7 +626,7 @@ class BacktestMetaAnalyzer:
                 executor.submit(cluster_cpu): "clustering",
             }
 
-            results = {}
+            results: dict[str, Any] = {}
             for future in as_completed(futures):
                 task_name = futures[future]
                 try:

@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timedelta
+from typing import Any
 from uuid import uuid4
 
 from .models import AlertEvent, AlertHistory, AlertRule, AlertState
@@ -309,7 +310,7 @@ class AlertManager:
         Returns:
             Dictionary with alert statistics
         """
-        stats = {
+        stats: dict[str, Any] = {
             "total_active": len(self.active_alerts),
             "by_state": {},
             "by_severity": {},

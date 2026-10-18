@@ -15,6 +15,7 @@ import contextlib
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -509,7 +510,7 @@ class CorrelationAnalyzer:
                 # Wait before retrying
                 await asyncio.sleep(60)
 
-    def get_statistics(self) -> dict[str, any]:
+    def get_statistics(self) -> dict[str, Any]:
         """
         Get correlation analyzer statistics.
 

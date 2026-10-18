@@ -470,11 +470,11 @@ class FactorPortfolioConstructor:
 
         # Calculate factor exposures
         portfolio_factor_exposures = {
-            "value": float(weights @ factor_exposures_matrix[:, 0]),
-            "size": float(weights @ factor_exposures_matrix[:, 1]),
-            "profitability": float(weights @ factor_exposures_matrix[:, 2]),
-            "investment": float(weights @ factor_exposures_matrix[:, 3]),
-            "momentum": float(weights @ factor_exposures_matrix[:, 4]),
+            "value": Decimal(str(float(weights @ factor_exposures_matrix[:, 0]))),
+            "size": Decimal(str(float(weights @ factor_exposures_matrix[:, 1]))),
+            "profitability": Decimal(str(float(weights @ factor_exposures_matrix[:, 2]))),
+            "investment": Decimal(str(float(weights @ factor_exposures_matrix[:, 3]))),
+            "momentum": Decimal(str(float(weights @ factor_exposures_matrix[:, 4]))),
         }
 
         # Create weights dictionary
@@ -528,7 +528,7 @@ class FactorPortfolioConstructor:
                 )
                 exp_return += factor_exposure["momentum"] * self.factor_premiums["momentum"]
             else:
-                factor_exposure = {}
+                factor_exposure: dict[str, Decimal] = {}
                 exp_return = None
 
             position = FactorPosition(

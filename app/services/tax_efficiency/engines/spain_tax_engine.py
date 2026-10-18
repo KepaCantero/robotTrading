@@ -58,28 +58,28 @@ class SpainTaxEngine(TaxEngine):
 
         # Use config values as defaults, allow override via parameter
         self.BRACKET_1_LIMIT: Decimal = (
-            to_decimal_required(config.get("bracket_1_limit", "33007.99"))
+            to_decimal_required(str(config.get("bracket_1_limit", "33007.99")))
             if config
             else Decimal("33007.99")
         )
         self.BRACKET_2_LIMIT: Decimal = (
-            to_decimal_required(config.get("bracket_2_limit", "53407.99"))
+            to_decimal_required(str(config.get("bracket_2_limit", "53407.99")))
             if config
             else Decimal("53407.99")
         )
 
         self.RATE_1: Decimal = (
-            to_decimal_required(config.get("rate_1", spain_tax.IRPF_RATE_19))
+            to_decimal_required(str(config.get("rate_1", spain_tax.IRPF_RATE_19)))
             if config
             else Decimal(str(spain_tax.IRPF_RATE_19))
         )
         self.RATE_2: Decimal = (
-            to_decimal_required(config.get("rate_2", spain_tax.IRPF_RATE_21))
+            to_decimal_required(str(config.get("rate_2", spain_tax.IRPF_RATE_21)))
             if config
             else Decimal(str(spain_tax.IRPF_RATE_21))
         )
         self.RATE_3: Decimal = (
-            to_decimal_required(config.get("rate_3", spain_tax.IRPF_RATE_23))
+            to_decimal_required(str(config.get("rate_3", spain_tax.IRPF_RATE_23)))
             if config
             else Decimal(str(spain_tax.IRPF_RATE_23))
         )

@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
+from typing import Any
 
 from .models import (
     AlertEvaluationContext,
@@ -260,7 +261,7 @@ class AlertRuleEngine:
                 "by_rule": {},
             }
 
-        stats = {
+        stats: dict[str, Any] = {
             "total_evaluations": len(self.evaluation_history),
             "total_triggered": sum(1 for e in self.evaluation_history if e["triggered"]),
             "by_rule": {},

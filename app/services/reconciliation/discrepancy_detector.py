@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
+from typing import Any
 
 from app.shared.config.centralized_config import get_config
 
@@ -332,7 +333,7 @@ class DiscrepancyDetector:
                 "internal_positions_count": len(internal_positions),
             },
         )
-        result = {
+        result: dict[str, Any] = {
             "quantity_mismatches": [],
             "price_mismatches": [],
             "value_mismatches": [],

@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 
 from app.backtesting.engine import SimpleBacktester
-from app.backtesting.models import BacktestConfig
+from app.backtesting.models import BacktestConfig, PerformanceMetrics
 from app.domain.models.market_data import Quote
 from app.domain.strategies.momentum_modular.strategy import ModularMomentumStrategy
 
@@ -25,6 +25,33 @@ if TYPE_CHECKING:
     from app.shared.protocols.i_data_feed import IDataFeed
 
 logger = logging.getLogger(__name__)
+
+
+def _default_performance_metrics() -> PerformanceMetrics:
+    """PerformanceMetrics con los valores por defecto del dominio.
+
+    Los campos declarados con ``Field(None, ...)`` posicional no son
+    reconocidos como opcionales por mypy sin el plugin de pydantic, por lo
+    que se pasan explícitamente (todos por defecto a None).
+    """
+    return PerformanceMetrics(
+        total_return=None,
+        max_drawdown_duration=None,
+        volatility_annualized=None,
+        annualized_volatility=None,
+        calmar_ratio=None,
+        omega_ratio=None,
+        treynor_ratio=None,
+        risk_reward_ratio=None,
+        ulcer_index=None,
+        recovery_factor=None,
+        profit_factor=None,
+        skewness=None,
+        kurtosis=None,
+        var_95=None,
+        cvar_95=None,
+        expectancy=None,
+    )
 
 
 class HyperparameterOptimizer:
@@ -353,7 +380,8 @@ class HyperparameterOptimizer:
                     timestamp=idx if isinstance(idx, datetime) else pd.to_datetime(idx),
                     bid=Decimal(str(df["close"].iloc[i])),
                     ask=Decimal(str(df["close"].iloc[i])),
-                    volume=int(df.get("volume", pd.Series([0] * len(df))).iloc[i]),
+                    last=Decimal(str(df["close"].iloc[i])),
+                    volume=Decimal(str(df.get("volume", pd.Series([0] * len(df))).iloc[i])),
                     close=Decimal(str(df["close"].iloc[i])),
                     high=Decimal(str(df.get("high", df["close"]).iloc[i])),
                     low=Decimal(str(df.get("low", df["close"]).iloc[i])),
@@ -381,21 +409,28 @@ class HyperparameterOptimizer:
 
             result = backtester.run_backtest(quotes, signals)
 
-            # Extraer métricas
+            # Extraer métricas (_default_performance_metrics() como valor por defecto)
+            performance = (
+                result.performance
+                if result.performance is not None
+                else _default_performance_metrics()
+            )
             return {
-                "total_pnl": float(result.performance.total_pnl),
-                "total_return": float(result.total_return),
-                "sharpe_ratio": (
-                    float(result.performance.sharpe_ratio)
-                    if result.performance.sharpe_ratio
-                    else 0.0
+                "total_pnl": float(performance.total_pnl),
+                "total_return": (
+                    float(result.total_return) if result.total_return is not None else 0.0
                 ),
-                "win_rate": float(result.performance.win_rate),
-                "max_drawdown": float(result.performance.max_drawdown_percentage),
-                "total_trades": result.performance.total_trades,
+                "sharpe_ratio": (
+                    float(performance.sharpe_ratio) if performance.sharpe_ratio is not None else 0.0
+                ),
+                "win_rate": float(performance.win_rate),
+                "max_drawdown": float(performance.max_drawdown_percentage),
+                "total_trades": performance.total_trades,
                 "final_capital": float(result.final_capital),
                 "annualized_return": (
-                    float(result.annualized_return) if hasattr(result, "annualized_return") else 0.0
+                    float(result.annualized_return)
+                    if hasattr(result, "annualized_return") and result.annualized_return is not None
+                    else 0.0
                 ),
             }
 

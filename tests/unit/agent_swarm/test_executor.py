@@ -204,9 +204,9 @@ class TestPeriodAndTax:
     async def test_backtest_runs_the_real_engine(self):
         """T4.1 executes the repo's real engine over real CSV candles."""
         request = make_request(
-            backtest_start="2025-04-01",
+            backtest_start="2024-10-24",
             backtest_end="2025-10-24",
-            symbols=["MSFT"],
+            symbols=["AAPL", "MSFT", "GOOGL"],
             strategy="mean_reversion",
         )
         state = await Capa2PipelineExecutor().run(request)
@@ -218,7 +218,7 @@ class TestPeriodAndTax:
 
     async def test_engine_params_reach_t41(self):
         request = make_request(
-            backtest_start="2025-04-01",
+            backtest_start="2024-10-24",
             backtest_end="2025-10-24",
             symbols=["MSFT"],
             strategy="mean_reversion",

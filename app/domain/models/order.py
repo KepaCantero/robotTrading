@@ -281,7 +281,7 @@ class Order(BaseModel):
                 raise ValueError("Stop-limit order price must be greater than stop price")
 
         # Validate stop price logic
-        if self.stop_price is not None:
+        if self.stop_price is not None and self.price is not None:
             if self.side == OrderSide.BUY and self.stop_price <= self.price:
                 logger.error(
                     "Order consistency validation failed: buy stop price logic",
@@ -590,6 +590,6 @@ class MarketData(BaseModel):
     @property
     def spread_percentage(self) -> Decimal | None:
         """Calculate spread as percentage of mid price."""
-        if self.mid_price is not None and self.mid_price > 0:
+        if self.mid_price is not None and self.mid_price > 0 and self.spread is not None:
             return (self.spread / self.mid_price) * 100
         return None

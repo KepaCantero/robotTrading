@@ -89,7 +89,7 @@ class UpdateMarketPricesRequest(BaseModel):
 class PortfolioResponse(BaseModel):
     """Response model for portfolio data."""
 
-    success: bool = Field(True, description="Success status")
+    success: bool = Field(default=True, description="Success status")
     portfolio: PaperPortfolio = Field(..., description="Portfolio data")
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
 
@@ -97,7 +97,7 @@ class PortfolioResponse(BaseModel):
 class SessionResponse(BaseModel):
     """Response model for session data."""
 
-    success: bool = Field(True, description="Success status")
+    success: bool = Field(default=True, description="Success status")
     session: PaperTradingSession = Field(..., description="Session data")
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
 
@@ -105,7 +105,7 @@ class SessionResponse(BaseModel):
 class TradeResponse(BaseModel):
     """Response model for trade data."""
 
-    success: bool = Field(True, description="Success status")
+    success: bool = Field(default=True, description="Success status")
     trade: PaperTrade = Field(..., description="Trade data")
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
 
@@ -113,7 +113,7 @@ class TradeResponse(BaseModel):
 class TradesResponse(BaseModel):
     """Response model for multiple trades."""
 
-    success: bool = Field(True, description="Success status")
+    success: bool = Field(default=True, description="Success status")
     trades: list[PaperTrade] = Field(..., description="List of trades")
     count: int = Field(..., description="Number of trades")
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
@@ -122,7 +122,7 @@ class TradesResponse(BaseModel):
 class PositionsResponse(BaseModel):
     """Response model for positions."""
 
-    success: bool = Field(True, description="Success status")
+    success: bool = Field(default=True, description="Success status")
     positions: list[PaperPosition] = Field(..., description="List of positions")
     count: int = Field(..., description="Number of positions")
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
@@ -131,7 +131,7 @@ class PositionsResponse(BaseModel):
 class MarketUpdateResponse(BaseModel):
     """Response model for market updates."""
 
-    success: bool = Field(True, description="Success status")
+    success: bool = Field(default=True, description="Success status")
     updated_symbols: list[str] = Field(..., description="List of updated symbols")
     count: int = Field(..., description="Number of updated symbols")
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")

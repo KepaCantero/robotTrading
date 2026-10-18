@@ -54,8 +54,11 @@ if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
 # Legacy imports for backward compatibility
+OrderBookSnapshot: type | None
 try:
-    from app.engines.execution_engine.microstructure.order_book_analyzer import OrderBookSnapshot
+    from app.engines.execution_engine.microstructure.order_book_analyzer import (
+        OrderBookSnapshot,  # noqa: E501
+    )
 except ImportError:
     OrderBookSnapshot = None
 

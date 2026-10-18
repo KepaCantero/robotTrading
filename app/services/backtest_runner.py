@@ -158,6 +158,8 @@ class BacktestRunner:
             raise RuntimeError(f"Real backtest failed: {result.error_message or 'unknown error'}")
 
         metrics = result.backtest_result.metrics
+        if metrics is None:
+            raise RuntimeError("Real backtest failed: no metrics available")
         return {
             "total_return": float(metrics.total_return_pct) / 100,
             "sharpe_ratio": float(metrics.sharpe_ratio),

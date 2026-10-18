@@ -245,7 +245,7 @@ class OFISignalGenerator:
             return None
 
         # Confidence based on z-score magnitude
-        z_score = cofi_tracker.z_score or 0
+        z_score = cofi_tracker.z_score if cofi_tracker.z_score is not None else 0.0
         confidence = min(1.0, abs(z_score) / 3.0)
 
         return OFISignal(
