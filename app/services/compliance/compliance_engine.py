@@ -997,17 +997,22 @@ class SystemBus:
                 # Check for NaN values
                 has_nan = price_history.isnull().any().any()
 
-                # Use configured max data age (addresses GAP-CFG-002)
+                # Use configured max data age (addresses GAP-CFG-002).
+                # Staleness relativa al TIEMPO DE LA SEÑAL, no al reloj de pared:
+                # en backtest la señal es histórica y comparar contra datetime.now()
+                # marcaba "stale" toda barra pasada y bloqueaba el 100% de las
+                # ventas (1.749 trades bloqueados con data completo).
+                reference_time = signal_time if signal_time is not None else datetime.now()
                 if "timestamp" in price_history.columns:
                     last_timestamp = pd.to_datetime(price_history["timestamp"].iloc[-1])
                     data_age = (
-                        datetime.now() - last_timestamp
+                        reference_time - last_timestamp
                     ).total_seconds() / config.SECONDS_PER_DAY
                 elif len(price_history) > 0:
                     # Assume index is timestamp if no timestamp column
                     last_timestamp = pd.to_datetime(price_history.index[-1])
                     data_age = (
-                        datetime.now() - last_timestamp
+                        reference_time - last_timestamp
                     ).total_seconds() / config.SECONDS_PER_DAY
                 else:
                     data_age = 0

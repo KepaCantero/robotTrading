@@ -489,10 +489,14 @@ class HarrisMicrostructureIntegrator:
         if adv is None:
             adv = Decimal("1000000")
 
-        # Rule 6.5: Quote stuffing detection
+        # Rule 6.5: Quote stuffing detection.
+        # Con tiempo de señal (backtest) la ventana se ancla a la señal; sin él
+        # (vivo) al reloj de pared. Antes usaba SIEMPRE now(): reproducir 16
+        # años de barras diarias en segundos disparaba el detector (>100
+        # "quotes/segundo" de reloj) y bloqueaba todas las ejecuciones.
         quote_stuffing = self.detect_quote_stuffing(
             symbol=symbol,
-            current_time=datetime.now(),
+            current_time=signal_time or datetime.now(),
         )
         if quote_stuffing:
             can_execute = False
