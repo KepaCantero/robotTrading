@@ -931,20 +931,19 @@ class WalkForwardValidator:
 
         is_oos_analysis["consistency_ratio"] = consistency_ratio
 
-        # Degradation metrics (Req #2 - max 30%)
+        # Degradation metrics (Req #2 - max 30%).
+        # Degradación = cuánto PEOR es OOS respecto de IS. Una mejora de OOS NO
+        # es degradación (el abs() anterior convertía mejoras en "degradación"
+        # del 300%); y una base IS no positiva no define degradación.
         return_degradation: float = 0.0
-        if float(is_oos_analysis["avg_is_return"]) != 0:
-            return_degradation = abs(
-                (float(is_oos_analysis["avg_is_return"]) - float(avg_return))
-                / float(is_oos_analysis["avg_is_return"])
-            )
+        is_return = float(is_oos_analysis["avg_is_return"])
+        if is_return > 0:
+            return_degradation = max(0.0, (is_return - float(avg_return)) / is_return)
 
         sharpe_degradation: float = 0.0
-        if float(is_oos_analysis["avg_is_sharpe"]) > 0:
-            sharpe_degradation = float(
-                (float(is_oos_analysis["avg_is_sharpe"]) - float(avg_sharpe))
-                / float(is_oos_analysis["avg_is_sharpe"])
-            )
+        is_sharpe = float(is_oos_analysis["avg_is_sharpe"])
+        if is_sharpe > 0:
+            sharpe_degradation = max(0.0, (is_sharpe - float(avg_sharpe)) / is_sharpe)
 
         is_oos_analysis["return_degradation"] = return_degradation
         is_oos_analysis["sharpe_degradation"] = sharpe_degradation

@@ -1282,7 +1282,6 @@ def render(
         with portfolio_container:
             with ui.element("div").classes("panel q-pa-md w-full"):
                 ui.label("PORTFOLIO").classes("lbl q-mb-xs")
-                ui.label(f"DEBUG: allocs={len(portfolio['allocations'])} trades={len(trades)}").classes("help")
 
                 # ── STOCK POSITIONS (IB-style table) ────────────────────
                 if trades:
