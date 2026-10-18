@@ -182,6 +182,12 @@ class BacktestOrchestrator:
     _STRATEGIES = {
         "mean_reversion": "app.domain.strategies.mean_reversion:MeanReversionStrategy",
         "momentum_modular": "app.domain.strategies.strategy:ModularMomentumStrategy",
+        # objetivo maximo dividendo: core-satellite evidenciado (core
+        # buy&hold crecimiento/aristócratas + filtro momentum anti-crash +
+        # satélite high-yield + refugio BND). Precios ajustados → el momentum
+        # incluye las distribuciones (dividend momentum, RFS 2026).
+        "dividend_tracking": "app.domain.strategies.dividend_core_satellite:DividendCoreSatelliteStrategy",
+        "dividend_etf_rotation": "app.domain.strategies.dividend_etf_rotation:DividendETFRotationStrategy",
     }
     #: warm-up bars fed to the strategy before the execution window
     _WARMUP_DAYS = 180
@@ -247,13 +253,17 @@ class BacktestOrchestrator:
         repo_root = Path(__file__).resolve().parents[3]
         loader = DataLoader(base_path=repo_root / "data" / "historical")
 
-        load_start = datetime.combine(
-            config.start_date - timedelta(days=self._WARMUP_DAYS), dt_time.min
-        )
+        symbols = config.symbols or ["AAPL", "MSFT", "GOOGL"]
+        # Estrategias cross-sectional (p.ej. rotación de ETFs): UNA instancia
+        # viendo el timeline global de todos los símbolos. Las per-símbolo
+        # (mean_reversion...) siguen con instancia propia como siempre.
+        probe = self._build_strategy(config.strategy_name)
+        shared_strategy = probe if getattr(probe, "is_cross_sectional", False) else None
+        warmup_days = int(getattr(probe, "suggested_warmup_days", self._WARMUP_DAYS))
+
+        load_start = datetime.combine(config.start_date - timedelta(days=warmup_days), dt_time.min)
         start_dt = datetime.combine(config.start_date, dt_time.min)
         end_dt = datetime.combine(config.end_date, dt_time.max)
-
-        symbols = config.symbols or ["AAPL", "MSFT", "GOOGL"]
         quotes: list = []
         signals: list = []
         for symbol in symbols:
@@ -271,11 +281,24 @@ class BacktestOrchestrator:
             if not clamped:
                 continue
             quotes.extend(clamped)
-            strategy = self._build_strategy(config.strategy_name)
+            if shared_strategy is None:
+                # estrategia per-símbolo (mean_reversion...): instancia propia
+                # y su serie en orden, como siempre
+                per_symbol_strategy = self._build_strategy(config.strategy_name)
+                signals.extend(
+                    signal
+                    for quote in sorted(clamped, key=lambda q: q.timestamp)
+                    for signal in per_symbol_strategy.generate_signals(quote)
+                )
+
+        if shared_strategy is not None:
+            # estrategia cross-sectional: UNA instancia, timeline GLOBAL
+            # intercalado por fecha (ver el universe completo en cada barra;
+            # alimentarla por bloques de símbolo rompería la cross-sección)
             signals.extend(
                 signal
-                for quote in sorted(clamped, key=lambda q: q.timestamp)
-                for signal in strategy.generate_signals(quote)
+                for quote in sorted(quotes, key=lambda q: q.timestamp)
+                for signal in shared_strategy.generate_signals(quote)
             )
 
         if not quotes:
@@ -296,6 +319,9 @@ class BacktestOrchestrator:
             EngineConfig(
                 strategy_name=config.strategy_name,
                 initial_capital=config.initial_capital,
+                max_position_size=Decimal(
+                    str(getattr(probe, "suggested_max_position_size", Decimal("0.10")))
+                ),
                 commission_per_trade=config.commission_per_trade
                 if config.commission_per_trade is not None
                 else Decimal("1.0"),
