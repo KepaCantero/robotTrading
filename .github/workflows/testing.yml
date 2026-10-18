@@ -80,7 +80,7 @@ jobs:
           "
 
       - name: Upload Unit Test Results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: unit-test-results
@@ -180,7 +180,7 @@ jobs:
             --maxfail=3
 
       - name: Upload Integration Test Results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: integration-test-results
@@ -218,7 +218,7 @@ jobs:
             --benchmark-histogram=performance-histogram || true
 
       - name: Upload Performance Results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: performance-results
@@ -258,7 +258,7 @@ jobs:
             --self-contained-html
 
       - name: Upload Load Test Results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: load-test-results
@@ -298,7 +298,7 @@ jobs:
           safety check --json --output safety-report.json
 
       - name: Upload Security Test Results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: security-test-results
@@ -338,7 +338,7 @@ jobs:
           coverage html
 
       - name: Upload Combined Coverage
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v7
         with:
           name: combined-coverage-report
           path: |

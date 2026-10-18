@@ -59,7 +59,7 @@ jobs:
         run: safety check --json --output safety-report.json
 
       - name: Upload Security Reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: security-reports
@@ -164,7 +164,7 @@ jobs:
           TEST_GROUP: performance
 
       - name: Upload Test Results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: test-results-${{ matrix.test-group }}-py${{ matrix.python-version }}
