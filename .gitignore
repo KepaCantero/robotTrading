@@ -36,6 +36,8 @@ logs/
 *.csv
 # Sample historical data is intentionally tracked (used by the test suite)
 !data/historical/*.csv
+# News sentiment series are intentionally tracked (backtest input)
+!data/news_sentiment/*.csv
 
 # Build
 build/

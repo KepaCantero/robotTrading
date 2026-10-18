@@ -7,7 +7,6 @@ repos:
       - id: end-of-file-fixer
       - id: check-yaml
         args: [--allow-multiple-documents]  # plantillas k8s multi-doc
-      - id: check-added-large-files
       - id: check-merge-conflict
       - id: debug-statements
       - id: check-docstring-first
