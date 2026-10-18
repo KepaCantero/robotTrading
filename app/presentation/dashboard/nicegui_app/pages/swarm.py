@@ -29,6 +29,7 @@ from app.presentation.dashboard.nicegui_app.components.office_scene import Offic
 from app.presentation.dashboard.nicegui_app.components.swarm_fx import install as install_fx
 from app.services.agent_swarm.executor import (
     AGENT_SPECS,
+    DEFAULT_UNIVERSE,
     SPEC_BY_AGENT,
     AgentState,
     SwarmRunRequest,
@@ -106,18 +107,7 @@ _SECTOR_MAP: dict[str, str] = {
     "AXP": "Financials",
 }
 
-DEFAULT_UNIVERSE = [
-    "AAPL",
-    "MSFT",
-    "GOOGL",
-    "SAN",
-    "ITX.MC",
-    "MC.PA",
-    "SAP.DE",
-    "6758.T",
-    "SPY",
-    "IBEX",
-]
+
 DATA_DIR = Path("data/historical")
 
 PERIOD_DAYS = {"6m": 183, "1y": 365, "2y": 730, "5y": 1825}

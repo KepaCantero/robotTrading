@@ -13,6 +13,7 @@ conventions of ``tests/unit/parametrization_framework/`` and
 
 from __future__ import annotations
 
+import dataclasses
 import logging
 import uuid
 from dataclasses import dataclass, field
@@ -54,6 +55,21 @@ RISK_PROFILE_PORTFOLIO_MAP = {
 }
 
 DEFAULT_MAX_DRAWDOWN_PCT = Decimal("20")
+
+# Universo por defecto multi-mercado (incluye el ETF SPY). Única fuente de
+# verdad: la página del swarm y cualquier fallback del ejecutor usan ESTA lista.
+DEFAULT_UNIVERSE = [
+    "AAPL",
+    "MSFT",
+    "GOOGL",
+    "SAN",
+    "ITX.MC",
+    "MC.PA",
+    "SAP.DE",
+    "6758.T",
+    "SPY",
+    "IBEX",
+]
 
 
 def _to_date(iso: str | None) -> date | None:
@@ -593,7 +609,7 @@ class Capa2PipelineExecutor:
             start_date=start,
             end_date=end,
             strategy_name=ctx.request.strategy or strategy,
-            symbols=ctx.request.symbols or ["AAPL", "MSFT", "GOOGL"],
+            symbols=ctx.request.symbols or list(DEFAULT_UNIVERSE),
             commission_per_trade=ctx.request.commission_per_trade,
             slippage_percentage=ctx.request.slippage_pct,
             stop_loss_percentage=ctx.request.stop_loss_pct,
@@ -845,12 +861,55 @@ class Capa2PipelineExecutor:
             return request.target_monthly_return_eur
         return (request.capital_initial * Decimal("0.003")).quantize(Decimal("1"))
 
+    _MAX_EQUITY_POINTS = 300
+    _MAX_TRADES_SUMMARY = 400
+
+    def _slim_backtest(self, backtest: Any) -> Any:
+        """Adelgaza el payload del backtest para la UI/store.
+
+        Con universos grandes el payload completo (curva de equity + todos los
+        trades con Decimales largos) supera el límite de safe_json y se
+        trunca ENTERO a un preview inútil. Aquí mantenemos todo lo que la UI
+        pinta —métricas completas, feasibility, equity diezmada, últimos
+        trades— con tamaño acotado.
+        """
+        if backtest is None:
+            return None
+        data = backtest if isinstance(backtest, dict) else None
+        inner = (
+            getattr(backtest, "backtest_result", None)
+            if data is None
+            else (backtest.get("backtest_result") or {})
+        )
+        if data is None:
+            data = {
+                k: getattr(backtest, k, None)
+                for k in ("success", "feasibility_ratio", "feasibility_status", "warnings")
+            }
+        if isinstance(inner, dict):
+            slim_inner = dict(inner)
+        elif dataclasses.is_dataclass(inner) and not isinstance(inner, type):
+            slim_inner = dataclasses.asdict(inner)
+        elif hasattr(inner, "model_dump"):
+            slim_inner = inner.model_dump()
+        else:
+            slim_inner = {}
+        eq = slim_inner.get("equity_curve")
+        if isinstance(eq, (list, tuple)) and len(eq) > self._MAX_EQUITY_POINTS:
+            step = max(1, len(eq) // self._MAX_EQUITY_POINTS)
+            slim_inner["equity_curve"] = list(eq)[::step]
+        ts = slim_inner.get("trades_summary")
+        if isinstance(ts, (list, tuple)) and len(ts) > self._MAX_TRADES_SUMMARY:
+            slim_inner["trades_summary"] = list(ts)[-self._MAX_TRADES_SUMMARY :]
+        data["backtest_result"] = slim_inner
+        return data
+
     def _stage_output(self, agent_id: str, ctx: _Ctx) -> Any:
         return {
             "t11": lambda: ctx.input_profile,
             "t21": lambda: ctx.profile,
             "t31": lambda: ctx.param_result,
-            "t41": lambda: ctx.backtest,
+            "t41": lambda: self._slim_backtest(ctx.backtest),
             "t51": lambda: ctx.validation,
             "t61": lambda: ctx.recommendation,
             "t71": lambda: ctx.portfolio,

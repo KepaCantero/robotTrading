@@ -104,10 +104,13 @@ class TestStructured:
 
 class TestTruncation:
     def test_huge_payload_truncated(self):
-        huge = {"data": "x" * 200_000}
+        # El umbral de safe_json es MAX_PAYLOAD_CHARS * 4 (256 KB): el payload
+        # debe SUPERARLO para truncarse. 200 KB pasa limpio (por diseño, para
+        # curvas de equity completas); usamos 600 KB.
+        huge = {"data": "x" * 600_000}
         result = safe_json(huge)
         assert result.get("__truncated__") is True
-        assert len(result["preview"]) < 20_000
+        assert len(result["preview"]) < 70_000  # preview = MAX_PAYLOAD_CHARS (65_536)
 
     def test_equity_curve_sized_payload_not_truncated(self):
         """Equity curves (~200 points + metrics) must survive serialization."""
