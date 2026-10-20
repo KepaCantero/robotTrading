@@ -77,6 +77,10 @@ class ValidationRequest:
     tax_rate: Decimal = Decimal("0.35")
     commission_per_trade: Decimal = Decimal("15")
     learning_enabled: bool = True
+    # Walk-forward gate outcome from the real backtest (R5/R6/DATA-001).
+    # None = not run; False = ran and failed -> critical failure.
+    walk_forward_passed: bool | None = None
+    walk_forward_failures: list[str] = field(default_factory=list)
 
 
 @dataclass

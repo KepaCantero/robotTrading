@@ -41,7 +41,6 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.core.exceptions import AlgoTradingDatabaseError as DatabaseError
 from app.infrastructure.persistence.database import Base
 from app.infrastructure.persistence.database._base_repository import BaseRepository
 from app.infrastructure.persistence.database.models import (
@@ -68,6 +67,7 @@ from app.infrastructure.persistence.database.repositories import (
     TradeRepository,
     UserRepository,
 )
+from app.shared.exceptions.exceptions import AlgoTradingDatabaseError as DatabaseError
 
 # =============================================================================
 # Test Fixtures
@@ -224,7 +224,9 @@ class TestBaseRepository:
         }
 
         # Act
-        with patch("app.database.repositories.logger") as mock_logger:
+        with patch(
+            "app.infrastructure.persistence.database._base_repository.logger"
+        ) as mock_logger:
             result = repo.create(**user_data)
 
         # Assert
@@ -259,7 +261,9 @@ class TestBaseRepository:
         repo = BaseRepository(User, db_session)
 
         # Act
-        with patch("app.database.repositories.logger") as mock_logger:
+        with patch(
+            "app.infrastructure.persistence.database._base_repository.logger"
+        ) as mock_logger:
             result = repo.get_by_id(test_user.id)
 
         # Assert
@@ -288,7 +292,9 @@ class TestBaseRepository:
         repo = BaseRepository(User, db_session)
 
         # Act
-        with patch("app.database.repositories.logger") as mock_logger:
+        with patch(
+            "app.infrastructure.persistence.database._base_repository.logger"
+        ) as mock_logger:
             result = repo.get_all()
 
         # Assert
@@ -321,7 +327,9 @@ class TestBaseRepository:
         repo = BaseRepository(User, db_session)
 
         # Act
-        with patch("app.database.repositories.logger") as mock_logger:
+        with patch(
+            "app.infrastructure.persistence.database._base_repository.logger"
+        ) as mock_logger:
             result = repo.update(test_user.id, is_active=False)
 
         # Assert
@@ -338,7 +346,9 @@ class TestBaseRepository:
         fake_id = uuid.uuid4()
 
         # Act
-        with patch("app.database.repositories.logger") as mock_logger:
+        with patch(
+            "app.infrastructure.persistence.database._base_repository.logger"
+        ) as mock_logger:
             result = repo.update(fake_id, is_active=False)
 
         # Assert
@@ -352,7 +362,9 @@ class TestBaseRepository:
         user_id = test_user.id
 
         # Act
-        with patch("app.database.repositories.logger") as mock_logger:
+        with patch(
+            "app.infrastructure.persistence.database._base_repository.logger"
+        ) as mock_logger:
             result = repo.delete(user_id)
 
         # Assert
@@ -368,7 +380,9 @@ class TestBaseRepository:
         fake_id = uuid.uuid4()
 
         # Act
-        with patch("app.database.repositories.logger") as mock_logger:
+        with patch(
+            "app.infrastructure.persistence.database._base_repository.logger"
+        ) as mock_logger:
             result = repo.delete(fake_id)
 
         # Assert
@@ -388,7 +402,9 @@ class TestBaseRepository:
         )
 
         # Act
-        with patch("app.database.repositories.logger") as mock_logger:
+        with patch(
+            "app.infrastructure.persistence.database._base_repository.logger"
+        ) as mock_logger:
             count = repo.count()
 
         # Assert
@@ -410,7 +426,9 @@ class TestUserRepository:
         repo = UserRepository(User, db_session)
 
         # Act
-        with patch("app.database.repositories.logger") as mock_logger:
+        with patch(
+            "app.infrastructure.persistence.database._user_portfolio_repositories.logger"
+        ) as mock_logger:
             result = repo.get_by_username(test_user.username)
 
         # Assert
@@ -525,7 +543,9 @@ class TestPortfolioRepository:
         new_value = Decimal("15000.00")
 
         # Act
-        with patch("app.database.repositories.logger") as mock_logger:
+        with patch(
+            "app.infrastructure.persistence.database._user_portfolio_repositories.logger"
+        ) as mock_logger:
             result = repo.update_total_value(test_portfolio.id, new_value)
 
         # Assert
@@ -872,7 +892,9 @@ class TestMarketDataRepository:
         ]
 
         # Act
-        with patch("app.database.repositories.logger") as mock_logger:
+        with patch(
+            "app.infrastructure.persistence.database._analytics_repositories.logger"
+        ) as mock_logger:
             result = repo.bulk_insert(market_data_list)
 
         # Assert

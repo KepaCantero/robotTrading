@@ -696,12 +696,14 @@ class FIFOProcessor:
             lot.quantity_remaining -= close_from_lot
             total_cost_basis += (lot.cost_basis_open / lot.quantity_opened) * close_from_lot
 
-            # If lot fully closed
+            # Estado del lot: CLOSED (agotado) o PARTIAL (queda cantidad)
             if lot.quantity_remaining == 0:
                 lot.status = LotStatus.CLOSED
                 lot.closed_at = transaction.occurred_at
                 lot.holding_period_days = (transaction.occurred_at - lot.opened_at).days
                 lot.tax_year_closed = transaction.occurred_at.year
+            elif close_from_lot > 0:
+                lot.status = LotStatus.PARTIAL
 
             lots_closed.append(lot.id)
             quantity_to_close -= close_from_lot

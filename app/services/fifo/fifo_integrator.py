@@ -205,6 +205,7 @@ class FIFOIntegrator:
 
             self.logger.info(f"Created new account: {account.account_name}")
 
+        self._accounts_cache[f"{exchange_name}_{currency}"] = account.id
         return account
 
     async def _determine_asset_type(self, symbol: str) -> AssetType:
@@ -315,18 +316,21 @@ class FIFOIntegrator:
                         fifo_calc = await processor.process_sell(transaction, strict_fifo=True)
 
                         # Store calculation results in transaction metadata
-                        transaction.meta_data["fifo_calculation"] = {
-                            "lots_closed": [str(lot_id) for lot_id in fifo_calc.lots_closed],
-                            "cost_basis": str(fifo_calc.cost_basis),
-                            "proceeds": str(fifo_calc.proceeds),
-                            "gain": str(fifo_calc.gain),
-                            "loss": str(fifo_calc.loss),
-                            "quantity_sold": str(fifo_calc.quantity_sold),
+                        transaction.meta_data = {
+                            **(transaction.meta_data or {}),
+                            "fifo_calculation": {
+                                "lots_closed": [str(lot_id) for lot_id in fifo_calc.lots_closed],
+                                "cost_basis": str(fifo_calc.cost_basis),
+                                "proceeds": str(fifo_calc.proceeds),
+                                "gain": str(fifo_calc.gain),
+                                "loss": str(fifo_calc.loss),
+                                "quantity_sold": str(fifo_calc.quantity_sold),
+                            },
                         }
 
                         # Update lot realized gains/losses
                         for lot_id in fifo_calc.lots_closed:
-                            lot = session.get(Lot, lot_id)
+                            lot = await session.get(Lot, lot_id)
                             if lot:
                                 lot.realized_gain = fifo_calc.gain
                                 lot.realized_loss = fifo_calc.loss
@@ -340,7 +344,11 @@ class FIFOIntegrator:
                     except ValueError as e:
                         self.logger.error(f"Insufficient lots for SELL: {e}")
                         # Still save the transaction but mark with error
-                        transaction.meta_data["fifo_error"] = str(e)
+                        # JSONB no detecta mutación in-place: reasignar el dict
+                        transaction.meta_data = {
+                            **(transaction.meta_data or {}),
+                            "fifo_error": str(e),
+                        }
 
                 await session.flush()
 
@@ -415,12 +423,16 @@ class FIFOIntegrator:
         """
         try:
             async with get_db_transaction() as session:
+                # scope a las cuentas DE ESTE usuario: los lots de otros
+                # usuarios no deben filtrarse (aislamiento multiusuario)
+                account_ids = list(self._accounts_cache.values())
                 stmt = (
                     select(Lot)
                     .where(
                         Lot.symbol == symbol.upper(),
-                        Lot.status == LotStatus.OPEN,
+                        Lot.status.in_([LotStatus.OPEN, LotStatus.PARTIAL]),
                         Lot.quantity_remaining > 0,
+                        Lot.account_id.in_(account_ids),
                     )
                     .order_by(Lot.opened_at)
                 )
@@ -528,7 +540,13 @@ class FIFOIntegrator:
         """
         try:
             async with get_db_transaction() as session:
-                stmt = select(Lot).where(Lot.status == LotStatus.CLOSED)
+                account_ids = list(self._accounts_cache.values())
+                # lots con ganancia realizada (cerrados del todo O parcialmente):
+                # en un cierre parcial la parte vendida YA está realizada fiscalmente
+                stmt = select(Lot).where(
+                    Lot.account_id.in_(account_ids),
+                    (Lot.realized_gain.is_not(None)) | (Lot.realized_loss.is_not(None)),
+                )
 
                 if symbol:
                     stmt = stmt.where(Lot.symbol == symbol.upper())
@@ -586,7 +604,11 @@ class FIFOIntegrator:
         try:
             async with get_db_transaction() as session:
                 # Get all lots for symbol
-                stmt = select(Lot).where(Lot.symbol == symbol.upper())
+                account_ids = list(self._accounts_cache.values())
+                stmt = select(Lot).where(
+                    Lot.symbol == symbol.upper(),
+                    Lot.account_id.in_(account_ids),
+                )
                 result = await session.execute(stmt)
                 lots = result.scalars().all()
 
@@ -595,7 +617,7 @@ class FIFOIntegrator:
                     Transaction.symbol == symbol.upper(),
                     Transaction.tx_type.in_([TransactionType.BUY, TransactionType.SELL]),
                 )
-                tx_result = session.execute(tx_stmt)
+                tx_result = await session.execute(tx_stmt)
                 transactions = tx_result.scalars().all()
 
                 # Calculate totals

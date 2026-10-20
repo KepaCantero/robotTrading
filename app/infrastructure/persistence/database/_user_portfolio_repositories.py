@@ -319,6 +319,17 @@ class AssetRepository(BaseRepository[Asset]):
 class PositionRepository(BaseRepository[Position]):
     """Repository for Position model."""
 
+    def get_non_zero_positions(self, portfolio_id: uuid.UUID) -> list[Position]:
+        """Posiciones del portfolio con cantidad distinta de cero."""
+        return list(
+            self.session.query(Position)
+            .filter(
+                Position.portfolio_id == portfolio_id,
+                Position.quantity != 0,
+            )
+            .all()
+        )
+
     def get_by_portfolio(self, portfolio_id: uuid.UUID) -> list[Position]:
         """Get positions by portfolio ID."""
         try:

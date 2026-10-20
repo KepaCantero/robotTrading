@@ -98,6 +98,16 @@ class ValidationEngine:
                 result.critical_failures.append(f"Capital viability: {capital_viability.reason}")
                 logger.warning(f"❌ Capital viability check failed for {request.profile_id}")
 
+            # Step 1b: Walk-forward gate (R5/R6/DATA-001). A backtest that failed
+            # out-of-sample validation can never be approved, whatever its
+            # in-sample feasibility looks like.
+            if request.walk_forward_passed is False:
+                reasons = (
+                    "; ".join(request.walk_forward_failures[:3]) or "IS->OOS validation failed"
+                )
+                result.critical_failures.append(f"Walk-forward (R5): {reasons}")
+                logger.warning(f"❌ Walk-forward gate failed for {request.profile_id}: {reasons}")
+
             # Step 2: Validate feasibility ratio (if backtest data provided)
             if request.backtest_feasibility_ratio is not None:
                 feasibility = self._validate_feasibility_ratio(

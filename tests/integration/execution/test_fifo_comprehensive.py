@@ -63,7 +63,9 @@ class TestFIFOIntegratorBasicOperations:
         lots = await integrator.get_open_lots("AAPL")
         assert len(lots) == 1
         assert lots[0].quantity_opened == Decimal("100")
-        assert lots[0].cost_basis_open == Decimal("15000.00")  # 100 * 150
+        assert lots[0].cost_basis_open == Decimal(
+            "15001.00"
+        )  # 100*150 + 1 comisión: valor de adquisición incluye gastos (fiscalidad ES)
 
     async def test_record_sell_trade_closes_lot_fifo(self):
         """Test that recording a SELL trade closes lots in FIFO order."""

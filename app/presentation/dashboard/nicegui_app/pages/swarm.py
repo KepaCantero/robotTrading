@@ -29,10 +29,15 @@ from app.presentation.dashboard.nicegui_app.components.office_scene import Offic
 from app.presentation.dashboard.nicegui_app.components.swarm_fx import install as install_fx
 from app.services.agent_swarm.executor import (
     AGENT_SPECS,
-    DEFAULT_UNIVERSE,
     SPEC_BY_AGENT,
     AgentState,
     SwarmRunRequest,
+)
+from app.services.agent_swarm.universe_selector import (
+    DEFAULT_DATA_DIR,
+    DEFAULT_UNIVERSE,
+    auto_universe,
+    corpus_symbol_names,
 )
 
 if TYPE_CHECKING:
@@ -128,7 +133,7 @@ def preset_for_goal(goal: str | None) -> tuple[str, list[str]] | None:
     return GOAL_PRESETS.get(str(goal).upper())
 
 
-DATA_DIR = Path("data/historical")
+DATA_DIR = DEFAULT_DATA_DIR
 
 PERIOD_DAYS = {"6m": 183, "1y": 365, "2y": 730, "5y": 1825}
 
@@ -190,16 +195,20 @@ SPANISH_PROVINCES = [
 
 def available_universe(data_dir: Path | str = DATA_DIR) -> list[str]:
     """Symbols that have historical CSV data (falls back to the defaults)."""
-    folder = Path(data_dir)
-    if folder.is_dir():
-        symbols = sorted(path.stem.upper() for path in folder.glob("*.csv"))
-        if symbols:
-            return symbols
-    return list(DEFAULT_UNIVERSE)
+    symbols = corpus_symbol_names(data_dir)
+    return symbols or list(DEFAULT_UNIVERSE)
 
 
-def data_window(symbols: list[str], data_dir: Path | str = DATA_DIR) -> tuple[date, date] | None:
-    """Earliest and latest date covered by the CSVs of the given symbols."""
+def data_window(
+    symbols: list[str] | None, data_dir: Path | str = DATA_DIR
+) -> tuple[date, date] | None:
+    """Earliest and latest date covered by the CSVs of the given symbols.
+
+    ``None`` (auto universe, not yet resolved) → no bounds: the period is
+    resolved without clamping, like custom dates.
+    """
+    if not symbols:
+        return None
     earliest: date | None = None
     latest: date | None = None
     for symbol in symbols:
@@ -988,6 +997,17 @@ def render(
                         "help"
                     )
 
+                    ui.label("Universe").classes("lbl q-mb-xs")
+                    modo_universo = ui.toggle(
+                        {"auto": "Automatic", "manual": "Manual"},
+                        value="auto",
+                    ).classes("w-full")
+                    ui.label(
+                        "Automatic: the app screens your CSV library (fresh data, "
+                        "liquidity, enough history) and tests the most liquid symbols. "
+                        "Manual: pick symbols under Advanced options."
+                    ).classes("help q-mb-sm")
+
                     with ui.expansion("Advanced options", icon="tune").classes("w-full q-mt-xs"):
                         target = ui.number(
                             "Monthly target (€) — empty = automatic",
@@ -1049,6 +1069,8 @@ def render(
                                 if not disponibles or sym in disponibles
                             ]
                             if symbols:
+                                # el preset trae su universo curado → modo manual
+                                modo_universo.value = "manual"
                                 universo.value = symbols
 
                         objetivo.on_value_change(lambda _e: _apply_goal_preset())
@@ -1081,9 +1103,16 @@ def render(
                         if not capital.value or capital.value <= 0:
                             ui.notify("Capital must be positive.", type="warning")
                             return
-                        symbols = [str(s).upper() for s in (universo.value or [])]
-                        if not symbols:
-                            symbols = default_universe or DEFAULT_UNIVERSE
+                        if modo_universo.value == "manual":
+                            symbols = [str(s).upper() for s in (universo.value or [])]
+                            if not symbols:
+                                ui.notify(
+                                    "Pick symbols under Advanced options or switch to Automatic.",
+                                    type="warning",
+                                )
+                                return
+                        else:
+                            symbols = None  # la app deriva el universo del corpus
                         start_iso, end_iso = resolve_period(
                             periodo.value,
                             custom_start.value,
@@ -1621,8 +1650,20 @@ def render(
                     from app.services.agent_swarm.optimizer import optimize as run_grid
 
                     optimize_button.disable()
-                    optimize_status.text = "Searching… (uses the real engine, may take 1-2 minutes)"
-                    symbols = [str(s).upper() for s in (universo.value or [])] or DEFAULT_UNIVERSE
+                    if modo_universo.value == "auto":
+                        auto = await asyncio.to_thread(auto_universe)
+                        symbols = auto.symbols
+                        optimize_status.text = (
+                            f"Searching over {len(symbols)} auto-picked symbols "
+                            "(real engine, may take a few minutes)…"
+                        )
+                    else:
+                        symbols = [str(s).upper() for s in (universo.value or [])] or list(
+                            DEFAULT_UNIVERSE
+                        )
+                        optimize_status.text = (
+                            "Searching… (uses the real engine, may take 1-2 minutes)"
+                        )
                     start_iso, end_iso = resolve_period(
                         periodo.value,
                         custom_start.value,

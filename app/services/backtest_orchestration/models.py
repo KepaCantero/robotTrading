@@ -189,6 +189,13 @@ class BacktestResult:
     validation_warnings: list[str] = field(default_factory=list)
     validation_failures: list[str] = field(default_factory=list)
 
+    # Walk-forward gate (R5/R6/DATA-001) — mandatory on every real backtest.
+    # None = gate could not run (no windows); False = ran and FAILED.
+    walk_forward_passed: bool | None = None
+    walk_forward_degradation: Decimal | None = None
+    walk_forward_windows: int = 0
+    walk_forward_summary: str = ""
+
     # Execution timing
     execution_timestamp: datetime = field(default_factory=datetime.utcnow)
     execution_duration_seconds: float = 0.0
@@ -224,6 +231,15 @@ class BacktestResult:
             "ending_capital": str(self.ending_capital),
             "peak_capital": str(self.peak_capital),
             "validation_passed": self.validation_passed,
+            "validation_failures": list(self.validation_failures),
+            "walk_forward_passed": self.walk_forward_passed,
+            "walk_forward_degradation": (
+                str(self.walk_forward_degradation)
+                if self.walk_forward_degradation is not None
+                else None
+            ),
+            "walk_forward_windows": self.walk_forward_windows,
+            "walk_forward_summary": self.walk_forward_summary,
             "execution_duration_seconds": self.execution_duration_seconds,
             "equity_curve": [{"ts": ts, "value": val} for ts, val in self.equity_curve]
             if self.equity_curve

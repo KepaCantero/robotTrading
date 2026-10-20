@@ -12,7 +12,7 @@ the compliance coordinator layer.
 from __future__ import annotations
 
 import logging
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
@@ -198,7 +198,7 @@ class OrderManagerAdapter(ITradeExecutor):
                     signal_price=signal_price,
                     error=error_msg,
                 )
-                return asdict(result)
+                return result
 
             # Map signal to order for tracking
             self._signal_to_order_map[signal_id] = broker_order.order_id
@@ -250,7 +250,7 @@ class OrderManagerAdapter(ITradeExecutor):
                 slippage_bps=slippage_bps,
                 signal_price=signal_price,
             )
-            return asdict(result)
+            return result
 
         except Exception as e:
             logger.error(f"OrderManagerAdapter.execute_order failed: {e}")
@@ -267,7 +267,7 @@ class OrderManagerAdapter(ITradeExecutor):
                 signal_price=Decimal("0"),
                 error=str(e),
             )
-            return asdict(result)
+            return result
 
     async def cancel_order(self, order_id: str) -> bool:
         """

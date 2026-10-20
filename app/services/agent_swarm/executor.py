@@ -13,6 +13,7 @@ conventions of ``tests/unit/parametrization_framework/`` and
 
 from __future__ import annotations
 
+import asyncio
 import dataclasses
 import logging
 import uuid
@@ -35,6 +36,7 @@ from app.services.agent_swarm.events import (
 )
 from app.services.agent_swarm.serialization import safe_json
 from app.services.agent_swarm.store import SwarmRunStore
+from app.services.agent_swarm.universe_selector import DEFAULT_UNIVERSE, auto_universe
 
 logger = logging.getLogger(__name__)
 
@@ -55,21 +57,6 @@ RISK_PROFILE_PORTFOLIO_MAP = {
 }
 
 DEFAULT_MAX_DRAWDOWN_PCT = Decimal("20")
-
-# Universo por defecto multi-mercado (incluye el ETF SPY). Única fuente de
-# verdad: la página del swarm y cualquier fallback del ejecutor usan ESTA lista.
-DEFAULT_UNIVERSE = [
-    "AAPL",
-    "MSFT",
-    "GOOGL",
-    "SAN",
-    "ITX.MC",
-    "MC.PA",
-    "SAP.DE",
-    "6758.T",
-    "SPY",
-    "IBEX",
-]
 
 
 def _to_date(iso: str | None) -> date | None:
@@ -303,6 +290,8 @@ class _Ctx:
 
     request: SwarmRunRequest
     target_monthly: Decimal
+    auto_symbols: list[str] | None = None  # corpus-derived universe (T4.1)
+    auto_universe_summary: str = ""  # human-readable screen diagnostics
     input_profile: Any = None
     profile: Any = None  # InvestmentProfile (T2)
     param_result: Any = None  # ParameterizationResult (T3)
@@ -357,6 +346,14 @@ class Capa2PipelineExecutor:
         self.active_run_id = run_id
 
         ctx = _Ctx(request=request, target_monthly=self._resolve_target(request))
+
+        if not request.symbols:
+            # sin selección manual: el universo se deriva del corpus de CSVs
+            # (escaneo costoso → hilo aparte para no bloquear el event loop)
+            auto = await asyncio.to_thread(auto_universe)
+            ctx.auto_symbols = auto.symbols
+            ctx.auto_universe_summary = auto.summary()
+            logger.info("Run %s %s", run_id, ctx.auto_universe_summary)
 
         self._emit(
             state,
@@ -609,7 +606,7 @@ class Capa2PipelineExecutor:
             start_date=start,
             end_date=end,
             strategy_name=ctx.request.strategy or strategy,
-            symbols=ctx.request.symbols or list(DEFAULT_UNIVERSE),
+            symbols=ctx.request.symbols or ctx.auto_symbols or list(DEFAULT_UNIVERSE),
             commission_per_trade=ctx.request.commission_per_trade,
             slippage_percentage=ctx.request.slippage_pct,
             stop_loss_percentage=ctx.request.stop_loss_pct,
@@ -638,6 +635,8 @@ class Capa2PipelineExecutor:
             backtest_sharpe_ratio=metrics.sharpe_ratio,
             backtest_max_drawdown_pct=abs(metrics.max_drawdown_pct),
             tax_rate=self._effective_tax_rate(ctx),
+            walk_forward_passed=ctx.backtest.backtest_result.walk_forward_passed,
+            walk_forward_failures=list(ctx.backtest.backtest_result.validation_failures),
         )
 
     def _effective_tax_rate(self, ctx: _Ctx) -> Decimal:
@@ -920,8 +919,10 @@ class Capa2PipelineExecutor:
 
     def _collect_warnings(self, agent_id: str, ctx: _Ctx) -> list[str]:
         source = self._stage_output(agent_id, ctx)
-        warnings = getattr(source, "warnings", None) or []
-        return [str(w) for w in warnings]
+        warnings = [str(w) for w in getattr(source, "warnings", None) or []]
+        if agent_id == "t41" and ctx.auto_universe_summary:
+            warnings = [ctx.auto_universe_summary, *warnings]
+        return warnings
 
     def _evaluate_achievements(self, state: RunState, on_event) -> None:
         unlocked: list[tuple[str, str, str]] = [("first_launch", "◦", "First execution")]

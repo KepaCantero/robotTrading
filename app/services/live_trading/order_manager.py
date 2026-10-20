@@ -15,8 +15,6 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from fastapi import Depends
-
 from .broker_connector import (
     BrokerAccount,
     BrokerConnector,
@@ -586,14 +584,15 @@ class OrderManager:
 _manager: OrderManager | None = None
 
 
-_DEFAULT_BROKER_DEPENDS = Depends(get_broker_connector)
-
-
 def get_order_manager(
-    broker: BrokerConnector = _DEFAULT_BROKER_DEPENDS,
+    broker: BrokerConnector | None = None,
 ) -> OrderManager:
+    """broker=None usa el conector PAPER por defecto (fuera de FastAPI el
+    Depends() llegaba sin resolver como objeto y reventaba en runtime)."""
     """Get or create singleton OrderManager."""
     global _manager
+    if broker is None:
+        broker = get_broker_connector()
     if _manager is None:
         # Import RiskGates here to avoid circular dependency
         from .risk_gates import RiskGates

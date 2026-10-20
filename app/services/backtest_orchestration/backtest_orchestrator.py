@@ -342,9 +342,119 @@ class BacktestOrchestrator:
         )
         engine_result = engine.run_backtest(quotes, window_signals, start_dt, end_dt)
 
-        return self._map_engine_result(config, engine_result, start_dt, end_dt)
+        # Gate R5/R6/DATA-001: walk-forward IS->OOS OBLIGATORIO sobre el MISMO
+        # motor (antes vivía en un orquestador gemelo que el producto nunca
+        # llamaba — los veredictos salían sin validación out-of-sample).
+        gate = self._walk_forward_gate(quotes, signals, engine.config, start_dt, end_dt, probe)
 
-    def _map_engine_result(self, config, engine_result, start_dt, end_dt) -> BacktestResult:
+        return self._map_engine_result(config, engine_result, start_dt, end_dt, gate)
+
+    #: ciclos IS->OOS mínimos del gate (regla R5)
+    _WF_MIN_CYCLES = 5
+    #: fracción del span dedicada a entrenamiento y a cada ventana OOS; con
+    #: 40% + 5 x 12% las cinco ventanas cubren exactamente el run
+    _WF_TRAIN_FRACTION = 0.40
+    _WF_VALIDATE_FRACTION = 0.12
+
+    def _walk_forward_gate(
+        self,
+        quotes: list,
+        signals: list,
+        engine_config,
+        start_dt: datetime,
+        end_dt: datetime,
+        probe,
+    ) -> dict:
+        """Walk-forward IS->OOS + compliance R5/R6/DATA-001 on the real motor.
+
+        Windows scale with the run span so every run gets `_WF_MIN_CYCLES`
+        cycles (a 10y run ≈ the classic 4y/1y windows; a 2y run gets
+        proportionally shorter ones — and will honestly fail if the strategy
+        barely trades inside them). Never raises: the verdict pipeline turns a
+        failed gate into REJECTED with the reasons attached.
+        """
+        from app.backtesting.walk_forward_validator import (
+            WalkForwardValidationParams,
+            WalkForwardValidator,
+        )
+
+        span_days = max(1, (end_dt - start_dt).days)
+        validate_years = span_days * self._WF_VALIDATE_FRACTION / 365
+        validator = WalkForwardValidator(
+            config={
+                "train_years": span_days * self._WF_TRAIN_FRACTION / 365,
+                "validation_years": validate_years,
+                "step_years": validate_years,
+                "min_windows": self._WF_MIN_CYCLES,
+                # rotational ETF strategies trade a handful of times a year;
+                # a window needs at least one trade to be evaluable
+                "min_trades_per_window": 1,
+                "thresholds": {
+                    "min_cycles": self._WF_MIN_CYCLES,
+                    "min_consistency": 0.6,
+                    "max_return_std": 0.3,
+                    "min_avg_sharpe": 0.0,
+                    "max_avg_drawdown": -0.30,
+                    "min_consistency_ratio": 0.7,
+                    "max_degradation": 0.30,
+                },
+            }
+        )
+        try:
+            wf = validator.validate_strategy(
+                WalkForwardValidationParams(
+                    quotes=quotes,
+                    signals=signals,
+                    config=engine_config,
+                    start_date=start_dt,
+                    end_date=end_dt,
+                )
+            )
+        except Exception as exc:  # noqa: BLE001 - gate failure must surface, not crash
+            logger.error("Walk-forward gate crashed: %s", exc, exc_info=True)
+            return {
+                "passed": None,
+                "degradation": None,
+                "windows": 0,
+                "summary": f"gate error: {exc}",
+            }
+
+        windows = wf.get("windows") or []
+        # validate_strategy already emits each window as {is_metrics, oos_metrics, ...}
+        folds = [w for w in windows if isinstance(w, dict)]
+        n_parameters = max(1, len(getattr(probe, "get_required_parameters", list)() or []))
+        compliance = (
+            validator.validate_compliance(
+                folds, n_parameters=n_parameters, n_observations=span_days
+            )
+            if folds
+            else None
+        )
+
+        analysis = wf.get("is_oos_analysis") or {}
+        degradation = analysis.get("return_degradation")
+        failures = list(wf.get("failures") or [])
+        if wf.get("reason"):
+            failures.append(str(wf["reason"]))
+        if compliance is not None and not compliance.is_compliant:
+            failures.extend(str(v) for v in compliance.violations)
+        passed = bool(wf.get("passed")) and (compliance is None or compliance.is_compliant)
+        summary = (
+            f"{len(windows)} IS->OOS windows; return degradation {float(degradation):.0%}; "
+            if degradation is not None
+            else f"{len(windows)} IS->OOS windows; "
+        ) + ("PASSED" if passed else "FAILED: " + "; ".join(failures[:4]))
+        return {
+            "passed": passed,
+            "degradation": degradation,
+            "windows": len(windows),
+            "summary": summary,
+            "failures": failures,
+        }
+
+    def _map_engine_result(
+        self, config, engine_result, start_dt, end_dt, gate: dict | None = None
+    ) -> BacktestResult:
         """Translate the real engine result into the orchestration payload."""
         performance = engine_result.performance
         trades = list(engine_result.trades)
@@ -445,6 +555,9 @@ class BacktestOrchestrator:
         # safe_json truncation limit (~4KB) while the chart still looks smooth
         step = max(1, len(raw_equity) // 200)
         equity_points = [(ts.isoformat(), str(val)) for ts, val in raw_equity[::step]]
+        gate = gate or {}
+        wf_passed = gate.get("passed")
+        wf_failures = [str(f) for f in gate.get("failures") or []]
         return BacktestResult(
             test_id=f"test_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
             profile_id=config.profile_id,
@@ -459,6 +572,16 @@ class BacktestOrchestrator:
             equity_curve=equity_points,
             trades_summary=trade_summary,
             execution_duration_seconds=(end_dt - start_dt).total_seconds(),
+            validation_passed=wf_passed is not False,
+            validation_failures=wf_failures if wf_passed is False else [],
+            walk_forward_passed=wf_passed,
+            walk_forward_degradation=(
+                Decimal(str(gate["degradation"])).quantize(Decimal("0.0001"))
+                if gate.get("degradation") is not None
+                else None
+            ),
+            walk_forward_windows=int(gate.get("windows") or 0),
+            walk_forward_summary=str(gate.get("summary") or ""),
         )
 
     @staticmethod
