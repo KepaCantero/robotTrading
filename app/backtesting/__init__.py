@@ -7,19 +7,16 @@ and strategy evaluation.
 
 Includes:
 - SimpleBacktester: Basic backtesting engine
-- RobustBacktester: Advanced engine for 25+ year backtests with bias correction
 - Walk-forward validation (WalkForwardValidator, TomasiniWalkForwardValidator)
 - Monte Carlo simulation
 - Stress testing
 - BacktestingCompliance: Validacion de reglas R5, R6, R7, DATA-001
 
-NEW: Unified Engine Hierarchy (app.backtesting.engines)
+Engine hierarchy (app.backtesting.engines)
 - BaseBacktestEngine: Abstract base class for all engines
-- StandardBacktestEngine: Single-strategy backtest with compliance
+- StandardBacktestEngine: Single-strategy backtest (used by the multi-strategy engine)
 - ExecutionBacktestEngine: Pessimistic execution (look-ahead bias prevention)
 - MultiStrategyBacktestEngine: Multi-strategy with capital allocation
-- RobustBacktestEngine: Long-term backtests with checkpointing
-- EngineFactory: Factory for creating engines by type
 
 COMPLIANCE: Todos los backtests deben usar BacktestingCompliance para validar
 las reglas de backtesting segun .ralph/rules/rules_mapping.yml:
@@ -38,17 +35,6 @@ from .backtesting_compliance import (
 )
 from .engine import BacktestResult, SimpleBacktester
 from .models import BacktestConfig, PerformanceMetrics, Trade, TradeSide, TradeStatus
-from .robust_engine import (
-    CorporateActionHandler,
-    CorporateActionType,
-    DividendHandler,
-    DripConfig,
-    PerformanceTracker,
-    RobustBacktestConfig,
-    RobustBacktester,
-    RobustBacktestResult,
-    SurvivorshipAdjuster,
-)
 from .walk_forward_validator import (
     ComprehensiveValidator,
     CrossValidationTemporal,
@@ -75,24 +61,14 @@ __all__ = [
     "BacktestingComplianceResult",
     "ComplianceViolation",
     "ComprehensiveValidator",
-    "CorporateActionHandler",
-    "CorporateActionType",
     "CrossValidationTemporal",
-    "DividendHandler",
-    "DripConfig",
     "MonteCarloSimulator",
     "ParameterHistory",
     "ParameterStabilityMetrics",
     "PerformanceMetrics",
-    "PerformanceTracker",
-    "RobustBacktestConfig",
-    "RobustBacktestResult",
-    # Robust backtesting (FASE 5.1)
-    "RobustBacktester",
     # Basic backtesting
     "SimpleBacktester",
     "StressTester",
-    "SurvivorshipAdjuster",
     "SyntheticDataGenerator",
     "TomasiniWalkForwardResult",
     # Tomasini Walk-Forward (Enhanced)

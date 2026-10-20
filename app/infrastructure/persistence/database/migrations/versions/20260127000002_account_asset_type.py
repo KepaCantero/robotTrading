@@ -77,7 +77,12 @@ def upgrade() -> None:
     )
     op.execute("UPDATE accounts SET asset_type = 'forex' WHERE asset_type IS NULL")
 
-    op.alter_column("accounts", "asset_type", nullable=False)
+    op.alter_column(
+        "accounts",
+        "asset_type",
+        nullable=False,
+        server_default="crypto",
+    )
     logger.info("accounts.asset_type añadida y backfill aplicado")
 
 

@@ -126,7 +126,8 @@ class DatabaseManager:
                 # PostgreSQL: Use connection pooling
                 self.async_engine = create_async_engine(
                     async_connection_string,
-                    poolclass=QueuePool,
+                    # async engine: pool propio (AsyncAdaptedQueuePool);
+                    # QueuePool síncrono lanza ArgumentError
                     pool_size=self.config.database.db_pool_size,
                     max_overflow=self.config.database.db_max_overflow,
                     pool_timeout=self.config.database.db_pool_timeout,
@@ -154,12 +155,17 @@ class DatabaseManager:
             )
 
     def _convert_to_async_url(self, sync_url: str) -> str:
-        """Convert synchronous database URL to asynchronous."""
+        """Convert synchronous database URL to asynchronous.
+
+        asyncpg no acepta `sslmode` como kwarg de conexión (el dialecto de
+        SQLAlchemy lo pasa tal cual y revienta): se traduce a `ssl`.
+        """
+        async_url = sync_url
         if sync_url.startswith("postgresql://"):
-            return sync_url.replace("postgresql://", "postgresql+asyncpg://", 1)
-        if sync_url.startswith("postgresql+psycopg2://"):
-            return sync_url.replace("postgresql+psycopg2://", "postgresql+asyncpg://", 1)
-        return sync_url
+            async_url = sync_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        elif sync_url.startswith("postgresql+psycopg2://"):
+            async_url = sync_url.replace("postgresql+psycopg2://", "postgresql+asyncpg://", 1)
+        return async_url.replace("?sslmode=", "?ssl=").replace("&sslmode=", "&ssl=")
 
     def _add_connection_listeners(self) -> None:
         """Add database connection event listeners."""
@@ -464,6 +470,11 @@ async def init_database():
         logger.warning(f"Async engine init skipped: {e}")
 
 
-def get_db_transaction():
-    """Get database transaction context for backward compatibility."""
-    return DatabaseSession()
+def get_db_transaction(async_mode: bool = True):
+    """Get database transaction context for backward compatibility.
+
+    async_mode=True por defecto: el código moderno (fifo_integrator,
+    tests de integración) usa `async with`. Los flujos síncronos pueden
+    pedir get_db_transaction(async_mode=False).
+    """
+    return DatabaseSession(async_mode=async_mode)

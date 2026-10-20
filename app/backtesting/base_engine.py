@@ -3,11 +3,10 @@ Abstract Base Backtest Engine.
 
 This module defines the abstract base class for all backtest engines,
 providing a unified interface and shared functionality to reduce code
-duplication across the 4 existing engines:
+duplication across the existing engines:
 - engine.py (BacktestEngine)
 - execution_engine.py (PessimisticExecutionEngine)
 - multi_strategy_engine.py (MultiStrategyBacktester)
-- robust_engine/robust_backtester.py (RobustBacktester)
 
 SINGLE SOURCE OF TRUTH: All defaults from CentralizedConfig.
 """

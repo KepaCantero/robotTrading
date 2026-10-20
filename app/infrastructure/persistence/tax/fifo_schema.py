@@ -34,6 +34,7 @@ from uuid import UUID, uuid4
 logger = logging.getLogger(__name__)
 
 import sqlalchemy as sa
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -117,9 +118,26 @@ class Account(Base):
     # Identification
     user_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), nullable=False, index=True)
     account_name: Mapped[str] = mapped_column(sa.String(100), nullable=False)
-    exchange_type: Mapped[ExchangeType] = mapped_column(sa.Enum(ExchangeType), nullable=False)
+    exchange_type: Mapped[ExchangeType] = mapped_column(
+        sa.Enum(
+            ExchangeType,
+            native_enum=False,
+            values_callable=lambda e: [m.value for m in e],
+            validate_strings=True,
+        ),
+        nullable=False,
+    )
     # Tipo de activo fiscal (Modelo 721/720); migración 0003 hace el backfill
-    asset_type: Mapped[AssetType] = mapped_column(sa.Enum(AssetType), nullable=False)
+    asset_type: Mapped[AssetType] = mapped_column(
+        sa.Enum(
+            AssetType,
+            native_enum=False,
+            values_callable=lambda e: [m.value for m in e],
+            validate_strings=True,
+        ),
+        nullable=False,
+        server_default="crypto",
+    )
     exchange_name: Mapped[str] = mapped_column(
         sa.String(100), nullable=False
     )  # "Binance", "Coinbase", "IBKR"
@@ -200,13 +218,30 @@ class Transaction(Base):
     )
 
     # Asset
-    asset_type: Mapped[AssetType] = mapped_column(sa.Enum(AssetType), nullable=False)
+    asset_type: Mapped[AssetType] = mapped_column(
+        sa.Enum(
+            AssetType,
+            native_enum=False,
+            values_callable=lambda e: [m.value for m in e],
+            validate_strings=True,
+        ),
+        nullable=False,
+        server_default="crypto",
+    )
     symbol: Mapped[str] = mapped_column(
         sa.String(20), nullable=False, index=True
     )  # "BTC", "AAPL", "EURUSD"
 
     # Transaction details
-    tx_type: Mapped[TransactionType] = mapped_column(sa.Enum(TransactionType), nullable=False)
+    tx_type: Mapped[TransactionType] = mapped_column(
+        sa.Enum(
+            TransactionType,
+            native_enum=False,
+            values_callable=lambda e: [m.value for m in e],
+            validate_strings=True,
+        ),
+        nullable=False,
+    )
     side: Mapped[str | None] = mapped_column(
         sa.String(10), nullable=True
     )  # "BUY", "SELL" (for trades)
@@ -330,7 +365,16 @@ class Lot(Base):
 
     # Asset
     symbol: Mapped[str] = mapped_column(sa.String(20), nullable=False, index=True)
-    asset_type: Mapped[AssetType] = mapped_column(sa.Enum(AssetType), nullable=False)
+    asset_type: Mapped[AssetType] = mapped_column(
+        sa.Enum(
+            AssetType,
+            native_enum=False,
+            values_callable=lambda e: [m.value for m in e],
+            validate_strings=True,
+        ),
+        nullable=False,
+        server_default="crypto",
+    )
 
     # Original purchase (cost basis)
     opening_transaction_id: Mapped[UUID] = mapped_column(
@@ -344,7 +388,14 @@ class Lot(Base):
     # Current status
     quantity_remaining: Mapped[Decimal] = mapped_column(sa.Numeric(36, 18), nullable=False)
     status: Mapped[LotStatus] = mapped_column(
-        sa.Enum(LotStatus), default=LotStatus.OPEN, nullable=False
+        sa.Enum(
+            LotStatus,
+            native_enum=False,
+            values_callable=lambda e: [m.value for m in e],
+            validate_strings=True,
+        ),
+        default=LotStatus.OPEN,
+        nullable=False,
     )
 
     # Realized gains (when closed)
@@ -533,7 +584,7 @@ class FIFOProcessor:
         self.session = session
         logger.debug("FIFOProcessor initialized", extra={"session_type": type(session).__name__})
 
-    def process_buy(self, transaction: Transaction) -> Lot:
+    async def process_buy(self, transaction: Transaction) -> Lot:
         """
         Procesar compra → Crear nuevo lote.
 
@@ -564,7 +615,7 @@ class FIFOProcessor:
             opened_at=transaction.occurred_at,
         )
         self.session.add(lot)
-        self.session.flush()
+        await self.session.flush()
         logger.debug(
             "FIFO lot created for BUY transaction",
             extra={
@@ -577,7 +628,9 @@ class FIFOProcessor:
         )
         return lot
 
-    def process_sell(self, transaction: Transaction, strict_fifo: bool = True) -> FIFOCalculation:
+    async def process_sell(
+        self, transaction: Transaction, strict_fifo: bool = True
+    ) -> FIFOCalculation:
         """
         Procesar venta → Cerrar lotes FIFO.
 
@@ -601,15 +654,20 @@ class FIFOProcessor:
             },
         )
         # Query open lots for this symbol, ordered by opened_at (FIFO)
-        open_lots = (
-            self.session.query(Lot)
-            .filter(
-                Lot.account_id == transaction.account_id,
-                Lot.symbol == transaction.symbol,
-                Lot.status == LotStatus.OPEN,
-                Lot.quantity_remaining > 0,
+        open_lots = list(
+            (
+                await self.session.execute(
+                    select(Lot)
+                    .filter(
+                        Lot.account_id == transaction.account_id,
+                        Lot.symbol == transaction.symbol,
+                        Lot.status == LotStatus.OPEN,
+                        Lot.quantity_remaining > 0,
+                    )
+                    .order_by(Lot.opened_at)  # FIFO = oldest first
+                )
             )
-            .order_by(Lot.opened_at)  # FIFO = oldest first
+            .scalars()
             .all()
         )
 
@@ -762,7 +820,7 @@ class Modelo721Generator:
             "Modelo721Generator initialized", extra={"session_type": type(session).__name__}
         )
 
-    def generate_annual_report(self, user_id: UUID, year: int) -> TaxReport:
+    async def generate_annual_report(self, user_id: UUID, year: int) -> TaxReport:
         """
         Generar reporte Modelo 721 para un año.
 
@@ -777,14 +835,17 @@ class Modelo721Generator:
             "Generating Modelo 721 annual report", extra={"user_id": str(user_id), "tax_year": year}
         )
         # Get all crypto accounts
-        crypto_accounts = (
-            self.session.query(Account)
-            .filter(
-                Account.user_id == user_id,
-                Account.asset_type == AssetType.CRYPTO,
-                # TODO(deuda): columna asset_type no existe aún en el modelo Account
-                Account.is_active,
+        crypto_accounts = list(
+            (
+                await self.session.execute(
+                    select(Account).filter(
+                        Account.user_id == user_id,
+                        Account.asset_type == AssetType.CRYPTO,
+                        Account.is_active,
+                    )
+                )
             )
+            .scalars()
             .all()
         )
 
@@ -806,12 +867,17 @@ class Modelo721Generator:
             # Using func.extract for proper typing - sa.extract has incomplete type stubs
             year_extract = sa.func.extract("year", BalanceSnapshot.captured_at)
             snapshot = (
-                self.session.query(BalanceSnapshot)
-                .filter(
-                    BalanceSnapshot.account_id == account.id,
-                    year_extract == year,
+                (
+                    await self.session.execute(
+                        select(BalanceSnapshot)
+                        .filter(
+                            BalanceSnapshot.account_id == account.id,
+                            year_extract == year,
+                        )
+                        .order_by(sa.desc(BalanceSnapshot.captured_at))
+                    )
                 )
-                .order_by(sa.desc(BalanceSnapshot.captured_at))
+                .scalars()
                 .first()
             )
 
@@ -822,13 +888,17 @@ class Modelo721Generator:
                 balances[symbol] += snapshot.balance_eur
 
         # Calculate total gains/losses for the year
-        closed_lots = (
-            self.session.query(Lot)
-            .filter(
-                Lot.__table__.c.account_id.in_([a.id for a in crypto_accounts]),
-                Lot.tax_year_closed == year,
-                Lot.status == LotStatus.CLOSED,
+        closed_lots = list(
+            (
+                await self.session.execute(
+                    select(Lot).filter(
+                        Lot.__table__.c.account_id.in_([a.id for a in crypto_accounts]),
+                        Lot.tax_year_closed == year,
+                        Lot.status == LotStatus.CLOSED,
+                    )
+                )
             )
+            .scalars()
             .all()
         )
 

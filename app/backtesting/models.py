@@ -157,7 +157,7 @@ class PerformanceMetrics(BaseModel):
     All other PerformanceMetrics implementations should import from this module.
 
     Consolidates metrics from:
-    - app/backtesting/robust_engine/performance_tracker.py
+    - app/backtesting/robust_engine/performance_tracker.py (removed)
     - app/domain/services/backtesting/backtest_engine.py
     - app/domain/models/portfolio_analytics.py
     - app/presentation/dashboard/dashboard_data.py

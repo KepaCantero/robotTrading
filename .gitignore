@@ -131,3 +131,4 @@ app/services/.ralph/
 # SQLite runtime sidecars
 *.db-shm
 *.db-wal
+.pgdata/
