@@ -14,9 +14,8 @@ Includes:
 
 Engine hierarchy (app.backtesting.engines)
 - BaseBacktestEngine: Abstract base class for all engines
-- StandardBacktestEngine: Single-strategy backtest (used by the multi-strategy engine)
-- ExecutionBacktestEngine: Pessimistic execution (look-ahead bias prevention)
-- MultiStrategyBacktestEngine: Multi-strategy with capital allocation
+- MultiStrategyBacktestEngine: Multi-strategy with capital allocation;
+  per-strategy execution delegates to the single motor below
 
 COMPLIANCE: Todos los backtests deben usar BacktestingCompliance para validar
 las reglas de backtesting segun .ralph/rules/rules_mapping.yml:

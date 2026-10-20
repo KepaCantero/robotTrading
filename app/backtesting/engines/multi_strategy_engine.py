@@ -267,10 +267,12 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
                 ),
             )
 
-            # Run backtest using StandardBacktestEngine
-            from app.backtesting.engines.standard_engine import StandardBacktestEngine
+            # Run backtest using THE motor (engine.py BacktestEngine — t+1,
+            # IBKR costs, golden-tested). Same constructor/run signature as
+            # the former StandardBacktestEngine (its pre-overhaul fork).
+            from app.backtesting.engine import BacktestEngine
 
-            backtester = StandardBacktestEngine(
+            backtester = BacktestEngine(
                 config,
                 diagnostic_logger=self.diagnostic_logger,
                 strategy=strategy,

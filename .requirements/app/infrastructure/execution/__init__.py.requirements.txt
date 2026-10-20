@@ -6,7 +6,6 @@ Domain: Infrastructure
 
 ## 2. Dependencies
 - `__future__`
-- `app.infrastructure.execution.execution_adapter`
 - `app.infrastructure.execution.order_manager_adapter`
 - `app.infrastructure.execution.trading_bridge_adapter`
 
