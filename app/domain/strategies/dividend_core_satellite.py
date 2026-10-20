@@ -69,6 +69,11 @@ class DividendCoreSatelliteStrategy(BaseStrategy):
         self._closes: dict[str, list[tuple[datetime, float]]] = {}
         self._holdings: set[str] = set()
         self._last_rebalance: datetime | None = None
+        #: el runner fija la fecha desde la que las señales son ejecutables;
+        #: antes (warm-up) solo se acumula historia para los indicadores —
+        #: comprometer holdings pre-ventana desincronizaría la estrategia
+        #: del motor (senales descartadas = posiciones fantasma)
+        self.signals_valid_from: datetime | None = None
 
     # ── BaseStrategy ────────────────────────────────────────────────
 
@@ -79,6 +84,8 @@ class DividendCoreSatelliteStrategy(BaseStrategy):
             return []
         series.append((market_data.timestamp, close))
 
+        if self.signals_valid_from is not None and market_data.timestamp < self.signals_valid_from:
+            return []
         if not self._rebalance_due(market_data.timestamp):
             return []
         self._last_rebalance = market_data.timestamp

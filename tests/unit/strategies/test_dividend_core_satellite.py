@@ -87,3 +87,47 @@ class TestDividendCoreSatellite:
         trades = feed(s, {"CORE1": down, "CORE2": down, "SAT1": down, "DEF": [100] * 70})
         buys = {sym for sym, side in trades if side == "buy"}
         assert not (buys & {"CORE1", "CORE2", "SAT1"}), "momentum negativo nunca se compra"
+
+
+class TestWarmupDoesNotCommitPhantomHoldings:
+    """El warm-up alimenta indicadores, NO posicionamiento.
+
+    Antes: el primer rebalance durante el warm-up comprometía `_holdings`
+    con señales que el runner descartaba (fuera de ventana) → cuando el
+    target volvía a ser ese set, target−holdings=∅ y el motor se quedaba
+    SIN posición durante años (visto en el run de aceptación 2008-2026:
+    equity plana 2011-2015). Ahora `signals_valid_from` corta cualquier
+    decisión pre-ventana y el primer rebalance YA EN VENTANA despliega.
+    """
+
+    def test_no_signals_before_valid_from_and_full_deploy_after(self):
+        s = make()
+        s.signals_valid_from = T0 + timedelta(days=30)
+        # 30 días de warm-up alcista (el core compraría si se le dejara)
+        warmup = feed(
+            s,
+            {
+                "CORE1": [100 + i for i in range(31)],
+                "CORE2": [100 + i for i in range(31)],
+                "SAT1": [50 + i for i in range(31)],
+                "DEF": [40 + i for i in range(31)],
+            },
+        )
+        assert warmup == [], "warm-up no puede emitir señales"
+        assert s._holdings == set(), "warm-up no puede comprometer holdings"
+        # primeras barras EN ventana (día 31+) → despliegue completo del target
+        live = []
+        for day in range(31, 45):
+            for sym, closes in {
+                "CORE1": 131 + (day - 31),
+                "CORE2": 131 + (day - 31),
+                "SAT1": 81 + (day - 31),
+                "DEF": 71 + (day - 31),
+            }.items():
+                for sig in s.generate_signals(quote(sym, day, float(closes))):
+                    side = sig.signal_type
+                    live.append((sig.symbol, side.value if hasattr(side, "value") else str(side)))
+        buys = {sym for sym, side in live if side == "buy"}
+        assert "CORE1" in buys and "CORE2" in buys, (
+            "el primer rebalance en ventana despliega el core"
+        )

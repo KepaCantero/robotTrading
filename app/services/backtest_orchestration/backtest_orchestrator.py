@@ -253,6 +253,10 @@ class BacktestOrchestrator:
         # (mean_reversion...) siguen con instancia propia como siempre.
         probe = self._build_strategy(config.strategy_name)
         shared_strategy = probe if getattr(probe, "is_cross_sectional", False) else None
+        if shared_strategy is not None:
+            # warm-up builds indicator history only; the first position
+            # decision happens INSIDE the execution window
+            shared_strategy.signals_valid_from = datetime.combine(config.start_date, dt_time.min)
         warmup_days = int(getattr(probe, "suggested_warmup_days", self._WARMUP_DAYS))
 
         load_start = datetime.combine(config.start_date - timedelta(days=warmup_days), dt_time.min)
