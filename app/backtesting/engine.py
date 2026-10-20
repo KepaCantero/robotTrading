@@ -980,6 +980,7 @@ class BacktestEngine:
                         entry_price=trade.entry_price,
                         exit_price=trade.exit_price,
                         realized_pnl=realized_pnl,
+                        trade_time=market_data.timestamp,
                     )
 
                 # Register trade result for learning engine

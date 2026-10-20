@@ -108,6 +108,34 @@ class ValidationEngine:
                 result.critical_failures.append(f"Walk-forward (R5): {reasons}")
                 logger.warning(f"❌ Walk-forward gate failed for {request.profile_id}: {reasons}")
 
+            # Step 1c: Strategy quality (Chan 2013 bars, FASE5): Sharpe >= 1.0
+            # and max drawdown <= 25%. Warnings, not critical failures — a
+            # modest-Sharpe strategy can still be goal-fit (defensive
+            # profiles), but a >25% drawdown downgrades APPROVE to CONDITIONAL.
+            if request.backtest_sharpe_ratio is not None or (
+                request.backtest_max_drawdown_pct is not None
+            ):
+                from app.backtesting.validation.strategy_validator import StrategyValidator
+
+                quality = StrategyValidator()
+                if request.backtest_sharpe_ratio is not None:
+                    if not quality.validate_sharpe_ratio(request.backtest_sharpe_ratio):
+                        result.warnings.append(
+                            f"Strategy quality: Sharpe {request.backtest_sharpe_ratio} below "
+                            "institutional bar 1.0 (Chan 2013) — goal-fit deployment, not "
+                            "risk-adjusted excellence"
+                        )
+                if request.backtest_max_drawdown_pct is not None:
+                    max_dd = -abs(request.backtest_max_drawdown_pct) / Decimal("100")
+                    if not quality.validate_max_drawdown(max_dd):
+                        result.warnings.append(
+                            f"Strategy quality: max drawdown {abs(request.backtest_max_drawdown_pct)}% "
+                            "exceeds 25% (Chan 2013) — over-leverage or flawed risk management"
+                        )
+                        if result.overall_recommendation == "APPROVE":
+                            result.overall_recommendation = "CONDITIONAL"
+                            result.confidence_level = "medium"
+
             # Step 2: Validate feasibility ratio (if backtest data provided)
             if request.backtest_feasibility_ratio is not None:
                 feasibility = self._validate_feasibility_ratio(

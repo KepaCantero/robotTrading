@@ -36,22 +36,22 @@ Lo hecho recientemente sobre este plan, verificado en código:
 - `ruff check app/`
 
 ### Task 1: Crear Strategy Validators (Sharpe > 1.0, DD < 25%)
-- [ ] Crear `app/backtesting/validation/strategy_validator.py`
-- [ ] Implementar `StrategyValidator` class con validadores:
+- [x] Crear `app/backtesting/validation/strategy_validator.py`  # ya existía
+- [x] Implementar `StrategyValidator` class con validadores:
   - Sharpe ratio >= 1.0 (Chan #8)
   - Max drawdown <= 25% (Chan #10)
-- [ ] Crear modelos Pydantic en `validation_models.py`
-- [ ] Agregar tests en `app/tests/backtesting/test_strategy_validator.py`
-- [ ] Integrar con pipeline de backtesting
-- [ ] Documentar con Google style docstrings
+- [x] Crear modelos Pydantic en `validation_models.py`
+- [x] Agregar tests (tests/backtesting/validation/test_strategy_validator.py, verde)
+- [x] Integrar con pipeline de backtesting  # HOY: wired al T5 del producto — Sharpe<1 warning; DD>25% warning + APPROVE degradado a CONDITIONAL (tests en tests/unit/dashboard/test_goal_presets.py)
+- [x] Documentar con Google style docstrings
 
 **Referencias:**
 - PLAN_EJECUCION_TAREAS_PENDIENTES.md - Task 5
 - AUDIT_PLAN_COMPLETO.md - Reglas Chan #8, #10
 
 ### Task 2: Verificar y Completar Circuit Breaker 5% Daily
-- [ ] Verificar `app/services/circuit_breaker_manager_v2.py`
-- [ ] Implementar circuit breaker de 5% diario si no existe:
+- [x] Verificar `app/services/circuit_breaker_manager_v2.py`  # no existe NUNCA existió; el breaker REAL vive en el motor: ComplianceEngine kill_switch_threshold default -0.05 (Hull Rule 13.1)
+- [x] Implementar circuit breaker de 5% diario si no existe:  # HOY corregida su semántica: track_daily_pnl hace ROLLOVER por fecha de simulación (antes acumulaba el P&L de todo el proceso y un día malo bloqueaba el backtest entero para siempre; tests tests/unit/core/test_kill_switch_daily.py 4/4)
   - Track daily P&L en real-time
   - Trading halted cuando -5% threshold hit
   - Breaker resets al inicio del siguiente día

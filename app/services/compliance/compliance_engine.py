@@ -2120,8 +2120,12 @@ class ComplianceEngine:
         self._completed_trades: list[dict[str, Any]] = []
         self._alert_hashes: set[str] = set()
 
-        # Kill Switch tracking (Hull Rule 13.1)
+        # Kill Switch tracking (Hull Rule 13.1) — DAILY: the tracking list
+        # holds only the current simulated day's closed trades (rollover on
+        # date change), so the kill switch halts ONE bad day, not the rest
+        # of the backtest.
         self._daily_pnl_tracking: list[dict[str, Any]] = []
+        self._tracking_day: Any = None
         # Use ComplianceConfig for default starting capital
         from app.shared.config.centralized_config import get_compliance_config
 
@@ -2239,6 +2243,7 @@ class ComplianceEngine:
         entry_price: Decimal,
         exit_price: Decimal | None = None,
         realized_pnl: float | None = None,
+        trade_time: datetime | None = None,
     ) -> None:
         """
         Track daily P&L for kill switch monitoring (Hull Rule 13.1).
@@ -2262,9 +2267,14 @@ class ComplianceEngine:
             else:  # SELL
                 pnl = float((entry_price - exit_price) * quantity)
 
+        stamp = trade_time or datetime.now()
+        if self._tracking_day != stamp.date():
+            # new simulated day: the breaker measures TODAY's loss only
+            self._daily_pnl_tracking.clear()
+            self._tracking_day = stamp.date()
         self._daily_pnl_tracking.append(
             {
-                "timestamp": datetime.now(),
+                "timestamp": stamp,
                 "symbol": symbol,
                 "side": side,
                 "quantity": quantity,

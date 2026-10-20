@@ -782,7 +782,7 @@ class TestIntegration:
             mock_result.final_capital = Decimal("110000")
             mock_result.performance = Mock()
             mock_result.performance.sharpe_ratio = Decimal("1.5")
-            mock_result.performance.max_drawdown_percentage = Decimal("-0.10")
+            mock_result.performance.max_drawdown = Decimal("-0.10")  # fracción (contrato del motor)
             mock_result.performance.total_trades = 20
             mock_result.performance.win_rate = Decimal("55")
 
