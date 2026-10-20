@@ -24,6 +24,7 @@ Domain: Backtest
 - `app.domain.services.compliance.compliance_engine`
 - `app.domain.services.trading_validators`
 - `app.domain.strategies.learning.learning_updater`
+- `app.engines.execution_engine.microstructure`
 - `app.services.dynamic_capital_reallocation`
 - `app.shared.config.centralized_config`
 - `contextlib`
@@ -39,6 +40,7 @@ Domain: Backtest
 - `BacktestEngine`
 ### Public Functions
 - `get_price()`
+- `reset_live_trading_gates()`
 - `positions()`
 - `run_backtest()`
 

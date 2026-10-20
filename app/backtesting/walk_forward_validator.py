@@ -854,9 +854,7 @@ class WalkForwardValidator:
                     is_metrics = {
                         "total_return": float(train_result.total_return),
                         "sharpe_ratio": float(_performance_of(train_result).sharpe_ratio or 0),
-                        "max_drawdown": float(
-                            _performance_of(train_result).max_drawdown_percentage or 0
-                        ),
+                        "max_drawdown": float(_performance_of(train_result).max_drawdown or 0),
                         "total_trades": _performance_of(train_result).total_trades,
                         "win_rate": float(_performance_of(train_result).win_rate),
                     }
@@ -880,7 +878,7 @@ class WalkForwardValidator:
                 validate_end=window["validate_end"],
                 total_return=float(result.total_return),
                 sharpe_ratio=float(_performance_of(result).sharpe_ratio or 0),
-                max_drawdown=float(_performance_of(result).max_drawdown_percentage or 0),
+                max_drawdown=float(_performance_of(result).max_drawdown or 0),
                 total_trades=_performance_of(result).total_trades,
                 win_rate=float(_performance_of(result).win_rate),
                 passed=_performance_of(result).total_trades >= self.min_trades_per_window,
@@ -1233,7 +1231,7 @@ class CrossValidationTemporal:
                     "result": {
                         "total_return": float(result.total_return),
                         "sharpe_ratio": float(_performance_of(result).sharpe_ratio or 0),
-                        "max_drawdown": float(_performance_of(result).max_drawdown_percentage or 0),
+                        "max_drawdown": float(_performance_of(result).max_drawdown or 0),
                         "total_trades": _performance_of(result).total_trades,
                         "win_rate": float(_performance_of(result).win_rate),
                     },
@@ -1506,7 +1504,7 @@ class StressTester:
         result = backtester.run_backtest(quotes, signals, start_date, end_date)
 
         total_return = float(result.total_return)
-        max_dd = float(_performance_of(result).max_drawdown_percentage or 0)
+        max_dd = float(_performance_of(result).max_drawdown or 0)
         final_capital = float(result.final_capital)
         initial_capital = float(backtest_config.initial_capital)
 

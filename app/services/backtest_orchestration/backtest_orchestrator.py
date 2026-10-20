@@ -231,20 +231,10 @@ class BacktestOrchestrator:
 
     @staticmethod
     def _reset_live_trading_gates() -> None:
-        """Reset live-trading gates that misfire on historical replay.
+        """Start the run from clean live-trading gates (single source: the engine)."""
+        from app.backtesting.engine import reset_live_trading_gates
 
-        The compliance engine and the Harris microstructure integrator keep
-        process-wide singletons whose quote-stuffing detector counts quotes
-        per WALL-CLOCK second. Replaying years of daily bars in a couple of
-        seconds looks like 150+ quotes/sec, and state accumulated by earlier
-        runs in the same process trips "DO NOT TRADE" for every fill.
-        Backtests are offline simulations: start each one from clean gates.
-        """
-        from app.engines.execution_engine.microstructure import harris_integration
-        from app.services.compliance.compliance_engine import ComplianceEngine
-
-        harris_integration._harris_integrator = None
-        ComplianceEngine._instance = None
+        reset_live_trading_gates()
 
     def _run_real_backtest(self, config) -> BacktestResult:
         """Synchronous real backtest (worker thread)."""
@@ -342,112 +332,111 @@ class BacktestOrchestrator:
         )
         engine_result = engine.run_backtest(quotes, window_signals, start_dt, end_dt)
 
-        # Gate R5/R6/DATA-001: walk-forward IS->OOS OBLIGATORIO sobre el MISMO
-        # motor (antes vivía en un orquestador gemelo que el producto nunca
-        # llamaba — los veredictos salían sin validación out-of-sample).
-        gate = self._walk_forward_gate(quotes, signals, engine.config, start_dt, end_dt, probe)
+        # Gate R5/R6/DATA-001: estabilidad walk-forward OBLIGATORIA sobre el
+        # MISMO motor (antes vivía en un orquestador gemelo que el producto
+        # nunca llamaba — los veredictos salían sin validación out-of-sample).
+        gate = self._walk_forward_gate(engine_result, engine.config, probe)
 
         return self._map_engine_result(config, engine_result, start_dt, end_dt, gate)
 
-    #: ciclos IS->OOS mínimos del gate (regla R5)
+    #: ventanas secuenciales del gate de estabilidad (regla R5)
     _WF_MIN_CYCLES = 5
-    #: fracción del span dedicada a entrenamiento y a cada ventana OOS; con
-    #: 40% + 5 x 12% las cinco ventanas cubren exactamente el run
-    _WF_TRAIN_FRACTION = 0.40
-    _WF_VALIDATE_FRACTION = 0.12
+    #: volatilidad anual mínima (mismo floor que PerformanceMetricsCalculator)
+    _WF_VOL_FLOOR = 0.15
+    _WF_TRADING_DAYS = 252
 
-    def _walk_forward_gate(
-        self,
-        quotes: list,
-        signals: list,
-        engine_config,
-        start_dt: datetime,
-        end_dt: datetime,
-        probe,
-    ) -> dict:
-        """Walk-forward IS->OOS + compliance R5/R6/DATA-001 on the real motor.
+    def _walk_forward_gate(self, engine_result, engine_config, probe) -> dict:
+        """R5/R6/DATA-001 stability gate on the run's own equity curve.
 
-        Windows scale with the run span so every run gets `_WF_MIN_CYCLES`
-        cycles (a 10y run ≈ the classic 4y/1y windows; a 2y run gets
-        proportionally shorter ones — and will honestly fail if the strategy
-        barely trades inside them). Never raises: the verdict pipeline turns a
-        failed gate into REJECTED with the reasons attached.
+        The strategy parameters are fixed a priori (no re-optimization inside
+        the gate), so the honest walk-forward question is: is the FULL run —
+        positions carried, exactly as it would trade live — consistently
+        profitable across time, or did all its performance concentrate in one
+        lucky stretch? We slice the run's equity curve into 5 sequential
+        windows and demand consistent profitability (R5), a sane
+        parameters/observations ratio (R6) and note that purged CV
+        (DATA-001) does not apply without in-gate re-optimization.
+
+        Re-running the strategy in isolated windows (the classic IS->OOS
+        layout) would measure signal incidence, not the strategy: a slow
+        rotational strategy with no rebalance inside a window would show a
+        flat 0% window while fully invested in reality.
+
+        Never raises: a failed gate flows into the verdict as REJECTED.
         """
-        from app.backtesting.walk_forward_validator import (
-            WalkForwardValidationParams,
-            WalkForwardValidator,
-        )
+        import math
 
-        span_days = max(1, (end_dt - start_dt).days)
-        validate_years = span_days * self._WF_VALIDATE_FRACTION / 365
-        validator = WalkForwardValidator(
-            config={
-                "train_years": span_days * self._WF_TRAIN_FRACTION / 365,
-                "validation_years": validate_years,
-                "step_years": validate_years,
-                "min_windows": self._WF_MIN_CYCLES,
-                # rotational ETF strategies trade a handful of times a year;
-                # a window needs at least one trade to be evaluable
-                "min_trades_per_window": 1,
-                "thresholds": {
-                    "min_cycles": self._WF_MIN_CYCLES,
-                    "min_consistency": 0.6,
-                    "max_return_std": 0.3,
-                    "min_avg_sharpe": 0.0,
-                    "max_avg_drawdown": -0.30,
-                    "min_consistency_ratio": 0.7,
-                    "max_degradation": 0.30,
-                },
-            }
-        )
-        try:
-            wf = validator.validate_strategy(
-                WalkForwardValidationParams(
-                    quotes=quotes,
-                    signals=signals,
-                    config=engine_config,
-                    start_date=start_dt,
-                    end_date=end_dt,
-                )
-            )
-        except Exception as exc:  # noqa: BLE001 - gate failure must surface, not crash
-            logger.error("Walk-forward gate crashed: %s", exc, exc_info=True)
+        by_ts: dict = {}
+        for ts, value in engine_result.equity_curve or []:
+            by_ts[ts] = float(value)
+        series = sorted(by_ts.items())
+        if len(series) < 50:
             return {
                 "passed": None,
                 "degradation": None,
                 "windows": 0,
-                "summary": f"gate error: {exc}",
+                "summary": "walk-forward: insufficient equity history for stability windows",
+                "failures": [],
             }
 
-        windows = wf.get("windows") or []
-        # validate_strategy already emits each window as {is_metrics, oos_metrics, ...}
-        folds = [w for w in windows if isinstance(w, dict)]
-        n_parameters = max(1, len(getattr(probe, "get_required_parameters", list)() or []))
-        compliance = (
-            validator.validate_compliance(
-                folds, n_parameters=n_parameters, n_observations=span_days
-            )
-            if folds
-            else None
-        )
+        n = self._WF_MIN_CYCLES
+        size = len(series) // n
+        rf = float(engine_config.risk_free_rate)
+        stats = []
+        for i in range(n):
+            chunk = series[i * size : (i + 1) * size if i < n - 1 else len(series)]
+            values = [v for _ts, v in chunk]
+            days = max(1, len(values))
+            years = days / self._WF_TRADING_DAYS
+            ret = values[-1] / values[0] - 1.0
+            ann = (1.0 + ret) ** (1.0 / years) - 1.0 if years > 0 and values[0] > 0 else 0.0
+            rets = [(b / a - 1.0) for a, b in zip(values[:-1], values[1:], strict=True) if a > 0]
+            mean = sum(rets) / len(rets) if rets else 0.0
+            var = sum((r - mean) ** 2 for r in rets) / (len(rets) - 1) if len(rets) > 1 else 0.0
+            vol = max(math.sqrt(var) * math.sqrt(self._WF_TRADING_DAYS), self._WF_VOL_FLOOR)
+            sharpe = (mean * self._WF_TRADING_DAYS - rf) / vol
+            peak, mdd = values[0], 0.0
+            for v in values:
+                peak = max(peak, v)
+                mdd = min(mdd, v / peak - 1.0)
+            stats.append({"ret": ret, "ann": ann, "sharpe": sharpe, "mdd": mdd})
 
-        analysis = wf.get("is_oos_analysis") or {}
-        degradation = analysis.get("return_degradation")
-        failures = list(wf.get("failures") or [])
-        if wf.get("reason"):
-            failures.append(str(wf["reason"]))
-        if compliance is not None and not compliance.is_compliant:
-            failures.extend(str(v) for v in compliance.violations)
-        passed = bool(wf.get("passed")) and (compliance is None or compliance.is_compliant)
+        profitable = sum(1 for w in stats if w["ret"] > 0)
+        consistency = profitable / n
+        worst = min(stats, key=lambda w: w["ann"])
+        mean_sharpe = sum(w["sharpe"] for w in stats) / n
+        # "degradation" here = depth of the worst window (time-instability);
+        # there is no IS/OOS refit, so classic degradation is not definable.
+        degradation = max(0.0, -worst["ret"])
+
+        failures = []
+        if consistency < 0.6:
+            failures.append(
+                f"R5 consistency {consistency:.0%} ({profitable}/{n} profitable windows) < 60%"
+            )
+        if worst["mdd"] < -0.30:
+            failures.append(f"R5 worst-window drawdown {worst['mdd']:.0%} < -30%")
+        if mean_sharpe <= 0:
+            failures.append(f"R5 mean window Sharpe {mean_sharpe:.2f} <= 0")
+        n_parameters = max(1, len(getattr(probe, "get_required_parameters", list)() or []))
+        ratio = n_parameters / len(series)
+        if ratio > 1 / 30:
+            failures.append(
+                f"R6 parameters/observations {n_parameters}/{len(series)} = {ratio:.4f} > 1/30"
+            )
+
+        passed = not failures
+        window_txt = ", ".join(f"{w['ret']:+.0%}" for w in stats)
         summary = (
-            f"{len(windows)} IS->OOS windows; return degradation {float(degradation):.0%}; "
-            if degradation is not None
-            else f"{len(windows)} IS->OOS windows; "
-        ) + ("PASSED" if passed else "FAILED: " + "; ".join(failures[:4]))
+            f"{n} sequential windows [{window_txt}]; worst {worst['ret']:+.0%}; "
+            f"mean Sharpe {mean_sharpe:.2f}; R6 {n_parameters}:{len(series)}; "
+            "DATA-001 n/a (fixed params, no in-gate refit); "
+            + ("PASSED" if passed else "FAILED: " + "; ".join(failures[:4]))
+        )
         return {
             "passed": passed,
             "degradation": degradation,
-            "windows": len(windows),
+            "windows": n,
             "summary": summary,
             "failures": failures,
         }

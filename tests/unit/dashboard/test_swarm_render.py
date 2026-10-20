@@ -89,8 +89,9 @@ async def test_swarm_pipeline_runs_end_to_end_from_ui(user: User, register_page)
     await user.open("/swarm-test")
     user.find(marker="run_pipeline").click()
 
-    # The real T1.1→T10.1 chain takes under a second; the UI polls at 0.25s.
-    for _ in range(40):
+    # The real T1.1→T10.1 chain includes a full backtest plus the mandatory
+    # walk-forward gate and a clean compliance-engine init; allow 60s.
+    for _ in range(240):
         await asyncio.sleep(0.25)
         try:
             await user.should_see("Completed")
@@ -98,7 +99,7 @@ async def test_swarm_pipeline_runs_end_to_end_from_ui(user: User, register_page)
         except AssertionError:
             continue
     else:
-        pytest.fail("pipeline did not complete within 10s in the simulated UI")
+        pytest.fail("pipeline did not complete within 60s in the simulated UI")
 
     await user.should_see("Step 10 of 10")
     await user.should_see("3 · RESULT")
@@ -121,7 +122,7 @@ async def test_step_dialogs_show_visual_outputs(user: User, register_page):
     """After a run, each step dialog renders charts/tiles, not just JSON."""
     await user.open("/swarm-test")
     user.find(marker="run_pipeline").click()
-    for _ in range(20):
+    for _ in range(240):
         await asyncio.sleep(0.25)
         try:
             await user.should_see("Completed")

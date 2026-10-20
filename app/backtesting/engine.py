@@ -68,6 +68,22 @@ def get_price(md) -> Decimal:
         )
 
 
+def reset_live_trading_gates() -> None:
+    """Reset live-trading gates that misfire on historical replay.
+
+    The compliance engine and the Harris microstructure integrator keep
+    process-wide singletons: the kill switch tracks P&L across everything
+    the process ever simulated, and the quote-stuffing detector counts quotes
+    per wall-clock second (years of daily bars replayed in seconds look like
+    150+ quotes/sec). Backtests are offline simulations — each one starts
+    from clean gates.
+    """
+    from app.engines.execution_engine.microstructure import harris_integration
+
+    harris_integration._harris_integrator = None  # noqa: SLF001 - singleton reset
+    ComplianceEngine._instance = None  # noqa: SLF001 - singleton reset
+
+
 class BacktestEngine:
     """
     Backtesting engine for trading strategies.
@@ -107,6 +123,14 @@ class BacktestEngine:
         self.strategy_name = strategy_name
         self.total_portfolio_capital = total_portfolio_capital or config.initial_capital
         self.reallocation_engine = reallocation_engine
+
+        # Every backtest is an isolated simulation: start it from clean
+        # live-trading gates. ComplianceEngine is a process singleton whose
+        # kill switch / quote-stuffing state would otherwise leak from the
+        # previous backtest (walk-forward windows, optimizer trials, dashboard
+        # runs) and silently reject every later trade.
+        if compliance_engine is None:
+            reset_live_trading_gates()
 
         # Track last known price for each symbol for accurate equity curve calculation
         self.last_known_prices: dict[str, Decimal] = {}

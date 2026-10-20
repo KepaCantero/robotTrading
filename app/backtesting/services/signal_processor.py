@@ -287,6 +287,14 @@ class SignalProcessor:
         if not self.enable_risk_envelope:
             return True
 
+        # Exposure limits only make sense for trades that ADD exposure. A
+        # SELL closes or reduces a position; blocking it because the position
+        # already exceeds a cap would trap the capital in the very position
+        # the cap is meant to limit (the engine is long-only, so SELL never
+        # opens a short).
+        if signal.signal_type == SignalType.SELL:
+            return True
+
         current_price = get_price(market_data)
 
         # Calculate current portfolio positions for validation

@@ -224,10 +224,21 @@ class EquityCurveTracker:
         if len(self.equity_curve) < 2:
             return []
 
+        # One equity point per BAR, not per quote: in multi-symbol runs the
+        # curve holds one point per symbol per day, and per-quote "returns"
+        # between same-day points are annualization noise that destroys the
+        # Sharpe/Sortino ratio. Keep the last value of each timestamp.
+        by_ts: dict[object, Decimal] = {}
+        for ts, value in self.equity_curve:
+            by_ts[ts] = value
+        points = list(by_ts.values())
+        if len(points) < 2:
+            return []
+
         returns = []
-        for i in range(1, len(self.equity_curve)):
-            prev_value = self.equity_curve[i - 1][1]
-            curr_value = self.equity_curve[i][1]
+        for i in range(1, len(points)):
+            prev_value = points[i - 1]
+            curr_value = points[i]
 
             if prev_value > 0:
                 ret = (curr_value - prev_value) / prev_value

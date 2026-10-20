@@ -32,6 +32,7 @@ Domain: Infrastructure
 - `get_by_asset_class()`
 - `get_active_assets()`
 - `search_by_name()`
+- `get_non_zero_positions()`
 - `get_by_portfolio()`
 - `get_by_portfolio_and_asset()`
 - `get_open_positions()`

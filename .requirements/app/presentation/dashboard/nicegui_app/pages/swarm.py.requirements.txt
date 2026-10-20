@@ -13,6 +13,7 @@ Domain: Presentation
 - `app.services.agent_swarm.executor`
 - `app.services.agent_swarm.optimizer`
 - `app.services.agent_swarm.store`
+- `app.services.agent_swarm.universe_selector`
 - `asyncio`
 - `collections`
 - `dataclasses`

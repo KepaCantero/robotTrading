@@ -9,13 +9,12 @@ Domain: Service
 - `app.backtesting.data_loader`
 - `app.backtesting.engine`
 - `app.backtesting.models`
-- `app.engines.execution_engine.microstructure`
-- `app.services.compliance.compliance_engine`
 - `asyncio`
 - `datetime`
 - `decimal`
 - `importlib`
 - `logging`
+- `math`
 - `models`
 - `pathlib`
 - `yaml`

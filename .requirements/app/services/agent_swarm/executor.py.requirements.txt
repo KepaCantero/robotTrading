@@ -10,6 +10,7 @@ Domain: Service
 - `app.services.agent_swarm.events`
 - `app.services.agent_swarm.serialization`
 - `app.services.agent_swarm.store`
+- `app.services.agent_swarm.universe_selector`
 - `app.services.backtest_orchestration.backtest_orchestrator`
 - `app.services.backtest_orchestration.models`
 - `app.services.deployment.deploy_decision_orchestrator`
@@ -28,6 +29,7 @@ Domain: Service
 - `app.services.tax_efficiency.engines.spain_tax_engine`
 - `app.services.validation_engine.models`
 - `app.services.validation_engine.validation_engine`
+- `asyncio`
 - `dataclasses`
 - `datetime`
 - `decimal`
