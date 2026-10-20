@@ -4,8 +4,8 @@ Centralized Timeout Configuration for External API Calls.
 This module provides timeout settings for all external service integrations:
 - Broker APIs (Alpaca, Interactive Brokers)
 - Market data providers (Yahoo Finance, Polygon, Alpha Vantage)
-- Database connections (PostgreSQL, Redis, QuestDB)
-- External services (MLFlow, Dagster)
+- Database connections (PostgreSQL, Redis)
+- External services (Dagster)
 - WebSocket connections
 
 All timeouts are configurable via environment variables for deployment flexibility.
@@ -90,16 +90,7 @@ class TimeoutConfig:
     redis_connect: float = 5.0
     redis_operation: float = 5.0
 
-    # QuestDB (time-series)
-    questdb_connect: float = 5.0
-    questdb_query: float = 30.0
-    questdb_insert: float = 10.0
-
     # ==================== External Service Timeouts ====================
-    # MLFlow (experiment tracking)
-    mlflow_connect: float = 10.0
-    mlflow_operation: float = 30.0
-
     # Dagster (orchestration)
     dagster_connect: float = 10.0
     dagster_operation: float = 60.0
@@ -229,12 +220,7 @@ class TimeoutConfig:
             "postgres_long_query": "TIMEOUT_POSTGRES_LONG_QUERY",
             "redis_connect": "TIMEOUT_REDIS_CONNECT",
             "redis_operation": "TIMEOUT_REDIS_OPERATION",
-            "questdb_connect": "TIMEOUT_QUESTDB_CONNECT",
-            "questdb_query": "TIMEOUT_QUESTDB_QUERY",
-            "questdb_insert": "TIMEOUT_QUESTDB_INSERT",
             # External Services
-            "mlflow_connect": "TIMEOUT_MLFLOW_CONNECT",
-            "mlflow_operation": "TIMEOUT_MLFLOW_OPERATION",
             "dagster_connect": "TIMEOUT_DAGSTER_CONNECT",
             "dagster_operation": "TIMEOUT_DAGSTER_OPERATION",
             # HTTP

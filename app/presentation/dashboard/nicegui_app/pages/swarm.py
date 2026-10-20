@@ -353,6 +353,9 @@ def extract_result_metrics(results: dict) -> dict:
         "verdict": decision.get("status"),
         "reasons": list(decision.get("reasons") or [])[:4],
         "next_steps": list(decision.get("next_steps") or [])[:3],
+        "benchmark_symbol": inner.get("benchmark_symbol") or "",
+        "benchmark_return": inner.get("benchmark_return_pct"),
+        "excess_return": inner.get("excess_return_pct"),
     }
 
 
@@ -1786,6 +1789,19 @@ def render(
                     _metric_tile("Recommended strategy", metrics.get("strategy"), 0.32)
                     _metric_tile("Test period", period, 0.40)
                     _metric_tile("Universe", universe, 0.48)
+
+                if metrics.get("benchmark_symbol") and metrics.get("benchmark_return") is not None:
+                    bench = _as_float(metrics.get("benchmark_return"))
+                    excess = metrics.get("excess_return")
+                    excess_txt = (
+                        f" · excess vs market {_as_float(excess):+,.1f}%"
+                        if excess is not None
+                        else ""
+                    )
+                    ui.label(
+                        f"Market context: {metrics['benchmark_symbol']} buy&hold did "
+                        f"{bench:+,.1f}% over the same period{excess_txt}."
+                    ).classes("help q-mt-sm")
 
                 if context_bits:
                     ui.label(f"Investor: {' · '.join(context_bits)}").classes("help q-mt-sm")

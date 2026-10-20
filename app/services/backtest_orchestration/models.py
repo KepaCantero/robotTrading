@@ -196,6 +196,12 @@ class BacktestResult:
     walk_forward_windows: int = 0
     walk_forward_summary: str = ""
 
+    # Benchmark (buy&hold reference over the same window) — market context
+    benchmark_symbol: str = ""
+    benchmark_return_pct: Decimal | None = None
+    excess_return_pct: Decimal | None = None
+    benchmark_curve: list[tuple[str, str]] = field(default_factory=list)
+
     # Execution timing
     execution_timestamp: datetime = field(default_factory=datetime.utcnow)
     execution_duration_seconds: float = 0.0
@@ -240,6 +246,16 @@ class BacktestResult:
             ),
             "walk_forward_windows": self.walk_forward_windows,
             "walk_forward_summary": self.walk_forward_summary,
+            "benchmark_symbol": self.benchmark_symbol,
+            "benchmark_return_pct": (
+                str(self.benchmark_return_pct) if self.benchmark_return_pct is not None else None
+            ),
+            "excess_return_pct": (
+                str(self.excess_return_pct) if self.excess_return_pct is not None else None
+            ),
+            "benchmark_curve": [{"ts": ts, "value": v} for ts, v in self.benchmark_curve]
+            if self.benchmark_curve
+            else [],
             "execution_duration_seconds": self.execution_duration_seconds,
             "equity_curve": [{"ts": ts, "value": val} for ts, val in self.equity_curve]
             if self.equity_curve
@@ -279,6 +295,9 @@ class BacktestOrchestrationRequest:
     slippage_percentage: Decimal | None = None  # engine cost model (%)
     stop_loss_percentage: Decimal | None = None  # per-trade stop (%)
     take_profit_percentage: Decimal | None = None  # per-trade take profit (%)
+    #: reference series for market-conditions analysis (buy&hold of this
+    #: symbol over the same window); "" disables
+    benchmark_symbol: str = "SPY"
 
 
 @dataclass

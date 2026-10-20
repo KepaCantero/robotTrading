@@ -48,7 +48,7 @@ app/core/config/
 - `CoveredCallThresholds` - OTM percentage, DTE parameters
 
 ### 5. `infrastructure.py`
-- `DatabaseConfig` - PostgreSQL and QuestDB configuration
+- `DatabaseConfig` - PostgreSQL configuration
 - `RedisConfig` - Redis cache configuration
 - `APIConfig` - API server configuration
 - `LoggingConfig` - Logging parameters

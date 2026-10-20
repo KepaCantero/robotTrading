@@ -336,8 +336,38 @@ class BacktestOrchestrator:
         # MISMO motor (antes vivía en un orquestador gemelo que el producto
         # nunca llamaba — los veredictos salían sin validación out-of-sample).
         gate = self._walk_forward_gate(engine_result, engine.config, probe)
+        benchmark = self._load_benchmark(config, loader, start_dt, end_dt)
 
-        return self._map_engine_result(config, engine_result, start_dt, end_dt, gate)
+        return self._map_engine_result(config, engine_result, start_dt, end_dt, gate, benchmark)
+
+    def _load_benchmark(self, config, loader, start_dt, end_dt) -> dict | None:
+        """Buy&hold reference over the same window (default SPY).
+
+        Normalised to the run's initial capital so the curve can be overlaid
+        on the equity chart; honest context for market conditions ("did the
+        strategy beat just holding the market?"). Returns None when disabled
+        or unavailable — the verdict never depends on it.
+        """
+        symbol = (config.benchmark_symbol or "").strip().upper()
+        if not symbol:
+            return None
+        try:
+            raw = loader.load_market_data(symbol, start_dt, end_dt, "1d", "csv")
+        except Exception as exc:  # noqa: BLE001 - benchmark is context, not a gate
+            logger.warning("Benchmark %s unavailable: %s", symbol, exc)
+            return None
+        closes = sorted((q.timestamp, float(q.close if q.close else q.last)) for q in raw)
+        if len(closes) < 2 or closes[0][1] <= 0:
+            return None
+        base = closes[0][1]
+        curve = [(ts.isoformat(), value / base) for ts, value in closes]
+        total = Decimal(str(curve[-1][1] - 1.0)) * Decimal("100")
+        step = max(1, len(curve) // 200)
+        return {
+            "symbol": symbol,
+            "return_pct": total.quantize(Decimal("0.01")),
+            "curve": [(ts, f"{v:.6f}") for ts, v in curve[::step]],
+        }
 
     #: ventanas secuenciales del gate de estabilidad (regla R5)
     _WF_MIN_CYCLES = 5
@@ -442,7 +472,13 @@ class BacktestOrchestrator:
         }
 
     def _map_engine_result(
-        self, config, engine_result, start_dt, end_dt, gate: dict | None = None
+        self,
+        config,
+        engine_result,
+        start_dt,
+        end_dt,
+        gate: dict | None = None,
+        benchmark: dict | None = None,
     ) -> BacktestResult:
         """Translate the real engine result into the orchestration payload."""
         performance = engine_result.performance
@@ -571,6 +607,14 @@ class BacktestOrchestrator:
             ),
             walk_forward_windows=int(gate.get("windows") or 0),
             walk_forward_summary=str(gate.get("summary") or ""),
+            benchmark_symbol=str((benchmark or {}).get("symbol") or ""),
+            benchmark_return_pct=(benchmark or {}).get("return_pct"),
+            excess_return_pct=(
+                (metrics.total_return_pct - benchmark["return_pct"]).quantize(Decimal("0.01"))
+                if benchmark and benchmark.get("return_pct") is not None
+                else None
+            ),
+            benchmark_curve=list((benchmark or {}).get("curve") or []),
         )
 
     @staticmethod

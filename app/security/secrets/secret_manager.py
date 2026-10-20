@@ -168,12 +168,6 @@ SECRET_DEFINITIONS: list[SecretDefinition] = [
         description="Redis password for caching",
         required_in_production=False,
     ),
-    SecretDefinition(
-        name="QUESTDB_PASSWORD",
-        category=SecretCategory.EXTERNAL_SERVICE,
-        description="QuestDB password for metrics storage",
-        required_in_production=False,
-    ),
 ]
 
 
@@ -701,7 +695,7 @@ class SecretManager:
         NEVER hardcodes credentials in connection strings.
 
         Args:
-            db_type: Type of database (postgresql, redis, questdb)
+            db_type: Type of database (postgresql, redis)
 
         Returns:
             Connection string built from environment variables
@@ -730,15 +724,6 @@ class SecretManager:
             if password:
                 return f"redis://:{password}@{host}:{port}/{db}"
             return f"redis://{host}:{port}/{db}"
-
-        elif db_type == "questdb":
-            host = self.get("QUESTDB_HOST", default="localhost")
-            port = self.get("QUESTDB_PORT", default="9009")
-            user = self.get("QUESTDB_USER", default="admin")
-            password = self.get("QUESTDB_PASSWORD", default="quest")
-            database = self.get("QUESTDB_DATABASE", default="qdb")
-
-            return f"postgresql://{user}:{password}@{host}:{port}/{database}"
 
         else:
             raise ValueError(f"Unknown database type: {db_type}")
@@ -815,7 +800,7 @@ def get_connection_string(db_type: str) -> str:
     NEVER hardcode credentials in connection strings.
 
     Args:
-        db_type: Database type (postgresql, redis, questdb)
+        db_type: Database type (postgresql, redis)
 
     Returns:
         Connection string

@@ -6,8 +6,6 @@ Domain: Service
 
 ## 2. Dependencies
 - `dagster_orchestrator`
-- `mlflow_tracker`
-- `questdb_connector`
 - `zipline_integrator`
 
 ## 3. Core Components

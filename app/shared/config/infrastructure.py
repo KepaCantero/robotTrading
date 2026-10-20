@@ -38,12 +38,7 @@ class DatabaseConfig(SettingsBase):
     # SSL
     ssl_mode: str = Field(default="prefer", description="SSL mode")
 
-    # QuestDB specific
-    questdb_host: str = Field(default="localhost", description="QuestDB host")
-    questdb_port: int = Field(default=8812, description="QuestDB port")
-    questdb_database: str = Field(default="qdb", description="QuestDB database name")
-
-    @field_validator("port", "questdb_port")
+    @field_validator("port")
     @classmethod
     def validate_port(cls, v: int) -> int:
         logger.debug("Validating port number", extra={"port": v})

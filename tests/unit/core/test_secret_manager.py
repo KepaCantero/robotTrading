@@ -239,23 +239,6 @@ class TestConnectionStrings:
 
             assert conn_str == "redis://localhost:6379/0"
 
-    def test_questdb_connection_string(self):
-        """Test building QuestDB connection string."""
-        with patch.dict(
-            os.environ,
-            {
-                "QUESTDB_HOST": "localhost",
-                "QUESTDB_PORT": "9009",
-                "QUESTDB_USER": "admin",
-                "QUESTDB_PASSWORD": "quest_pass",
-                "QUESTDB_DATABASE": "qdb",
-            },
-        ):
-            manager = SecretManager()
-            conn_str = manager.get_connection_string("questdb")
-
-            assert conn_str == "postgresql://admin:quest_pass@localhost:9009/qdb"
-
     def test_postgresql_missing_password_raises_error(self):
         """Test that missing DB password raises error."""
         with patch.dict(
@@ -297,7 +280,7 @@ class TestConvenienceFunctions:
     def test_get_connection_string_function(self):
         """Test get_connection_string convenience function."""
         # Clear cache to ensure fresh values
-        import app.security.secret_manager as sm_module
+        import app.security.secrets.secret_manager as sm_module
 
         sm_module._secret_manager.clear_cache()
 
@@ -325,7 +308,7 @@ class TestConvenienceFunctions:
     def test_is_production_function(self):
         """Test is_production function."""
         # Need to patch at the module level since is_production uses the global instance
-        import app.security.secret_manager as sm_module
+        import app.security.secrets.secret_manager as sm_module
 
         with patch.dict(os.environ, {"ENVIRONMENT": "production"}):
             # Create new instance to pick up the environment
