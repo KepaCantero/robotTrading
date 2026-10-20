@@ -63,38 +63,32 @@ tests/
 
 ```bash
 # Run all tests
-python run_tests.py
+pytest
 
 # Run only unit tests
-python run_tests.py --unit
+pytest tests/unit
 
 # Run only integration tests
-python run_tests.py --integration
+pytest tests/integration
 
-# Run only load tests
-python run_tests.py --load
-
-# Run only critical tests
-python run_tests.py --critical
+# Run a specific suite by keyword
+pytest -k <keyword>
 ```
 
 ### Advanced Usage
 
 ```bash
-# Run with coverage report
-python run_tests.py --coverage
-
-# Run fast tests only (skip slow tests)
-python run_tests.py --fast
+# With coverage report
+pytest --cov=app --cov-report=html
 
 # Stop on first failure
-python run_tests.py --failfast
+pytest -x
 
 # Verbose output
-python run_tests.py --verbose
+pytest -v
 
 # Run tests in parallel (requires pytest-xdist)
-python run_tests.py --parallel 4
+pytest -n 4
 
 # Run specific test file
 pytest tests/integration/test_position_monitor_comprehensive.py
@@ -265,7 +259,7 @@ jobs:
           python-version: '3.9'
       - run: pip install -r requirements.txt
       - run: pip install -r requirements-dev.txt
-      - run: python run_tests.py --coverage
+      - run: pytest --cov=app
       - uses: codecov/codecov-action@v2
 ```
 
