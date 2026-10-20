@@ -12,10 +12,7 @@ Includes:
 - Stress testing
 - BacktestingCompliance: Validacion de reglas R5, R6, R7, DATA-001
 
-Engine hierarchy (app.backtesting.engines)
-- BaseBacktestEngine: Abstract base class for all engines
-- MultiStrategyBacktestEngine: Multi-strategy with capital allocation;
-  per-strategy execution delegates to the single motor below
+Single motor: engine.py BacktestEngine (t+1, IBKR costs, golden-tested)
 
 COMPLIANCE: Todos los backtests deben usar BacktestingCompliance para validar
 las reglas de backtesting segun .ralph/rules/rules_mapping.yml:

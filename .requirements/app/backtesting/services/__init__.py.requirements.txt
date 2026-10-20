@@ -5,15 +5,6 @@ File: __init__.py
 Domain: Backtest
 
 ## 2. Dependencies
-- `__future__`
-- `app.backtesting.services.batch_execution_service`
-- `app.backtesting.services.configuration_service`
-- `app.backtesting.services.database_service`
-- `app.backtesting.services.fallback_tracker`
-- `app.backtesting.services.metrics_service`
-- `app.backtesting.services.models`
-- `app.backtesting.services.profile_generation_service`
-- `app.backtesting.services.report_generation_service`
 
 ## 3. Core Components
 ### Module Initialization

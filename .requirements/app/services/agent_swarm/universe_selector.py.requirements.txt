@@ -1,28 +1,30 @@
-# Requirements Document: app/services/validation_orchestration/validation_engine.py
+# Requirements Document: app/services/agent_swarm/universe_selector.py
 
 ## 1. Module Overview
-File: validation_engine.py
+File: universe_selector.py
 Domain: Service
 
 ## 2. Dependencies
 - `__future__`
-- `app.domain.models.investment_profile`
-- `app.services.backtesting_orchestration`
 - `dataclasses`
-- `decimal`
-- `enum`
+- `datetime`
+- `functools`
 - `logging`
-- `typing`
+- `math`
+- `pandas`
+- `pathlib`
 
 ## 3. Core Components
 ### Classes
-- `GateStatus`
-- `GateResult`
-- `ValidationReport`
-- `ValidationEngine`
+- `CorpusSymbol`
+- `CorpusScan`
+- `AutoUniverseResult`
 ### Public Functions
-- `to_dict()`
-- `validate_backtest_result()`
+- `corpus_symbol_names()`
+- `scan_corpus()`
+- `auto_universe()`
+- `symbol_names()`
+- `summary()`
 
 ## 4. Applicable Trading Rules
 

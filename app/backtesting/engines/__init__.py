@@ -1,17 +1,10 @@
 """
 Backtest Engines Package.
 
-Concrete engines on top of BaseBacktestEngine:
-- MultiStrategyBacktestEngine: multi-strategy with capital allocation
-  (used by ComprehensiveBacktestRunner). Per-strategy EXECUTION delegates
-  to app.backtesting.engine.BacktestEngine — the single, golden-tested
-  motor (t+1, IBKR costs, cash reconciliation).
-
-Usage:
-    from app.backtesting.engines import MultiStrategyBacktestEngine
-
-    engine = MultiStrategyBacktestEngine(config)
-    result = engine.run_backtest(market_data, signals)
+The single execution motor is app.backtesting.engine.BacktestEngine
+(golden-tested: t+1, IBKR costs, cash reconciliation). This package keeps
+only the pessimistic execution engine (test-only library) on top of
+BaseBacktestEngine.
 """
 
 from app.backtesting.base_engine import (
@@ -22,14 +15,14 @@ from app.backtesting.base_engine import (
     ExecutionType,
     Position,
 )
-from app.backtesting.engines.multi_strategy_engine import MultiStrategyBacktestEngine
+from app.backtesting.engines.execution_engine import ExecutionBacktestEngine
 
 __all__ = [
     "BacktestState",
     "BaseBacktestEngine",
     "EngineType",
+    "ExecutionBacktestEngine",
     "ExecutionResult",
     "ExecutionType",
-    "MultiStrategyBacktestEngine",
     "Position",
 ]
