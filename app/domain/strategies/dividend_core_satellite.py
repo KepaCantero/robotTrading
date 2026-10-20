@@ -97,11 +97,13 @@ class DividendCoreSatelliteStrategy(BaseStrategy):
     def suggested_warmup_days(self) -> int:
         return int((self.lookback_days + self.skip_recent_days + self.rebalance_days) * 1.6)
 
-    #: tamaño de posición que permite desplegar el núcleo completo
+    #: tamaño de posición que permite desplegar el núcleo completo, sin
+    #: superar el techo del validador del motor (trade_executor: ≤25%; por
+    #: encima rechaza TODAS las compras en silencio)
     @property
     def suggested_max_position_size(self) -> float:
         expected = len(self.core_symbols) + self.satellite_top_k + 1
-        return round(min(0.9, 1.5 / expected), 2)
+        return round(min(0.25, 1.5 / expected), 2)
 
     def get_required_parameters(self) -> list[str]:
         return ["lookback_days", "skip_recent_days", "satellite_top_k", "rebalance_days"]

@@ -1,0 +1,38 @@
+# Requirements Document: app/domain/strategies/low_volatility.py
+
+## 1. Module Overview
+File: low_volatility.py
+Domain: Domain
+
+## 2. Dependencies
+- `__future__`
+- `app.domain.models.market_data`
+- `app.domain.models.signal`
+- `app.domain.strategies.base`
+- `datetime`
+- `math`
+- `typing`
+
+## 3. Core Components
+### Classes
+- `LowVolatilityStrategy`
+### Public Functions
+- `generate_signals()`
+- `suggested_warmup_days()`
+- `suggested_max_position_size()`
+- `get_required_parameters()`
+- `risk_check()`
+- `realized_volatility()`
+
+## 4. Applicable Trading Rules
+
+#### R15
+Complete Logging (log all decisions, trade journal format)
+
+- [ ] Implementation verified
+- [ ] Tests pass
+
+---
+Universal rules (SOLID, type hints, formatting, security, logging) live in
+.requirements/BASE_RULES.md and apply to every file.
+Resync this stub with: python scripts/generate_requirements.py

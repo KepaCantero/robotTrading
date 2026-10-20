@@ -479,3 +479,45 @@ class TestShortRoundTrip:
         assert opened == [], (
             f"motor long-only: un SELL sin posición no debe abrir trades; abrió {len(opened)}"
         )
+
+
+class TestPositionSizingHonorsConfig:
+    """El tamaño de posición lo gobierna `config.max_position_size` del motor.
+
+    Antes el motor pedía la cantidad al ComplianceEngine sin pasarle su
+    límite, y el sizer caía al default del singleton (10%): toda estrategia
+    quedaba capada a ~8% por posición con la mayoría del capital en caja,
+    fuera cual fuera su `max_position_size`.
+    """
+
+    def test_buy_deploys_max_position_size_fraction_of_capital(self):
+        bars = [
+            make_quote("AAPL", T0, "100", "102", "99", "100"),
+            make_quote("AAPL", T0 + timedelta(days=1), "100", "101", "99", "100"),
+            make_quote("AAPL", T0 + timedelta(days=2), "100", "101", "99", "100"),
+        ]
+        buy = make_signal("AAPL", SignalType.BUY, T0, price="100")
+        buy.confidence = 100.0
+
+        result = make_engine(max_position_size=Decimal("0.25")).run_backtest(bars, [buy])
+
+        entries = [t for t in result.trades if t.side == "buy"]
+        assert len(entries) == 1
+        deployed = float(entries[0].quantity) * float(entries[0].entry_price)
+        assert deployed == pytest.approx(25_000, rel=0.01), (
+            f"con max_position_size=25% y confianza 100 debe invertir ~25k de 100k, invirtió {deployed:,.0f}"
+        )
+
+    def test_confidence_scales_size_below_the_cap(self):
+        bars = [
+            make_quote("AAPL", T0, "100", "102", "99", "100"),
+            make_quote("AAPL", T0 + timedelta(days=1), "100", "101", "99", "100"),
+        ]
+        buy = make_signal("AAPL", SignalType.BUY, T0, price="100")
+        buy.confidence = 80.0
+
+        result = make_engine(max_position_size=Decimal("0.25")).run_backtest(bars, [buy])
+
+        entries = [t for t in result.trades if t.side == "buy"]
+        deployed = float(entries[0].quantity) * float(entries[0].entry_price)
+        assert deployed == pytest.approx(20_000, rel=0.01), "25% x confianza 0.8 = 20% del capital"

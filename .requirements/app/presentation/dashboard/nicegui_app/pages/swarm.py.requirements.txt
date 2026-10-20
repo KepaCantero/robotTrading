@@ -30,6 +30,7 @@ Domain: Presentation
 ### Classes
 - `_ReplaySnapshot`
 ### Public Functions
+- `preset_for_goal()`
 - `available_universe()`
 - `data_window()`
 - `resolve_period()`

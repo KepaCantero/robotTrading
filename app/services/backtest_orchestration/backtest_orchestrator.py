@@ -188,6 +188,10 @@ class BacktestOrchestrator:
         # incluye las distribuciones (dividend momentum, RFS 2026).
         "dividend_tracking": "app.domain.strategies.dividend_core_satellite:DividendCoreSatelliteStrategy",
         "dividend_etf_rotation": "app.domain.strategies.dividend_etf_rotation:DividendETFRotationStrategy",
+        # objetivo preservar capital: anomalía de baja volatilidad (tramo de
+        # menor vol realizada del universo sectorial, equiponderado, poca
+        # rotación) — Blitz & van Vliet 2007, Baker/Bradley/Wurgler 2011.
+        "low_volatility": "app.domain.strategies.low_volatility:LowVolatilityStrategy",
     }
     #: warm-up bars fed to the strategy before the execution window
     _WARMUP_DAYS = 180

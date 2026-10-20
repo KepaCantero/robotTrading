@@ -111,6 +111,23 @@ _SECTOR_MAP: dict[str, str] = {
 #: universo de ETFs de dividendo (core crecimiento + high-yield + refugio)
 DIVIDEND_ETF_UNIVERSE = ["VIG", "DGRO", "DGRW", "SCHD", "VYM", "DVY", "BND"]
 
+#: universo sectorial Vanguard para la anomalía de baja volatilidad
+LOW_VOL_UNIVERSE = ["VDC", "VCR", "VDE", "VFH", "VHT", "VIS", "VGT", "VAW", "VNQ", "VPU", "VOX"]
+
+#: objetivo → (estrategia real, universo) que la UI preselecciona
+GOAL_PRESETS: dict[str, tuple[str, list[str]]] = {
+    "MAXIMIZAR_DIVIDENDOS": ("dividend_tracking", DIVIDEND_ETF_UNIVERSE),
+    "CAPITAL_PRESERVATION": ("low_volatility", LOW_VOL_UNIVERSE),
+}
+
+
+def preset_for_goal(goal: str | None) -> tuple[str, list[str]] | None:
+    """Preset (estrategia, universo) para un objetivo, insensible a mayúsculas."""
+    if not goal:
+        return None
+    return GOAL_PRESETS.get(str(goal).upper())
+
+
 DATA_DIR = Path("data/historical")
 
 PERIOD_DAYS = {"6m": 183, "1y": 365, "2y": 730, "5y": 1825}
@@ -1001,6 +1018,7 @@ def render(
                                 "momentum_modular": "Momentum (modular)",
                                 "dividend_tracking": "Dividend ETFs (core-satellite)",
                                 "dividend_etf_rotation": "Dividend ETFs (rotation)",
+                                "low_volatility": "Low volatility (sector ETFs)",
                             },
                             value="mean_reversion",
                             label="Strategy (real engine)",
@@ -1009,11 +1027,13 @@ def render(
                             "Momentum is long-only and can yield zero trades in bearish windows."
                         ).classes("help")
 
-                        def _apply_dividend_preset() -> None:
-                            """Objetivo dividendos -> estrategia y universo de ETFs de dividendo."""
-                            if objetivo.value != "maximizar_dividendos":
+                        def _apply_goal_preset() -> None:
+                            """Objetivo con preset -> estrategia real y universo adecuados."""
+                            preset = preset_for_goal(objetivo.value)
+                            if preset is None:
                                 return
-                            estrategia.value = "dividend_tracking"
+                            strategy_name, preset_universe = preset
+                            estrategia.value = strategy_name
                             disponibles = (
                                 {
                                     opt
@@ -1023,15 +1043,15 @@ def render(
                                 if isinstance(universo.options, dict)
                                 else set(universo.options or [])
                             )
-                            preset = [
+                            symbols = [
                                 sym
-                                for sym in DIVIDEND_ETF_UNIVERSE
+                                for sym in preset_universe
                                 if not disponibles or sym in disponibles
                             ]
-                            if preset:
-                                universo.value = preset
+                            if symbols:
+                                universo.value = symbols
 
-                        objetivo.on_value_change(lambda _e: _apply_dividend_preset())
+                        objetivo.on_value_change(lambda _e: _apply_goal_preset())
 
                         with ui.row().classes("w-full gap-sm no-wrap"):
                             comision = ui.number(

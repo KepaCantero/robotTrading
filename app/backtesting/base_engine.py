@@ -75,6 +75,7 @@ class ExecutionType(str, Enum):
 class EngineType(str, Enum):
     """Type of backtest engine."""
 
+    EXECUTION = "execution"  # Pessimistic execution engine (test-only library)
     MULTI_STRATEGY = "multi_strategy"  # Multi-strategy engine
 
 

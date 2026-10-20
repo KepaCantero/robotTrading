@@ -787,12 +787,16 @@ class BacktestEngine:
             # COMPLIANCE: Calculate position size FIRST (backtesting is "stupid", asks compliance engine)
             current_price = get_price(market_data)
 
-            # Ask ComplianceEngine for position size
+            # Ask ComplianceEngine for position size. The engine's own
+            # max_position_size must govern: without it the sizer falls back
+            # to the compliance singleton default (10%), silently capping
+            # every strategy at ~8% per position and leaving most capital idle.
             estimated_quantity = self.compliance_engine.calculate_position_size(
                 symbol=signal.symbol,
                 price=current_price,
                 capital=self.capital,
                 confidence=signal.confidence if hasattr(signal, "confidence") else 100.0,
+                max_position_ratio=float(self.config.max_position_size),
             )
 
             # Build price history for compliance engine validation
