@@ -42,7 +42,19 @@ ASSET_TYPE_ENUM = sa.Enum(
 
 
 def upgrade() -> None:
-    op.add_column("accounts", sa.Column("asset_type", ASSET_TYPE_ENUM, nullable=True))
+    # crear el tipo ENUM explícitamente (create_type implícito falla en PG real
+    # cuando la tabla referenciara el tipo antes de su creación)
+    sa.Enum("crypto", "stock_us", "stock_eu", "forex", "etf", name="assettype").create(
+        op.get_bind(), checkfirst=True
+    )
+    op.add_column(
+        "accounts",
+        sa.Column(
+            "asset_type",
+            sa.Enum("crypto", "stock_us", "stock_eu", "forex", "etf", name="assettype"),
+            nullable=True,
+        ),
+    )
 
     # Backfill derivado de exchange_type/currency
     op.execute(

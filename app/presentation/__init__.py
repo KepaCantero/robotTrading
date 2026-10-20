@@ -1,35 +1,7 @@
 """
-Presentation Layer - API Controllers, Views, and DTOs
+Presentation Layer - HTTP API
 
-This layer handles:
-- HTTP API endpoints
-- WebSocket connections
-- Request/Response DTOs
-- Dashboard views
-
-Dependencies: Can depend on Application and Domain layers
+The live API surface lives in `app.presentation.api` (routers mounted in
+app.main) and the NiceGUI dashboard under `app.presentation.dashboard`.
+The legacy controllers/dto/views packages were removed as dead code.
 """
-
-from . import controllers, dto, views
-from .controllers import dashboard_router, portfolio_router, strategy_router
-from .dto import (
-    CreatePortfolioRequest,
-    ExecuteStrategyRequest,
-    HealthResponse,
-    PortfolioResponse,
-    StrategyResponse,
-)
-
-__all__ = [
-    "CreatePortfolioRequest",
-    "ExecuteStrategyRequest",
-    "HealthResponse",
-    "PortfolioResponse",
-    "StrategyResponse",
-    "controllers",
-    "dashboard_router",
-    "dto",
-    "portfolio_router",
-    "strategy_router",
-    "views",
-]

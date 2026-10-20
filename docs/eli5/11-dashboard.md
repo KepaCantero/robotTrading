@@ -16,6 +16,14 @@ The dashboard is a small web app that rides on top of your backtests. NiceGUI (a
 
 NiceGUI turns each `@ui.page` function into a real URL. When your browser asks for `/results`, that function runs. It calls `BacktestResultStore`, which reads rows from SQLite (a database that's just one file on disk). When a backtest finishes, `BacktestRunner` saves one row to the same file. That's why the History page can compare runs from last week.
 
+## The Swarm page and its presets
+
+The Swarm page (`/swarm`) is where you launch a full run against the real backtest engine. Its strategy dropdown offers more than the classics: mean reversion and momentum sit next to the two dividend strategies, "core-satellite" and "rotation".
+
+The goal picker and the strategy picker talk to each other. Pick the goal "Maximise dividends" and the page applies a preset for you. The strategy switches to the dividend core-satellite. The universe of symbols switches to the dividend ETFs (VIG, DGRO, DGRW, SCHD, VYM, DVY and BND). Before this existed, every "Maximise dividends" run quietly backtested mean reversion on the default symbols — the goal and the run never matched.
+
+Replaying a past run shows both panels: the result (metrics, verdict, equity curve) and the portfolio (what it actually held). The saved payload is slimmed on purpose. It keeps the full metrics, thins the equity curve to at most 300 points, and keeps only the last 400 trades. That way a whole run fits inside the message size cap without losing anything the page renders.
+
 ## The docs live inside it
 
 ![make dashboard builds the MkDocs site, then the app serves it at /docs](diagrams/11-dashboard-3.svg)
@@ -26,7 +34,7 @@ NiceGUI turns each `@ui.page` function into a real URL. When your browser asks f
 
 - `app/presentation/dashboard/nicegui_app/app.py` — `create_app()`: builds the services, injects them, mounts `/docs`.
 - `app/presentation/dashboard/nicegui_app/layout.py` — `AppShell`: the drawer (from the `PAGES` list in `theme.py`) and every `@ui.page` route.
-- `app/presentation/dashboard/nicegui_app/pages/` — one `render()` module per page.
+- `app/presentation/dashboard/nicegui_app/pages/` — one `render()` module per page; `swarm.py` holds the dividend preset and the replay panels.
 - `app/presentation/dashboard/nicegui_app/__main__.py` — `ui.run()`; the port comes from the `DASHBOARD_PORT` env variable, 8503 by default.
 - `Makefile` — `make dashboard`: docs build first, then the app, on port 8503.
 - `scripts/start_paper_trading.sh` — starts the same app beside paper trading, with `DASHBOARD_PORT=8501`.

@@ -28,6 +28,18 @@ When the loop ends, `PerformanceMetricsCalculator` turns your trades into number
 
 The verdict is a real enum in `acceptance/models.py` — APPROVED, REVISION or REJECTED — and REVISION kicks in at a score of 60. Hard rules can still kill a run: if commissions eat over 20% of gross profit, the verdict is REJECTED no matter the score.
 
+## The out-of-sample gate
+
+A good score on the full history is not enough. A strategy can memorize the past instead of learning the pattern — that's overfitting. So every real backtest that goes through `execute_backtest` must also pass a walk-forward gate before anyone trusts it.
+
+Walk-forward splits history into rolling windows. Each window has an in-sample half (IS), where the strategy tunes itself, and an out-of-sample half (OOS), which the strategy has never seen. Then the engine compares the two. If profit drops a lot from IS to OOS, the strategy only worked on data it knew — a red flag.
+
+The drop is measured as degradation, and the formula is careful: `max(0, (IS - OOS) / IS)`. The `max(0, ...)` part means a strategy that does better out of sample has zero degradation. Improving on unseen data is not a warning sign, so it never counts as one.
+
+The gate is mandatory, not a checkbox. The result object (`ExtendedBacktestResult`) carries the verdict as `walk_forward_passed`, the drop as `walk_forward_degradation`, and a human-readable `compliance_summary`. If the check fails — rules R5, R6 and DATA-001 — the run raises `BacktestComplianceError` and stops. A weak backtest can't slip quietly into deployment.
+
+One more honesty rule: there are no invented results. An older code path used to make up a fake result when no real engine was available. That path was deleted. Now, if there is no real runner, you get an error — never numbers that look real but aren't.
+
 ## Many strategies, one pot
 
 ![One pot of capital split across three strategies, results combined, and capital moved to winners every 30 days](diagrams/09-backtesting-3.svg)
@@ -41,6 +53,8 @@ The verdict is a real enum in `acceptance/models.py` — APPROVED, REVISION or R
 - `app/backtesting/shared/slippage_utils.py` — the one slippage formula every engine shares.
 - `app/backtesting/acceptance/` — `VerdictDeterminer`, `ScoringService`, and the states in `models.py`; thresholds in `acceptance_criteria.py`.
 - `app/backtesting/engines/multi_strategy_engine.py` — `MultiStrategyBacktestEngine`; `meta_analyzer/` sits nearby.
+- `app/services/backtesting_orchestration/backtest_orchestrator.py` — `execute_backtest`: the real run plus the mandatory walk-forward gate; raises `BacktestComplianceError` on failure.
+- `app/backtesting/walk_forward_validator.py` and `app/backtesting/backtesting_compliance.py` — the IS/OOS windows, the degradation math, and rules R5/R6/DATA-001.
 
 ## Want to go deeper?
 

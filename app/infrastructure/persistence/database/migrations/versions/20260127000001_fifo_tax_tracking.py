@@ -88,6 +88,36 @@ def upgrade() -> None:
     # ==========================================================================
 
     op.create_table(
+        "lots",
+        sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("account_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("symbol", sa.String(20), nullable=False),
+        sa.Column("asset_type", sa.String(20), nullable=False),
+        sa.Column("opening_transaction_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("quantity_opened", sa.Numeric(36, 18), nullable=False),
+        sa.Column("cost_basis_open", sa.Numeric(36, 18), nullable=False),
+        sa.Column("quantity_remaining", sa.Numeric(36, 18), nullable=False),
+        sa.Column("status", sa.String(20), nullable=False, server_default="open"),
+        sa.Column("realized_gain", sa.Numeric(36, 18), nullable=True),
+        sa.Column("realized_loss", sa.Numeric(36, 18), nullable=True),
+        sa.Column("opened_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("closed_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("holding_period_days", sa.Integer(), nullable=True),
+        sa.Column("tax_year_closed", sa.Integer(), nullable=True),
+        sa.Column("meta_data", postgresql.JSONB(), nullable=False, server_default="{}"),
+        sa.ForeignKeyConstraint(["account_id"], ["accounts.id"], name="fk_lots_account_id"),
+        sa.PrimaryKeyConstraint("id", name="pk_lots"),
+        sa.CheckConstraint(
+            "asset_type IN ('crypto', 'stock_us', 'stock_eu', 'forex', 'etf')",
+            name="ck_lots_asset_type",
+        ),
+        sa.CheckConstraint("status IN ('open', 'closed', 'partial')", name="ck_lots_status"),
+        sa.CheckConstraint("quantity_remaining >= 0", name="ck_lot_remaining_positive"),
+        sa.CheckConstraint(
+            "quantity_remaining <= quantity_opened", name="ck_lot_remaining_le_opened"
+        ),
+    )
+    op.create_table(
         "transactions",
         sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("external_id", sa.String(255), nullable=False),
@@ -142,7 +172,6 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(
             ["to_account_id"], ["accounts.id"], name="fk_transactions_to_account_id"
         ),
-        sa.ForeignKeyConstraint(["lot_id"], ["lots.id"], name="fk_transactions_lot_id"),
         sa.PrimaryKeyConstraint("id", name="pk_transactions"),
         sa.UniqueConstraint("external_id", "account_id", name="uq_tx_external_account"),
         sa.CheckConstraint(
@@ -154,46 +183,21 @@ def upgrade() -> None:
             name="ck_transactions_tx_type",
         ),
     )
-    op.create_index("idx_transactions_symbol_type", "transactions", ["symbol", "tx_type"])
-    op.create_index("idx_transactions_occurred", "transactions", ["occurred_at"])
-    op.create_index("idx_transactions_tax_year", "transactions", ["tax_year"])
-
-    # ==========================================================================
-    # LOTS (FIFO lots for cost basis tracking)
-    # ==========================================================================
-
-    op.create_table(
+    # FKs cruzadas lots <-> transactions: se crean DESPUÉS de ambas tablas
+    # (dependencia circular, imposible de resolver en un solo CREATE TABLE)
+    op.create_foreign_key(
+        "fk_lots_opening_transaction_id",
         "lots",
-        sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("account_id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("symbol", sa.String(20), nullable=False),
-        sa.Column("asset_type", sa.String(20), nullable=False),
-        sa.Column("opening_transaction_id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("quantity_opened", sa.Numeric(36, 18), nullable=False),
-        sa.Column("cost_basis_open", sa.Numeric(36, 18), nullable=False),
-        sa.Column("quantity_remaining", sa.Numeric(36, 18), nullable=False),
-        sa.Column("status", sa.String(20), nullable=False, server_default="open"),
-        sa.Column("realized_gain", sa.Numeric(36, 18), nullable=True),
-        sa.Column("realized_loss", sa.Numeric(36, 18), nullable=True),
-        sa.Column("opened_at", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("closed_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("holding_period_days", sa.Integer(), nullable=True),
-        sa.Column("tax_year_closed", sa.Integer(), nullable=True),
-        sa.Column("meta_data", postgresql.JSONB(), nullable=False, server_default="{}"),
-        sa.ForeignKeyConstraint(["account_id"], ["accounts.id"], name="fk_lots_account_id"),
-        sa.ForeignKeyConstraint(
-            ["opening_transaction_id"], ["transactions.id"], name="fk_lots_opening_transaction_id"
-        ),
-        sa.PrimaryKeyConstraint("id", name="pk_lots"),
-        sa.CheckConstraint(
-            "asset_type IN ('crypto', 'stock_us', 'stock_eu', 'forex', 'etf')",
-            name="ck_lots_asset_type",
-        ),
-        sa.CheckConstraint("status IN ('open', 'closed', 'partial')", name="ck_lots_status"),
-        sa.CheckConstraint("quantity_remaining >= 0", name="ck_lot_remaining_positive"),
-        sa.CheckConstraint(
-            "quantity_remaining <= quantity_opened", name="ck_lot_remaining_le_opened"
-        ),
+        "transactions",
+        ["opening_transaction_id"],
+        ["id"],
+    )
+    op.create_foreign_key(
+        "fk_transactions_lot_id",
+        "transactions",
+        "lots",
+        ["lot_id"],
+        ["id"],
     )
     op.create_index("idx_lots_symbol_status", "lots", ["symbol", "status"])
     op.create_index("idx_lots_opened", "lots", ["opened_at"])

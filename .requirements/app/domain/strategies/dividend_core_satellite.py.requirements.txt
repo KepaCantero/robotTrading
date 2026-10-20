@@ -1,35 +1,26 @@
-# Requirements Document: app/presentation/controllers/health.py
+# Requirements Document: app/domain/strategies/dividend_core_satellite.py
 
 ## 1. Module Overview
-File: health.py
-Domain: Presentation
+File: dividend_core_satellite.py
+Domain: Domain
 
 ## 2. Dependencies
 - `__future__`
-- `asyncio`
+- `app.domain.models.market_data`
+- `app.domain.models.signal`
+- `app.domain.strategies.base`
 - `datetime`
-- `fastapi`
-- `logging`
-- `os`
-- `psutil`
-- `pydantic`
-- `sqlalchemy.exc`
-- `sqlite3`
 - `typing`
 
 ## 3. Core Components
 ### Classes
-- `HealthCheckResponse`
-- `HealthChecker`
+- `DividendCoreSatelliteStrategy`
 ### Public Functions
-- `get_health_checker()`
-- `health_check()`
-- `set_dependencies()`
-- `check_database()`
-- `check_broker()`
-- `check_memory()`
-- `check_positions()`
-- `run_all_checks()`
+- `generate_signals()`
+- `suggested_warmup_days()`
+- `suggested_max_position_size()`
+- `get_required_parameters()`
+- `risk_check()`
 
 ## 4. Applicable Trading Rules
 

@@ -2,7 +2,7 @@
 
 ## The short version
 
-A strategy is the part of the brain that turns prices into opinions. It reads fresh market data, boils it down to a few numbers, and answers with a signal: buy, sell, or hold. Here are the three core strategies, plus the referee that can team them up.
+A strategy is the part of the brain that turns prices into opinions. It reads fresh market data, boils it down to a few numbers, and answers with a signal: buy, sell, or hold. Here are the three core strategies, a dividend specialist, plus the referee that can team them up.
 
 ## From quote to signal
 
@@ -20,6 +20,20 @@ Every strategy follows the same pipeline, whatever its style. A quote (a snapsho
 
 **Pairs trading** works on two symbols at once, in `pairs_trading.py`. It first tests them for cointegration, a statistical bond where two prices wander but keep meeting again. The hedge ratio says how many units of one asset balance the other, and their difference is the spread. When the spread's z-score passes 2.0, the pair enters; near 0.5, it exits.
 
+## The dividend specialist
+
+There is a fourth strategy, built for one job: growing dividend income. It lives in `dividend_core_satellite.py` and is called `DividendCoreSatelliteStrategy`. The name says the design: a core and a satellite.
+
+The core is buy-and-hold in four ETFs that grow their dividends year after year: VIG, DGRO, DGRW and SCHD. The evidence says rotating these constantly adds nothing, so the core mostly just sits there.
+
+One filter guards the core. Each holding gets a 12-1 momentum score: its price change over the last 12 months. The most recent month (about 21 days) is skipped, so very fresh noise doesn't count. A holding with negative momentum is sold. And when most of the core goes dark, the money parks in BND, a bond ETF, until momentum recovers. This is for crash protection, not for extra profit.
+
+The satellite is a small side bet. It ranks the high-yield ETFs VYM and DVY by momentum and holds only the top one — and only while its momentum is positive. High yield is the fragile corner of the dividend world, so the bet stays small.
+
+One detail matters a lot here: momentum is computed on adjusted prices. Adjusted prices fold dividends back into the price, so the score counts the cash the ETF paid out, not just its price moves.
+
+The strategy is cross-sectional: one instance watches all symbols on one shared timeline. The backtest runner knows this. It also reads the strategy's own hints for how much warm-up history it needs and how big each position may be. It is registered in the backtest registry under the name `dividend_tracking`. Before this registry entry existed, that name silently fell back to mean reversion — the real strategy was never reachable. A rotation-style variant, `DividendETFRotationStrategy`, is registered too, under `dividend_etf_rotation`.
+
 ## When strategies team up
 
 ![Diagram of the ensemble: three strategies feed one ensemble box, which outputs one combined signal](diagrams/05-strategies-3.svg)
@@ -31,6 +45,8 @@ An ensemble is a team of strategies with a referee, and it lives with the engine
 - `app/domain/strategies/momentum.py` — `MomentumStrategy`: RSI, EMA, volume ratio, ROC, OBV.
 - `app/domain/strategies/mean_reversion.py` — `MeanReversionStrategy`: z-score with a lookback window.
 - `app/domain/strategies/pairs_trading.py` — `PairsTrading`: cointegration, hedge ratio, spread z-score.
+- `app/domain/strategies/dividend_core_satellite.py` — `DividendCoreSatelliteStrategy`: dividend core, 12-1 momentum crash filter, high-yield satellite. `dividend_etf_rotation.py` next door holds the rotation variant.
+- `app/services/backtest_orchestration/backtest_orchestrator.py` — the `_STRATEGIES` registry: maps names like `dividend_tracking` to real strategy classes.
 - `app/domain/models/signal.py` — the `Signal` model: type, confidence, strength, metadata.
 - `app/engines/strategy_engines/ensemble.py` — `WeightedEnsemble`, `VotingEnsemble`, `RegimeBasedSelector`.
 - `app/shared/config/params/trading_thresholds.py` — the default numbers, like RSI 70/30 and the 40-60 zone.

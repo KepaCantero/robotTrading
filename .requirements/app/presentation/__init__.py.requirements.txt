@@ -5,8 +5,6 @@ File: __init__.py
 Domain: Presentation
 
 ## 2. Dependencies
-- `controllers`
-- `dto`
 
 ## 3. Core Components
 ### Module Initialization

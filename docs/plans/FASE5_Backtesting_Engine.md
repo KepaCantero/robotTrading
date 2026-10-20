@@ -13,10 +13,19 @@ Basado en el análisis de AUDIT_PLAN_COMPLETO.md, implementar las siguientes tar
 ### Tareas YA IMPLEMENTADAS (verificar y documentar):
 - ✅ Fundamental Law (IR = IC × √BR) - Grinold & Kahn #116
 - ✅ Overfitting Detector - Hastie #96
-- ✅ Walk-Forward Validation - Pardo #54
+- ✅ Walk-Forward Validation - Pardo #54 — ahora además OBLIGATORIA (ver estado abajo)
 - ✅ Regime Detection - Ilmanen #254
 - ✅ InputProfile Router - existe
 - ✅ Risk Configurator - existe
+
+### Actualización de estado (2026-10)
+
+Lo hecho recientemente sobre este plan, verificado en código:
+
+- ✅ **Gate walk-forward obligatorio** (commit 7274ab71): `execute_backtest` ejecuta walk-forward IS→OOS y valida compliance R5/R6/DATA-001 tras cada backtest real. `ExtendedBacktestResult` lleva `walk_forward_passed`, `walk_forward_degradation` y `compliance_summary`; si no pasa, se lanza `BacktestComplianceError`. Degradación con semántica correcta `max(0, (IS-OOS)/IS)` — la mejora OOS no cuenta como degradación.
+- ✅ **Simulador de resultados falsos eliminado** (commit 262b28c9): sin runner real no hay números inventados, hay `RuntimeError`. Además (commit 0528ea62) los gates de compliance se anclaron al tiempo de señal (no al reloj de pared), desbloqueando los replays históricos.
+- ✅ **Estrategia de dividendos real** (commit 8279f5ee): `DividendCoreSatelliteStrategy` registrada como `dividend_tracking` en el orquestador (antes caía silenciosamente a mean_reversion). Estrategias cross-sectionales reciben el timeline global; warmup y tamaño de posición conscientes de la estrategia.
+- ✅ **Universo de datos ampliado** (commits fce38e01 y 8279f5ee): ~713 CSVs en `data/historical` (catálogo Vanguard de 66 ETFs + 9 clásicos + importaciones masivas de ETFs de dividendo vía `scripts/import_yahoo_csv.py`).
 
 ### Tareas A IMPLEMENTAR:
 

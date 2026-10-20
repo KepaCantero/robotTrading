@@ -1,16 +1,24 @@
-# Requirements Document: app/presentation/dto/__init__.py
+# Requirements Document: app/domain/strategies/dividend_etf_rotation.py
 
 ## 1. Module Overview
-File: __init__.py
-Domain: Presentation
+File: dividend_etf_rotation.py
+Domain: Domain
 
 ## 2. Dependencies
-- `requests`
-- `responses`
+- `__future__`
+- `app.domain.models.market_data`
+- `app.domain.models.signal`
+- `base`
+- `datetime`
+- `typing`
 
 ## 3. Core Components
-### Module Initialization
-- Package/module initialization file
+### Classes
+- `DividendETFRotationStrategy`
+### Public Functions
+- `generate_signals()`
+- `get_required_parameters()`
+- `risk_check()`
 
 ## 4. Applicable Trading Rules
 
