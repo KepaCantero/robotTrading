@@ -59,13 +59,18 @@ async def test_swarm_page_config_form_has_plain_helpers(user: User, register_pag
 
 
 async def test_swarm_page_has_period_and_tax_inputs(user: User, register_page):
-    """The backtest period, investor age and tax province are configurable."""
+    """The investment period, investor age and tax province are configurable.
+
+    The period IS the investment horizon (money stays invested for the whole
+    window), so the old separate "Time frame (months)" field is gone.
+    """
     await user.open("/swarm-test")
 
-    await user.should_see("Backtest period")
+    await user.should_see("Investment period")
     await user.should_see("Last year")
     await user.should_see("Your age")
     await user.should_see("Province (tax residence)")
+    await user.should_not_see("Time frame (months)")
 
 
 async def test_swarm_page_links_to_docs(user: User, register_page):

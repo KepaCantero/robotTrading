@@ -1,9 +1,9 @@
 """
 T4.1: BacktestOrchestrator - Backtesting execution and orchestration
 
-Orchestrates the execution of backtests for parametrized strategies.
-Wraps existing backtesting infrastructure (SimpleBacktester, ComprehensiveBacktestRunner)
-and provides standardized interface for the parametrization pipeline.
+Orchestrates the execution of backtests for parametrized strategies on the
+single BacktestEngine and provides the standardized interface for the
+parametrization pipeline (walk-forward gate, benchmark, feasibility).
 
 Calculates feasibility_ratio: achieved_return / required_return
 """
@@ -344,6 +344,13 @@ class BacktestOrchestrator:
 
         return self._map_engine_result(config, engine_result, start_dt, end_dt, gate, benchmark)
 
+    #: same-index substitutes tried when the requested benchmark does not
+    #: cover the window (local SPY history starts in 2016; IVV in 2000)
+    _BENCHMARK_FALLBACKS: dict[str, tuple[str, ...]] = {"SPY": ("IVV",)}
+    #: a benchmark "covers" the window if its first quote falls within this
+    #: fraction of the span from the requested start
+    _BENCHMARK_COVERAGE_TOLERANCE = 0.05
+
     def _load_benchmark(self, config, loader, start_dt, end_dt) -> dict | None:
         """Buy&hold reference over the same window (default SPY).
 
@@ -351,18 +358,34 @@ class BacktestOrchestrator:
         on the equity chart; honest context for market conditions ("did the
         strategy beat just holding the market?"). Returns None when disabled
         or unavailable — the verdict never depends on it.
+
+        A benchmark that only covers the tail of a long window would silently
+        compare 20 years of strategy against 10 years of market, so same-index
+        substitutes with deeper history are tried and the best-covering series
+        wins.
         """
         symbol = (config.benchmark_symbol or "").strip().upper()
         if not symbol:
             return None
-        try:
-            raw = loader.load_market_data(symbol, start_dt, end_dt, "1d", "csv")
-        except Exception as exc:  # noqa: BLE001 - benchmark is context, not a gate
-            logger.warning("Benchmark %s unavailable: %s", symbol, exc)
+        span_days = max(1, (end_dt - start_dt).days)
+        tolerance = timedelta(days=span_days * self._BENCHMARK_COVERAGE_TOLERANCE)
+        best: tuple[str, list[tuple[datetime, float]]] | None = None
+        for candidate in (symbol, *self._BENCHMARK_FALLBACKS.get(symbol, ())):
+            try:
+                raw = loader.load_market_data(candidate, start_dt, end_dt, "1d", "csv")
+            except Exception as exc:  # noqa: BLE001 - benchmark is context, not a gate
+                logger.warning("Benchmark %s unavailable: %s", candidate, exc)
+                continue
+            closes = sorted((q.timestamp, float(q.close if q.close else q.last)) for q in raw)
+            if len(closes) < 2 or closes[0][1] <= 0:
+                continue
+            if best is None or closes[0][0] < best[1][0][0]:
+                best = (candidate, closes)
+            if closes[0][0] <= start_dt + tolerance:
+                break
+        if best is None:
             return None
-        closes = sorted((q.timestamp, float(q.close if q.close else q.last)) for q in raw)
-        if len(closes) < 2 or closes[0][1] <= 0:
-            return None
+        symbol, closes = best
         base = closes[0][1]
         curve = [(ts.isoformat(), value / base) for ts, value in closes]
         total = Decimal(str(curve[-1][1] - 1.0)) * Decimal("100")

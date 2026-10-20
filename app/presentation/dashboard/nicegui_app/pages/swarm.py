@@ -113,8 +113,17 @@ _SECTOR_MAP: dict[str, str] = {
 }
 
 
-#: universo de ETFs de dividendo (core crecimiento + high-yield + refugio)
+#: universo de ETFs de dividendo (core crecimiento + high-yield + refugio);
+#: VIG/DGRO/DGRW/SCHD/VYM/BND solo tienen ~10 años de histórico
 DIVIDEND_ETF_UNIVERSE = ["VIG", "DGRO", "DGRW", "SCHD", "VYM", "DVY", "BND"]
+
+#: universo de dividendo con histórico profundo (2003-2007 en adelante) para
+#: horizontes largos: con el universo de 10 años un run de 20 años se
+#: truncaría silenciosamente a la década disponible
+DEEP_DIVIDEND_ETF_UNIVERSE = ["SDY", "DLN", "DVY", "PEY", "BIV"]
+
+#: a partir de este horizonte (meses) el preset de dividendos usa el universo profundo
+LONG_HORIZON_MONTHS = 180
 
 #: universo sectorial Vanguard para la anomalía de baja volatilidad
 LOW_VOL_UNIVERSE = ["VDC", "VCR", "VDE", "VFH", "VHT", "VIS", "VGT", "VAW", "VNQ", "VPU", "VOX"]
@@ -125,17 +134,72 @@ GOAL_PRESETS: dict[str, tuple[str, list[str]]] = {
     "CAPITAL_PRESERVATION": ("low_volatility", LOW_VOL_UNIVERSE),
 }
 
+#: objetivo → universo alternativo cuando el horizonte es largo
+LONG_HORIZON_UNIVERSES: dict[str, list[str]] = {
+    "MAXIMIZAR_DIVIDENDOS": DEEP_DIVIDEND_ETF_UNIVERSE,
+}
 
-def preset_for_goal(goal: str | None) -> tuple[str, list[str]] | None:
-    """Preset (estrategia, universo) para un objetivo, insensible a mayúsculas."""
+
+def preset_for_goal(
+    goal: str | None, horizon_months: float | None = None
+) -> tuple[str, list[str]] | None:
+    """Preset (estrategia, universo) para un objetivo, insensible a mayúsculas.
+
+    Con ``horizon_months`` >= LONG_HORIZON_MONTHS el universo cambia al de
+    histórico profundo si el objetivo tiene uno.
+    """
     if not goal:
         return None
-    return GOAL_PRESETS.get(str(goal).upper())
+    key = str(goal).upper()
+    preset = GOAL_PRESETS.get(key)
+    if preset is None:
+        return None
+    strategy_name, universe = preset
+    if horizon_months is not None and horizon_months >= LONG_HORIZON_MONTHS:
+        universe = LONG_HORIZON_UNIVERSES.get(key, universe)
+    return strategy_name, universe
 
 
 DATA_DIR = DEFAULT_DATA_DIR
 
-PERIOD_DAYS = {"6m": 183, "1y": 365, "2y": 730, "5y": 1825}
+PERIOD_DAYS = {"6m": 183, "1y": 365, "2y": 730, "5y": 1825, "10y": 3650}
+
+#: días por mes medio (365.25 / 12) para convertir ventanas en horizonte
+_DAYS_PER_MONTH = 30.4375
+
+
+def horizon_months(start_iso: str, end_iso: str) -> int:
+    """Investment horizon (months) = the backtest window itself.
+
+    The user stays invested for the whole tested period, so there is no
+    separate "months you plan to stay invested" question: a 10-year backtest
+    IS a 10-year horizon. Never below 1 month.
+    """
+    start = _to_day(start_iso)
+    end = _to_day(end_iso)
+    if start is None or end is None:
+        return 1
+    return max(1, round((end - start).days / _DAYS_PER_MONTH))
+
+
+def period_months(preset: str, custom_start: Any, custom_end: Any) -> int | None:
+    """Approximate months a period selection spans, before touching the data.
+
+    Used to pick a universe while the user is still configuring: fixed
+    presets map through PERIOD_DAYS, custom dates are measured directly, and
+    "max" (all available data) counts as a long horizon so the deepest
+    history gets used. None when unknown.
+    """
+    if preset == "max":
+        return LONG_HORIZON_MONTHS
+    if preset == "custom":
+        start, end = _to_day(custom_start), _to_day(custom_end)
+        if start is None or end is None or end <= start:
+            return None
+        return horizon_months(start.isoformat(), end.isoformat())
+    days = PERIOD_DAYS.get(preset)
+    return None if days is None else max(1, round(days / _DAYS_PER_MONTH))
+
 
 SPANISH_PROVINCES = [
     "A Coruña",
@@ -969,9 +1033,6 @@ def render(
                     ).classes("w-full")
                     ui.label("How much risk you are comfortable taking.").classes("help q-mb-sm")
 
-                    horizonte = ui.number("Time frame (months)", value=24, min=1, max=600, step=1)
-                    ui.label("How many months you plan to stay invested.").classes("help q-mb-sm")
-
                     edad = ui.number("Your age", value=35, min=18, max=100, step=1)
                     ui.label("Used for suitability and long-term planning.").classes("help q-mb-sm")
 
@@ -990,15 +1051,17 @@ def render(
                             "1y": "Last year",
                             "2y": "Last 2 years",
                             "5y": "Last 5 years",
+                            "10y": "Last 10 years",
                             "max": "All available data",
                             "custom": "Custom dates…",
                         },
                         value="1y",
-                        label="Backtest period",
+                        label="Investment period",
                     ).classes("w-full")
-                    ui.label("The slice of historical data the strategy is tested on.").classes(
-                        "help"
-                    )
+                    ui.label(
+                        "How long you stay invested — the strategy is tested on exactly "
+                        "this slice of history, money never leaves."
+                    ).classes("help")
 
                     ui.label("Universe").classes("lbl q-mb-xs")
                     modo_universo = ui.toggle(
@@ -1052,7 +1115,10 @@ def render(
 
                         def _apply_goal_preset() -> None:
                             """Objetivo con preset -> estrategia real y universo adecuados."""
-                            preset = preset_for_goal(objetivo.value)
+                            preset = preset_for_goal(
+                                objetivo.value,
+                                period_months(periodo.value, custom_start.value, custom_end.value),
+                            )
                             if preset is None:
                                 return
                             strategy_name, preset_universe = preset
@@ -1077,6 +1143,8 @@ def render(
                                 universo.value = symbols
 
                         objetivo.on_value_change(lambda _e: _apply_goal_preset())
+                        # el periodo decide el universo (10 años vs histórico profundo)
+                        periodo.on_value_change(lambda _e: _apply_goal_preset())
 
                         with ui.row().classes("w-full gap-sm no-wrap"):
                             comision = ui.number(
@@ -1098,6 +1166,8 @@ def render(
                         ui.label(
                             "Custom dates apply when 'Custom dates…' is selected above."
                         ).classes("help")
+                        custom_start.on_value_change(lambda _e: _apply_goal_preset())
+                        custom_end.on_value_change(lambda _e: _apply_goal_preset())
 
                     async def run_pipeline() -> None:
                         if executor is None:
@@ -1126,7 +1196,7 @@ def render(
                             capital_initial=Decimal(str(capital.value)),
                             objetivo_inversion=objetivo.value,
                             risk_tolerance=riesgo.value,
-                            investment_horizon=int(horizonte.value or 24),
+                            investment_horizon=horizon_months(start_iso, end_iso),
                             target_monthly_return_eur=(
                                 Decimal(str(target.value)) if target.value else None
                             ),

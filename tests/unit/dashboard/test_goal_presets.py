@@ -10,9 +10,13 @@ from __future__ import annotations
 from decimal import Decimal as D
 
 from app.presentation.dashboard.nicegui_app.pages.swarm import (
+    DEEP_DIVIDEND_ETF_UNIVERSE,
     DIVIDEND_ETF_UNIVERSE,
+    LONG_HORIZON_MONTHS,
     LOW_VOL_UNIVERSE,
     OBJECTIVES,
+    horizon_months,
+    period_months,
     preset_for_goal,
 )
 
@@ -36,6 +40,54 @@ def test_goals_without_preset_return_none():
     assert preset_for_goal("MAXIMIZAR_CAPITAL") is None
     assert preset_for_goal(None) is None
     assert preset_for_goal("") is None
+
+
+class TestLongHorizonUniverse:
+    """Un run de 20 años sobre VIG/SCHD (10 años de histórico) se trunca en
+    silencio a la década disponible; con horizonte largo el preset de
+    dividendos cambia al universo con histórico desde 2003-2007."""
+
+    def test_short_horizon_keeps_ten_year_universe(self):
+        assert preset_for_goal("MAXIMIZAR_DIVIDENDOS", 120) == (
+            "dividend_tracking",
+            DIVIDEND_ETF_UNIVERSE,
+        )
+
+    def test_long_horizon_switches_to_deep_history_universe(self):
+        assert preset_for_goal("MAXIMIZAR_DIVIDENDOS", LONG_HORIZON_MONTHS) == (
+            "dividend_tracking",
+            DEEP_DIVIDEND_ETF_UNIVERSE,
+        )
+        assert preset_for_goal("maximizar_dividendos", 240) == (
+            "dividend_tracking",
+            DEEP_DIVIDEND_ETF_UNIVERSE,
+        )
+
+    def test_goal_without_deep_universe_is_unchanged(self):
+        assert preset_for_goal("CAPITAL_PRESERVATION", 240) == ("low_volatility", LOW_VOL_UNIVERSE)
+
+
+class TestHorizonIsThePeriod:
+    """El horizonte de inversión ES la ventana del backtest (sin campo aparte)."""
+
+    def test_horizon_months_from_window(self):
+        assert horizon_months("2016-10-17", "2026-10-17") == 120
+        assert horizon_months("2024-01-01", "2024-07-01") == 6
+        assert horizon_months("2024-01-01", "2024-01-05") == 1
+
+    def test_period_months_for_presets(self):
+        assert period_months("6m", None, None) == 6
+        assert period_months("1y", None, None) == 12
+        assert period_months("10y", None, None) == 120
+        assert period_months("unknown", None, None) is None
+
+    def test_all_available_data_counts_as_long_horizon(self):
+        assert period_months("max", None, None) >= LONG_HORIZON_MONTHS
+
+    def test_custom_dates_measured_directly(self):
+        assert period_months("custom", "2008-01-02", "2026-01-02") == 216
+        assert period_months("custom", "2026-01-02", "2008-01-02") is None
+        assert period_months("custom", None, "2026-01-02") is None
 
 
 class TestStrategyQualityInVerdict:

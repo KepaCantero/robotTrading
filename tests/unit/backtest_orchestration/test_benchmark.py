@@ -72,6 +72,30 @@ class TestLoadBenchmark:
         )
         assert bench is None
 
+    def test_long_window_falls_back_to_deeper_same_index_series(self):
+        """SPY local empieza en 2016: un run de 2008-2026 compararía 18 años
+        de estrategia contra 10 de mercado. IVV (mismo índice, desde 2000)
+        cubre la ventana y debe ganar."""
+        bench = BacktestOrchestrator()._load_benchmark(
+            _request(start_date=date(2008, 1, 2), end_date=date(2026, 1, 2)),
+            DataLoader(base_path=REPO / "data" / "historical"),
+            datetime(2008, 1, 2),
+            datetime(2026, 1, 2),
+        )
+        assert bench is not None
+        assert bench["symbol"] == "IVV"
+        assert bench["curve"][0][0].startswith("2008-01")
+
+    def test_short_window_keeps_requested_symbol(self):
+        bench = BacktestOrchestrator()._load_benchmark(
+            _request(start_date=date(2019, 1, 2), end_date=date(2021, 1, 2)),
+            DataLoader(base_path=REPO / "data" / "historical"),
+            datetime(2019, 1, 2),
+            datetime(2021, 1, 2),
+        )
+        assert bench is not None
+        assert bench["symbol"] == "SPY"
+
 
 class TestMapperAttachesBenchmark:
     def _engine_result(self):
