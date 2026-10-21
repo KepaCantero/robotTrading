@@ -110,6 +110,63 @@ _SECTOR_MAP: dict[str, str] = {
     "F": "Consumer",
     "BA": "Industrial",
     "AXP": "Financials",
+    # ── ETFs: familia → sector legible ─────────────────────────────
+    "IVV": "Index Fund",
+    "VOO": "Index Fund",
+    "DIA": "Index Fund",
+    "IWM": "Index Fund",
+    "IJH": "Index Fund",
+    "IWF": "Index Fund",
+    "VTV": "Index Fund",
+    "VEA": "Index Fund",
+    "EFA": "Index Fund",
+    "EEM": "Index Fund",
+    "VTI": "Index Fund",
+    "XLK": "Technology",
+    "VGT": "Technology",
+    "SMH": "Technology",
+    "SOXX": "Technology",
+    "XLF": "Financials",
+    "VFH": "Financials",
+    "XLE": "Energy",
+    "VDE": "Energy",
+    "XLV": "Healthcare",
+    "VHT": "Healthcare",
+    "XLI": "Industrial",
+    "VIS": "Industrial",
+    "XLY": "Consumer",
+    "VCR": "Consumer",
+    "XLP": "Consumer",
+    "VDC": "Consumer",
+    "XLU": "Utilities",
+    "VPU": "Utilities",
+    "XLB": "Materials",
+    "VAW": "Materials",
+    "XLC": "Technology",
+    "VNQ": "Real Estate",
+    "VOX": "Technology",
+    "GLD": "Commodities",
+    "IAU": "Commodities",
+    "SLV": "Commodities",
+    "TLT": "Bonds",
+    "IEF": "Bonds",
+    "LQD": "Bonds",
+    "VCIT": "Bonds",
+    "AGG": "Bonds",
+    "BND": "Bonds",
+    "BIV": "Bonds",
+    "SCHD": "Dividend ETF",
+    "VIG": "Dividend ETF",
+    "VYM": "Dividend ETF",
+    "DGRO": "Dividend ETF",
+    "DGRW": "Dividend ETF",
+    "DVY": "Dividend ETF",
+    "SDY": "Dividend ETF",
+    "NOBL": "Dividend ETF",
+    "DLN": "Dividend ETF",
+    "PEY": "Dividend ETF",
+    "FDVV": "Dividend ETF",
+    "DTD": "Dividend ETF",
 }
 
 
@@ -1504,8 +1561,13 @@ def render(
                                 else 0
                             )
                             realized = sum(_as_float(t.get("pnl") or 0) for t in sells)
-                            open_shares = total_shares - sum(
-                                _as_float(t.get("quantity")) for t in sells
+                            # el motor fuerza el cierre de TODO al final de la
+                            # ventana (P&L realizado): el neto debería ser 0;
+                            # piernas de venta desparejadas (splits/stops) pueden
+                            # dejar residuo — nunca mostrar shares negativos
+                            open_shares = max(
+                                0.0,
+                                total_shares - sum(_as_float(t.get("quantity")) for t in sells),
                             )
                             rows.append(
                                 {
