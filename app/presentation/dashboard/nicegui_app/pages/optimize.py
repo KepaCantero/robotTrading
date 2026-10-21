@@ -33,6 +33,7 @@ PERIOD_PRESETS = {
     "1y": "Last year",
     "2y": "Last 2 years",
     "5y": "Last 5 years",
+    "10y": "Last 10 years",
 }
 
 
