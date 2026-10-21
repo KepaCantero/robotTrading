@@ -154,6 +154,7 @@ class TestExecutorWiring:
 
         assert state.status == "completed"
         assert seen.get("goal") == "MAXIMIZAR_DIVIDENDOS"
+        assert seen.get("window_start") is None  # request sin backtest_start
 
     async def test_explicit_symbols_skip_auto_universe(self, monkeypatch):
         def _boom() -> None:
@@ -201,7 +202,9 @@ class TestGoalAwareUniverse:
         result = auto_universe(tmp_path, today=TODAY, goal="CAPITAL_PRESERVATION")
 
         assert "TSLA" not in result.symbols
-        assert {"BND", "TLT", "GLD"} <= set(result.symbols)
+        # BND/AGG y TLT/IEF son familias: con liquidez igual gana el
+        # alfabético (AGG, IEF); GLD no tiene rival en este corpus
+        assert {"AGG", "IEF", "GLD"} <= set(result.symbols)
 
     def test_goal_with_too_few_survivors_falls_back_to_generic(self, tmp_path):
         write_csv(tmp_path, "SCHD", 700)
@@ -251,8 +254,9 @@ class TestFamilyDiversification:
 
         assert len(result.symbols) == 5  # 3 capped + 2 deferred rellenan
 
-    def test_goal_filtered_screen_is_not_capped(self, tmp_path):
-        # sin tope de familia: son precisamente el universo elegido
+    def test_goal_filtered_screen_dedupes_but_no_generic_cap(self, tmp_path):
+        # 10 símbolos en 4 familias de solapamiento -> 4 elegidos (uno por
+        # familia); el tope genérico de familia NO aplica en el goal screen
         for i, sym in enumerate(
             ("SCHD", "VIG", "VYM", "DGRO", "DVY", "SDY", "NOBL", "PEY", "FDVV", "DLN")
         ):
@@ -260,8 +264,34 @@ class TestFamilyDiversification:
 
         result = auto_universe(tmp_path, k=10, today=TODAY, goal="MAXIMIZAR_DIVIDENDOS")
 
-        assert len(result.symbols) == 10
+        assert len(result.symbols) == 4
+        assert result.overlap_dropped == 6
         assert result.diversified is False
+
+    def test_long_window_prefers_family_member_that_covers_it(self, tmp_path):
+        # VYMI (más líquido, historia corta) vs PID (menos líquido, historia
+        # larga): un run desde 2008 debe elegir PID; uno desde 2020, VYMI
+        write_csv(tmp_path, "VYMI", 2500, volume=9_000_000)  # ~2019 -> hoy
+        write_csv(tmp_path, "PID", 7000, volume=2_000_000)  # ~2007 -> hoy
+        for sym, vol in (
+            ("SCHD", 5_000_000),
+            ("VYM", 4_500_000),
+            ("NOBL", 3_000_000),
+            ("SDY", 2_500_000),
+            ("DVY", 2_000_000),
+            ("PEY", 1_500_000),
+        ):
+            write_csv(tmp_path, sym, 700, volume=vol)
+
+        short = auto_universe(
+            tmp_path, today=TODAY, goal="MAXIMIZAR_DIVIDENDOS", window_start=date(2020, 1, 1)
+        )
+        assert "VYMI" in short.symbols and "PID" not in short.symbols
+
+        long_run = auto_universe(
+            tmp_path, today=TODAY, goal="MAXIMIZAR_DIVIDENDOS", window_start=date(2008, 1, 2)
+        )
+        assert "PID" in long_run.symbols and "VYMI" not in long_run.symbols
 
     def test_family_of_known_shapes(self):
         from app.services.agent_swarm.universe_selector import family_of
@@ -270,3 +300,96 @@ class TestFamilyDiversification:
         assert family_of("7203.T") == "japan"
         assert family_of("ITX.MC") == "europe"
         assert family_of("WEIRDTOCKER") == "WEIRDTOCKER"
+
+
+class TestOverlapFamilyDedupe:
+    """DGRO/VIG comparten ~80-95% de posiciones: pagar dos comisiones por
+    la misma exposición. El cribado por objetivo mantiene UNO por familia
+    (el más líquido) — incluida la familia internacional si el corpus la
+    tiene."""
+
+    def _corpus(self, tmp_path, vols: dict[str, float]):
+        for sym, vol in vols.items():
+            write_csv(tmp_path, sym, 700, volume=vol)
+
+    def test_dividend_goal_keeps_one_per_family(self, tmp_path):
+        self._corpus(
+            tmp_path,
+            {
+                "VIG": 9_000_000,
+                "DGRO": 8_000_000,  # misma familia → solo VIG
+                "SCHD": 7_000_000,
+                "VYM": 6_500_000,  # misma familia → solo SCHD
+                "NOBL": 5_000_000,
+                "SDY": 4_500_000,  # aristócratas → solo NOBL
+                "DVY": 4_000_000,
+                "PEY": 3_500_000,  # high-yield → solo DVY
+                "VYMI": 3_000_000,  # internacional, única
+            },
+        )
+        result = auto_universe(tmp_path, today=TODAY, goal="MAXIMIZAR_DIVIDENDOS")
+        assert set(result.symbols) == {"VIG", "SCHD", "NOBL", "DVY", "VYMI"}
+        assert "DGRO" not in result.symbols and "VYM" not in result.symbols
+        assert result.overlap_dropped == 4  # DGRO, VYM, SDY, PEY
+
+    def test_most_liquid_wins_within_family(self, tmp_path):
+        self._corpus(
+            tmp_path,
+            {
+                "DGRO": 9_000_000,
+                "VIG": 8_000_000,
+                "SCHD": 5_000_000,
+                "VYM": 4_000_000,
+                "NOBL": 3_000_000,
+                "SDY": 2_000_000,
+                "DVY": 1_500_000,
+                "PEY": 1_200_000,
+                "VYMI": 1_000_000,
+                "DGRW": 6_000_000,
+                "FDVV": 3_000_000,
+                "DLN": 2_500_000,
+            },
+        )
+        result = auto_universe(tmp_path, today=TODAY, goal="MAXIMIZAR_DIVIDENDOS")
+        assert "DGRO" in result.symbols and "VIG" not in result.symbols
+
+    def test_preservation_goal_dedupes_bond_and_gold_twins(self, tmp_path):
+        self._corpus(
+            tmp_path,
+            {
+                "BND": 9_000_000,
+                "AGG": 8_500_000,
+                "SCHZ": 8_000_000,
+                "GLD": 7_000_000,
+                "IAU": 6_500_000,
+                "TLT": 6_000_000,
+                "IEF": 5_500_000,
+                "JNJ": 5_000_000,
+                "XLV": 4_500_000,
+                "VHT": 4_000_000,
+            },
+        )
+        result = auto_universe(tmp_path, today=TODAY, goal="CAPITAL_PRESERVATION")
+        assert "BND" in result.symbols and "AGG" not in result.symbols
+        assert "GLD" in result.symbols and "IAU" not in result.symbols
+        assert "XLV" in result.symbols and "VHT" not in result.symbols
+
+    def test_unaffiliated_symbols_pass_through(self, tmp_path):
+        # 8+ supervivientes para no disparar el fallback genérico
+        self._corpus(
+            tmp_path,
+            {
+                "SCHD": 9_000_000,
+                "VYM": 8_000_000,
+                "NOBL": 3_000_000,
+                "SDY": 2_000_000,
+                "DVY": 1_500_000,
+                "PEY": 1_200_000,
+                "VYMI": 1_000_000,
+                "DES": 900_000,
+                "DON": 800_000,
+            },
+        )
+        result = auto_universe(tmp_path, today=TODAY, goal="MAXIMIZAR_DIVIDENDOS")
+        assert {"SCHD", "NOBL", "DVY", "VYMI"} <= set(result.symbols)
+        assert "VYM" not in result.symbols and "DES" in result.symbols

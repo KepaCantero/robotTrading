@@ -221,6 +221,9 @@ DATA_DIR = DEFAULT_DATA_DIR
 
 PERIOD_DAYS = {"6m": 183, "1y": 365, "2y": 730, "5y": 1825, "10y": 3650}
 
+#: "All available data" sin límites conocidos (universo Automatic): 20 años
+MAX_PERIOD_FALLBACK_DAYS = 7300
+
 #: días por mes medio (365.25 / 12) para convertir ventanas en horizonte
 _DAYS_PER_MONTH = 30.4375
 
@@ -382,7 +385,10 @@ def resolve_period(
         start = _to_day(custom_start) or (end - timedelta(days=365))
         end = _to_day(custom_end) or end
     elif preset == "max":
-        start = data_min or (end - timedelta(days=3650))
+        # sin símbolos conocidos (universo Automatic) no hay data_min: pedir
+        # 20 años — el selector elige fondos que cubren la ventana y el
+        # cargador recorta cada símbolo a su propio histórico
+        start = data_min or (end - timedelta(days=MAX_PERIOD_FALLBACK_DAYS))
     else:
         start = end - timedelta(days=PERIOD_DAYS.get(preset, 365))
 

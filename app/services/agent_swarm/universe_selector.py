@@ -26,7 +26,7 @@ from __future__ import annotations
 import logging
 import math
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 from functools import lru_cache
 from pathlib import Path
 
@@ -74,6 +74,7 @@ DIVIDEND_ETFS = {
     "VIG",
     "VYM",
     "DGRO",
+    "DGRW",
     "DVY",
     "HDV",
     "SDY",
@@ -100,6 +101,11 @@ DIVIDEND_ETFS = {
     "FVD",
     "DGRS",
     "TDVD",
+    "VYMI",
+    "FGD",
+    "PID",
+    "IHDG",
+    "DES",
 }
 DEFENSIVE_SYMBOLS = {
     "BND",
@@ -113,6 +119,7 @@ DEFENSIVE_SYMBOLS = {
     "VCSH",
     "MUB",
     "GLD",
+    "IAU",
     "XLV",
     "XLP",
     "XLU",
@@ -131,6 +138,37 @@ GOAL_FILTERS: dict[str, set[str]] = {
     "MAXIMIZAR_DIVIDENDOS": DIVIDEND_ETFS,
     "CAPITAL_PRESERVATION": DEFENSIVE_SYMBOLS,
 }
+
+#: overlap families inside the goal sets: funds that hold essentially the
+#: same basket (DGRO/VIG share ~80-95% of holdings by weight; NOBL/SDY are
+#: both dividend-aristocrat strategies; BND/AGG/SCHZ track the same US
+#: aggregate bond index). Holding two of them is paying twice for one
+#: exposure, so the goal screen keeps ONE per family — the most liquid.
+#: Symbols in no family are kept as themselves.
+_OVERLAP_FAMILIES: dict[str, frozenset[str]] = {
+    "us-dividend-growth": frozenset({"DGRO", "VIG", "DGRW", "RDVI", "DGRS"}),
+    "us-quality-yield": frozenset({"SCHD", "VYM", "HDV", "FDVV", "DTD", "DLN", "DTN", "FVD"}),
+    "us-aristocrats": frozenset({"NOBL", "SDY"}),
+    "us-high-yield": frozenset({"DVY", "PEY", "SPHD", "FDL", "SPYD", "SDIV", "HIY"}),
+    "intl-dividend": frozenset(
+        {"VYMI", "FGD", "PID", "IHDG", "IDV", "DWX", "VIGI", "SCHY", "DVYE", "EMD"}
+    ),
+    "mid-small-dividend": frozenset({"DON", "DES", "OEDV", "TDVD"}),
+    "us-aggregate-bond": frozenset({"BND", "AGG", "SCHZ", "BIV"}),
+    "us-treasuries": frozenset({"TLT", "IEF", "VGIT"}),
+    "us-corporate-bond": frozenset({"LQD", "VCSH"}),
+    "gold": frozenset({"GLD", "IAU"}),
+    "healthcare-sector": frozenset({"XLV", "VHT"}),
+    "staples-sector": frozenset({"XLP", "VDC"}),
+    "utilities-sector": frozenset({"XLU", "VPU"}),
+}
+_OVERLAP_BY_SYMBOL = {sym: fam for fam, syms in _OVERLAP_FAMILIES.items() for sym in syms}
+
+
+def overlap_family_of(symbol: str) -> str | None:
+    """Overlap family of a symbol inside the goal sets, if any."""
+    return _OVERLAP_BY_SYMBOL.get(symbol)
+
 
 #: minimum goal-filtered survivors before falling back to the generic screen
 GOAL_FILTER_MIN = 8
@@ -224,6 +262,7 @@ class AutoUniverseResult:
     fallback_used: bool
     goal_filter: str = ""
     diversified: bool = False
+    overlap_dropped: int = 0
 
     def summary(self) -> str:
         one_liner = "auto universe"
@@ -242,6 +281,7 @@ class AutoUniverseResult:
             + f" -> top {len(self.symbols)}"
             + (" by liquidity" if not self.goal_filter else " by liquidity in-goal")
             + (" with family cap" if self.diversified else "")
+            + (f" ({self.overlap_dropped} overlapping dropped)" if self.overlap_dropped else "")
         )
 
 
@@ -302,6 +342,7 @@ def auto_universe(
     k: int = AUTO_UNIVERSE_SIZE,
     today: date | None = None,
     goal: str | None = None,
+    window_start: date | None = None,
 ) -> AutoUniverseResult:
     """Derive the run universe from the corpus (deterministic).
 
@@ -345,7 +386,9 @@ def auto_universe(
             len(candidates),
             goal_key,
         )
-        return auto_universe(data_dir=data_dir, k=k, today=today, goal=None)
+        return auto_universe(
+            data_dir=data_dir, k=k, today=today, goal=None, window_start=window_start
+        )
 
     scanned = len(scan.symbols) + len(scan.unreadable)
     if not candidates:
@@ -364,9 +407,10 @@ def auto_universe(
 
     ranked = sorted(candidates, key=lambda s: (-s.avg_dollar_volume, s.symbol))
     if goal_filter:
-        picked = [s.symbol for s in ranked[:k]]
+        picked, overlap_dropped = _one_per_overlap_family(ranked, k, window_start)
     else:
         picked = _diversify(ranked, k)
+        overlap_dropped = 0
     return AutoUniverseResult(
         symbols=picked,
         scanned=scanned,
@@ -375,7 +419,59 @@ def auto_universe(
         fallback_used=False,
         goal_filter=goal_label,
         diversified=not goal_filter,
+        overlap_dropped=overlap_dropped,
     )
+
+
+def _one_per_overlap_family(
+    ranked: list[CorpusSymbol], k: int, window_start: date | None = None
+) -> tuple[list[str], int]:
+    """Keep ONE symbol of each overlap family (one exposure, one fee);
+    unaffiliated symbols pass through. Returns (picked, dropped).
+
+    With ``window_start`` (the run's first day) the family representative
+    must COVER the window when any member does: for a 2008-2026 run the
+    intl-dividend seat goes to PID (history from 2005), not to the more
+    liquid VYMI (history from 2016). Liquidity only breaks ties between
+    members that equally cover — or when none does.
+    """
+    tolerance = timedelta(days=90)
+    picked: list[str] = []
+    seen_families: set[str] = set()
+    dropped = 0
+    for sym in ranked:
+        family = overlap_family_of(sym.symbol)
+        if family is None:
+            picked.append(sym.symbol)
+            if len(picked) == k:
+                break
+            continue
+        if family in seen_families:
+            dropped += 1
+            continue
+        if window_start is not None:
+            covers = sym.first_date <= window_start + tolerance
+            if not covers:
+                covering = [
+                    m
+                    for m in ranked
+                    if overlap_family_of(m.symbol) == family
+                    and m.first_date <= window_start + tolerance
+                ]
+                if covering:
+                    # este run es largo: la familia la cubre otro miembro
+                    winner = min(covering, key=lambda m: (-m.avg_dollar_volume, m.symbol))
+                    picked.append(winner.symbol)
+                    seen_families.add(family)
+                    dropped += 1
+                    if len(picked) == k:
+                        break
+                    continue
+        seen_families.add(family)
+        picked.append(sym.symbol)
+        if len(picked) == k:
+            break
+    return picked, dropped
 
 
 def _diversify(ranked: list[CorpusSymbol], k: int) -> list[str]:

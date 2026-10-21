@@ -317,6 +317,10 @@ class TestPeriodHelpers:
         start, end = swarm.resolve_period("max", None, None, bounds)
         assert start == "2010-01-01"
 
+        # universo Automatic: sin límites conocidos, "max" pide 20 años
+        start, end = swarm.resolve_period("max", None, None, None, today=date(2026, 10, 21))
+        assert start == "2006-10-26"
+
     def test_resolve_period_custom_dates(self):
         bounds = (date(2010, 1, 1), date(2024, 12, 31))
         start, end = swarm.resolve_period("custom", "2022-03-01", "2023-03-01", bounds)

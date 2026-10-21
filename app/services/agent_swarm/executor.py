@@ -350,9 +350,22 @@ class Capa2PipelineExecutor:
         if not request.symbols:
             # sin selección manual: el universo se deriva del corpus de CSVs,
             # consciente del objetivo (dividendos -> ETFs de dividendo del
-            # corpus; preservar capital -> defensivos) — escaneo costoso →
-            # hilo aparte para no bloquear el event loop
-            auto = await asyncio.to_thread(auto_universe, goal=request.objetivo_inversion)
+            # corpus; preservar capital -> defensivos) y de la ventana (en
+            # cada familia de solapamiento gana el fondo que CUBRE el run) —
+            # escaneo costoso → hilo aparte para no bloquear el event loop
+            window_start = None
+            if request.backtest_start:
+                try:
+                    from datetime import date as _date
+
+                    window_start = _date.fromisoformat(str(request.backtest_start)[:10])
+                except ValueError:
+                    window_start = None
+            auto = await asyncio.to_thread(
+                auto_universe,
+                goal=request.objetivo_inversion,
+                window_start=window_start,
+            )
             ctx.auto_symbols = auto.symbols
             ctx.auto_universe_summary = auto.summary()
             logger.info("Run %s %s", run_id, ctx.auto_universe_summary)
