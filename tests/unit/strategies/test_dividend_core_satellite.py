@@ -131,3 +131,62 @@ class TestWarmupDoesNotCommitPhantomHoldings:
         assert "CORE1" in buys and "CORE2" in buys, (
             "el primer rebalance en ventana despliega el core"
         )
+
+
+class TestRunUniverseClassification:
+    """El orquestador pasa el universo del run vía config["symbols"]; sin
+    clasificación la estrategia mira sus capas por defecto (VIG/DGRO/…),
+    que pueden no existir en los datos → cero señales (bug del dashboard
+    con universo automático: IBEX, QQQ, NVDA…)."""
+
+    def test_deep_universe_classifies_all_three_layers(self):
+        s = DividendCoreSatelliteStrategy(
+            {"name": "d", "enabled": True, "symbols": ["SDY", "DLN", "DVY", "PEY", "BIV"]}
+        )
+        assert s.core_symbols == ["SDY", "DLN"]
+        assert s.satellite_symbols == ["DVY", "PEY"]
+        assert s.defensive_symbol == "BIV"
+
+    def test_ten_year_preset_universe_matches_default_layers(self):
+        s = DividendCoreSatelliteStrategy(
+            {
+                "name": "d",
+                "enabled": True,
+                "symbols": ["VIG", "DGRO", "DGRW", "SCHD", "VYM", "DVY", "BND"],
+            }
+        )
+        assert s.core_symbols == ["VIG", "DGRO", "DGRW", "SCHD"]
+        assert s.satellite_symbols == ["VYM", "DVY"]
+        assert s.defensive_symbol == "BND"
+
+    def test_arbitrary_universe_degrades_to_pure_core(self):
+        s = DividendCoreSatelliteStrategy(
+            {"name": "d", "enabled": True, "symbols": ["IBEX", "QQQ", "NVDA", "7203.T"]}
+        )
+        assert s.core_symbols == ["IBEX", "QQQ", "NVDA", "7203.T"]
+        assert s.satellite_symbols == []
+        assert s.defensive_symbol == ""
+
+    def test_no_symbols_keeps_explicit_layer_config(self):
+        s = make()
+        assert s.core_symbols == ["CORE1", "CORE2"]
+        assert s.satellite_symbols == ["SAT1"]
+        assert s.defensive_symbol == "DEF"
+
+    def test_arbitrary_universe_still_generates_signals(self):
+        s = DividendCoreSatelliteStrategy(
+            {
+                "name": "d",
+                "enabled": True,
+                "symbols": ["AAA", "BBB"],
+                "lookback_days": 30,
+                "skip_recent_days": 3,
+                "min_history": 25,
+                "rebalance_days": 5,
+            }
+        )
+        trades = feed(
+            s, {"AAA": [100 + i for i in range(40)], "BBB": [50 + 0.5 * i for i in range(40)]}
+        )
+        buys = {sym for sym, side in trades if side == "buy"}
+        assert buys == {"AAA", "BBB"}, "universo sin satélites: núcleo puro se despliega"

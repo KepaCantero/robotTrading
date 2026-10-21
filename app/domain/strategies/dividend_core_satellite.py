@@ -47,6 +47,24 @@ DEFAULT_CORE = ["VIG", "DGRO", "DGRW", "SCHD"]
 DEFAULT_SATELLITE = ["VYM", "DVY"]
 DEFAULT_DEFENSIVE = "BND"
 
+#: clasificación por rol cuando la estrategia recibe el universo del run:
+#: high-yield conocido → satélite; renta fija conocida → refugio (primera
+#: que aparezca); el resto → núcleo. Universos sin satélites ni refugio
+#: (p.ej. el automático del dashboard) degradan a núcleo puro con filtro
+#: de momentum — mejor que fallar con cero señales.
+_HIGH_YIELD = {"VYM", "DVY", "PEY", "HDV", "SPHD"}
+_DEFENSIVE_CANDIDATES = ("BND", "BIV", "AGG", "IEF", "SCHZ")
+
+
+def _classify_universe(symbols: list[str]) -> tuple[list[str], list[str], str]:
+    """Split a run universe into (core, satellite, defensive)."""
+    unique = list(dict.fromkeys(str(s).upper() for s in symbols))
+    satellite = [s for s in unique if s in _HIGH_YIELD]
+    defensive = next((s for s in unique if s in _DEFENSIVE_CANDIDATES), "")
+    skip = set(satellite) | {defensive}
+    core = [s for s in unique if s not in skip]
+    return core or unique, satellite, defensive
+
 
 class DividendCoreSatelliteStrategy(BaseStrategy):
     """Núcleo buy&hold de crecimiento de dividendo + filtro momentum + satélite."""
@@ -55,11 +73,19 @@ class DividendCoreSatelliteStrategy(BaseStrategy):
 
     def __init__(self, config: dict[str, Any]) -> None:
         super().__init__(config)
-        self.core_symbols: list[str] = list(config.get("core_symbols") or DEFAULT_CORE)
-        self.satellite_symbols: list[str] = list(
-            config.get("satellite_symbols") or DEFAULT_SATELLITE
-        )
-        self.defensive_symbol: str = str(config.get("defensive_symbol") or DEFAULT_DEFENSIVE)
+        run_symbols = config.get("symbols")
+        if run_symbols:
+            # el orquestador fija el universo del run: clasificar capas
+            core, satellite, defensive = _classify_universe(list(run_symbols))
+            self.core_symbols: list[str] = core
+            self.satellite_symbols: list[str] = satellite
+            self.defensive_symbol: str = defensive
+        else:
+            self.core_symbols: list[str] = list(config.get("core_symbols") or DEFAULT_CORE)
+            self.satellite_symbols: list[str] = list(
+                config.get("satellite_symbols") or DEFAULT_SATELLITE
+            )
+            self.defensive_symbol: str = str(config.get("defensive_symbol") or DEFAULT_DEFENSIVE)
         self.lookback_days: int = int(config.get("lookback_days", 252))
         self.skip_recent_days: int = int(config.get("skip_recent_days", 21))
         self.satellite_top_k: int = int(config.get("satellite_top_k", 1))

@@ -202,8 +202,14 @@ class BacktestOrchestrator:
     #: merged on top of the strategy's YAML config before instantiation.
     _strategy_param_overrides: dict | None = None
 
-    def _build_strategy(self, name: str):
-        """Instantiate the real strategy class for `name` (with fallback)."""
+    def _build_strategy(self, name: str, symbols: list[str] | None = None):
+        """Instantiate the real strategy class for `name` (with fallback).
+
+        Cross-sectional strategies trade the RUN's universe: without it they
+        fall back to their default symbols, which may not even be in the
+        loaded data (e.g. Automatic universe + dividend layers → zero quotes
+        tracked → "no signals" failure).
+        """
         import importlib
 
         path = self._STRATEGIES.get(name, self._STRATEGIES["mean_reversion"])
@@ -218,6 +224,10 @@ class BacktestOrchestrator:
                 (repo_root / "config" / "strategies" / "momentum_modular.yaml").read_text()
             )
             strategy = strategy_cls({"name": "momentum_modular", "enabled": True, **cfg})
+        elif name == "dividend_tracking" and symbols:
+            strategy = strategy_cls({"name": name, "enabled": True, "symbols": symbols})
+        elif name == "low_volatility" and symbols:
+            strategy = strategy_cls({"name": name, "enabled": True, "universe": symbols})
         else:
             strategy = strategy_cls({"name": name, "enabled": True})
         # Optimizer overrides: the strategy's __init__ prioritises its YAML
@@ -251,7 +261,7 @@ class BacktestOrchestrator:
         # Estrategias cross-sectional (p.ej. rotación de ETFs): UNA instancia
         # viendo el timeline global de todos los símbolos. Las per-símbolo
         # (mean_reversion...) siguen con instancia propia como siempre.
-        probe = self._build_strategy(config.strategy_name)
+        probe = self._build_strategy(config.strategy_name, symbols)
         shared_strategy = probe if getattr(probe, "is_cross_sectional", False) else None
         if shared_strategy is not None:
             # warm-up builds indicator history only; the first position
@@ -282,7 +292,7 @@ class BacktestOrchestrator:
             if shared_strategy is None:
                 # estrategia per-símbolo (mean_reversion...): instancia propia
                 # y su serie en orden, como siempre
-                per_symbol_strategy = self._build_strategy(config.strategy_name)
+                per_symbol_strategy = self._build_strategy(config.strategy_name, symbols)
                 signals.extend(
                     signal
                     for quote in sorted(clamped, key=lambda q: q.timestamp)
