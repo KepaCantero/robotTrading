@@ -538,7 +538,17 @@ class BacktestOrchestrator:
 
         total_return = (final / initial - Decimal("1")) * Decimal("100")
         days = max((end_dt - start_dt).days, 1)
-        annual_return = total_return * Decimal("365") / Decimal(days)
+        # CAGR real (compuesto): (final/inicial)^(365/días) − 1. El prorrateo
+        # lineal (total×365/días) sobreestimaba: 165% total en 10 años daba
+        # 16.5%/año lineal vs 10.2% CAGR real.
+        years = Decimal(days) / Decimal("365")
+        ratio = final / initial
+        if ratio > 0:
+            annual_return = (
+                Decimal(str(float(ratio) ** (1 / float(years)))) - Decimal("1")
+            ) * Decimal("100")
+        else:
+            annual_return = Decimal("-100")
 
         # daily returns from the equity curve → volatility + VaR(95)
         daily_returns = [

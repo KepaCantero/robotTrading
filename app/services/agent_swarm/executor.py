@@ -694,10 +694,33 @@ class Capa2PipelineExecutor:
         modules = sorted(param_set.module_parameters.items(), key=lambda kv: kv[1].priority)
         total = max(1, len(modules))
         ranked: list[RankedStrategy] = []
+        # SCORE DESDE EL BACKTEST REAL, no fórmula estática (que daba 61.0
+        # en TODAS las ejecuciones sin importar Sharpe/CAGR). Componentes:
+        # Sharpe (0-30), MaxDD (0-25), Feasibility (0-25), Excess (0-10), WF (0-10).
+        backtest = getattr(ctx, "backtest", None)
+        metrics = getattr(getattr(backtest, "backtest_result", None), "metrics", None)
+        sharpe = float(getattr(metrics, "sharpe_ratio", 0) or 0) if metrics else 0.0
+        max_dd = abs(float(getattr(metrics, "max_drawdown_pct", 0) or 0)) if metrics else 100.0
+        feasibility = float(getattr(backtest, "feasibility_ratio", 0) or 0) if backtest else 0.0
+        excess = float(getattr(backtest, "excess_return_pct", 0) or 0) if backtest else -100.0
+        wf_passed = bool(getattr(backtest, "walk_forward_passed", False)) if backtest else False
+
+        sharpe_pts = 30 if sharpe >= 1.0 else 20 if sharpe >= 0.5 else 10 if sharpe >= 0 else 0
+        dd_pts = 25 if max_dd < 15 else 15 if max_dd < 25 else 5 if max_dd < 35 else 0
+        feas_pts = (
+            25
+            if feasibility >= 2.0
+            else 15
+            if feasibility >= 1.5
+            else 10
+            if feasibility >= 1.0
+            else 0
+        )
+        excess_pts = 10 if excess > 0 else 5 if excess > -50 else 0
+        wf_pts = 10 if wf_passed else 0
+        base = Decimal(str(min(100, sharpe_pts + dd_pts + feas_pts + excess_pts + wf_pts)))
+
         for rank, (name, config) in enumerate(modules, start=1):
-            base = min(
-                Decimal("92"), Decimal("52") + config.estimated_improvement_pct * Decimal("6")
-            )
             preset = str(getattr(config, "preset", "balanced")).lower()
             return_bonus = Decimal("6") if "aggressive" in preset else Decimal("0")
             safety = Decimal("6") if "conservative" in preset else Decimal("0")

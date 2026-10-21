@@ -1822,7 +1822,7 @@ def render(
 
                     optimize_button.disable()
                     if modo_universo.value == "auto":
-                        auto = await asyncio.to_thread(auto_universe)
+                        auto = await asyncio.to_thread(auto_universe, goal=objetivo.value)
                         symbols = auto.symbols
                         optimize_status.text = (
                             f"Searching over {len(symbols)} auto-picked symbols "
