@@ -212,6 +212,10 @@ class BacktestResult:
     # Novice-readable trade list (symbol, shares, prices, P&L per trade)
     trades_summary: list[dict] = field(default_factory=list)
 
+    # Universe the run actually traded (may be corpus-derived, not the
+    # request's manual selection — the UI shows it in the result panel)
+    symbols: list[str] = field(default_factory=list)
+
     def to_dict(self) -> dict:
         """Convert result to dictionary."""
         logger.debug(
@@ -261,6 +265,7 @@ class BacktestResult:
             if self.equity_curve
             else [],
             "trades_summary": self.trades_summary,
+            "symbols": list(self.symbols),
             "metrics": (
                 {
                     "total_return_pct": str(self.metrics.total_return_pct),

@@ -633,6 +633,7 @@ class BacktestOrchestrator:
             metrics=metrics,
             equity_curve=equity_points,
             trades_summary=trade_summary,
+            symbols=list(config.symbols or []),
             execution_duration_seconds=(end_dt - start_dt).total_seconds(),
             validation_passed=wf_passed is not False,
             validation_failures=wf_failures if wf_passed is False else [],

@@ -731,8 +731,26 @@ class Capa2PipelineExecutor:
         )
 
     async def _t71_run(self, ctx: _Ctx, request):
+        from app.services.agent_swarm.portfolio_allocation import allocation_from_backtest
         from app.services.portfolio_constructor.portfolio_constructor import PortfolioConstructor
 
+        # LA CARtera real del run: exposición media ponderada por tiempo de
+        # los trades reales del backtest. El constructor genérico (pesos por
+        # características de módulo inventadas) queda como fallback sin datos.
+        bt = getattr(ctx.backtest, "backtest_result", None)
+        if bt is not None and bt.trades_summary:
+            try:
+                ctx.portfolio = allocation_from_backtest(
+                    profile_id=ctx.profile.profile_id,
+                    capital_eur=ctx.input_profile.capital_initial,
+                    trades_summary=bt.trades_summary,
+                    annual_return_pct=bt.achieved_annual_return_pct,
+                    sharpe_ratio=bt.metrics.sharpe_ratio,
+                    max_drawdown_pct=bt.metrics.max_drawdown_pct,
+                )
+                return ctx.portfolio
+            except ValueError:
+                logger.warning("T7.1: no usable trade exposure -> generic constructor")
         ctx.portfolio = await PortfolioConstructor().construct_portfolio(request)
         return ctx.portfolio
 

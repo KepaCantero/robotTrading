@@ -408,10 +408,12 @@ def extract_result_metrics(results: dict) -> dict:
     metrics = inner.get("metrics") or {}
     recommendation = results.get("recommendation") or {}
     decision = results.get("deployment_decision") or {}
+    # max_drawdown_pct is a FRACTION by engine contract — % for display
+    drawdown = _as_float(metrics.get("max_drawdown_pct")) * 100
     return {
         "total_return": metrics.get("total_return_pct"),
         "sharpe": metrics.get("sharpe_ratio"),
-        "drawdown": metrics.get("max_drawdown_pct"),
+        "drawdown": round(drawdown, 2),
         "feasibility": backtest.get("feasibility_ratio"),
         "strategy": recommendation.get("recommended_strategy"),
         "verdict": decision.get("status"),
@@ -420,6 +422,7 @@ def extract_result_metrics(results: dict) -> dict:
         "benchmark_symbol": inner.get("benchmark_symbol") or "",
         "benchmark_return": inner.get("benchmark_return_pct"),
         "excess_return": inner.get("excess_return_pct"),
+        "symbols": [str(s) for s in inner.get("symbols") or []],
     }
 
 
@@ -897,10 +900,19 @@ def _render_step_visual(agent_id: str, payload: Any) -> None:
 
     elif agent_id == "t71":
         portfolio = extract_portfolio({"portfolio": payload})
+        is_real = portfolio["method"] == "backtest_positions"
         with ui.row().classes("w-full gap-sm wrap q-mb-sm"):
             _metric_tile("Method", str(portfolio["method"] or "?").replace("_", " "), 0)
-            _metric_tile("Expected return %", portfolio["expected_return"], 0.05)
-            _metric_tile("Sharpe", portfolio["expected_sharpe"], 0.1)
+            _metric_tile(
+                "Return %/yr (run)" if is_real else "Expected return %",
+                portfolio["expected_return"],
+                0.05,
+            )
+            _metric_tile(
+                "Sharpe (run)" if is_real else "Sharpe",
+                portfolio["expected_sharpe"],
+                0.1,
+            )
             _metric_tile("Diversification", portfolio["diversification"], 0.15)
         donut = build_allocation_chart(portfolio["allocations"])
         if donut is not None:
@@ -1603,12 +1615,17 @@ def render(
                     except Exception as exc:
                         ui.label(f"⚠ Stock table error: {exc}").classes("term-line term-warn")
 
+                is_real_alloc = portfolio["method"] == "backtest_positions"
                 summary_bits = [
                     bit
                     for bit in (
                         str(portfolio["method"] or "").replace("_", " "),
                         (
-                            f"expected return {_fmt_short(portfolio['expected_return'])}%"
+                            (
+                                f"avg exposure · return {_fmt_short(portfolio['expected_return'])}%/yr"
+                                if is_real_alloc
+                                else f"expected return {_fmt_short(portfolio['expected_return'])}%"
+                            )
                             if portfolio["expected_return"] is not None
                             else None
                         ),
@@ -1837,8 +1854,6 @@ def render(
         if request is not None:
             if request.backtest_start and request.backtest_end:
                 period = f"{request.backtest_start[:7]} → {request.backtest_end[:7]}"
-            symbols = getattr(request, "symbols", None) or []
-            universe = f"{len(symbols)} symbols" if symbols else "—"
             context_bits = [
                 bit
                 for bit in (
@@ -1850,6 +1865,15 @@ def render(
             ]
         else:
             context_bits = []
+        # universo REAL del run: el manual, o el derivado del corpus (el
+        # request no lo conoce — Automatic se resuelve en T4.1)
+        universe_symbols = (
+            list(getattr(request, "symbols", None) or []) or metrics.get("symbols") or []
+        )
+        if universe_symbols:
+            universe = f"{len(universe_symbols)} symbols: {', '.join(universe_symbols[:4])}" + (
+                "…" if len(universe_symbols) > 4 else ""
+            )
 
         result_container.clear()
         with result_container:

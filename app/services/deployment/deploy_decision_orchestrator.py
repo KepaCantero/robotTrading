@@ -190,7 +190,14 @@ class DeployDecisionOrchestrator:
 
         elif status == "CONDITIONAL":
             reasons.append("⚠️  Validation passed but with conditions")
-            reasons.append(f"⚠️  Feasibility ratio {feasibility_ratio:.2f} is moderate (0.7-1.0)")
+            if feasibility_ratio >= 1.0:
+                reasons.append(
+                    f"✅ Feasibility ratio {feasibility_ratio:.2f} exceeds 1.0 threshold"
+                )
+            else:
+                reasons.append(
+                    f"⚠️  Feasibility ratio {feasibility_ratio:.2f} is moderate (0.7-1.0)"
+                )
             reasons.append(f"⚠️  Recommendation score {recommendation_score:.1f} is acceptable")
             reasons.append("⚠️  Strategy requires optimization before full deployment")
 
