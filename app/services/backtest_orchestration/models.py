@@ -201,6 +201,7 @@ class BacktestResult:
     benchmark_return_pct: Decimal | None = None
     excess_return_pct: Decimal | None = None
     benchmark_curve: list[tuple[str, str]] = field(default_factory=list)
+    dividend_tax_drag_pct: Decimal | None = None
 
     # Execution timing
     execution_timestamp: datetime = field(default_factory=datetime.utcnow)

@@ -1978,6 +1978,13 @@ def render(
                         f"{bench:+,.1f}% over the same period{excess_txt}."
                     ).classes("help q-mt-sm")
 
+                if metrics.get("dividend_tax_drag") is not None:
+                    drag = _as_float(metrics.get("dividend_tax_drag"))
+                    ui.label(
+                        f"Spanish dividend tax drag: ~-{drag:.1f}% estimated IRPF on "
+                        f"distributions over the period (net return would be lower)."
+                    ).classes("help")
+
                 if context_bits:
                     ui.label(f"Investor: {' · '.join(context_bits)}").classes("help q-mt-sm")
 

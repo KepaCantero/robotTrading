@@ -104,7 +104,12 @@ class DeployDecisionOrchestrator:
             recommendations = await self._generate_recommendations(
                 status, feasibility_ratio, recommendation_score
             )
-            next_steps = await self._determine_next_steps(status)
+            next_steps = await self._determine_next_steps(
+                status,
+                sharpe_ratio=sharpe_ratio,
+                feasibility_ratio=feasibility_ratio,
+                recommendation_score=recommendation_score,
+            )
 
             decision_id = f"decision_{self._get_timestamp()}"
 
@@ -270,7 +275,13 @@ class DeployDecisionOrchestrator:
 
         return recommendations
 
-    async def _determine_next_steps(self, status: str) -> list[str]:
+    async def _determine_next_steps(
+        self,
+        status: str,
+        sharpe_ratio: float | None = None,
+        feasibility_ratio: float | None = None,
+        recommendation_score: float | None = None,
+    ) -> list[str]:
         """Determine next actions based on status."""
         next_steps = []
 
@@ -281,10 +292,30 @@ class DeployDecisionOrchestrator:
             next_steps.append("4. Schedule weekly performance reviews")
 
         elif status == "CONDITIONAL":
-            next_steps.append("1. Perform sensitivity analysis on key parameters")
-            next_steps.append("2. Test strategy with smaller position sizes")
-            next_steps.append("3. Wait for market conditions to improve")
-            next_steps.append("4. Re-evaluate before larger deployment")
+            # next steps dirigidos por datos, no plantilla
+            if sharpe_ratio is not None and sharpe_ratio < 0.5:
+                next_steps.append(
+                    f"1. Sharpe {sharpe_ratio:.2f} < 0.5: la estrategia no compensa "
+                    f"el riesgo asumido; sube el peso del núcleo global o reduce el satélite"
+                )
+            else:
+                next_steps.append(
+                    "1. Run sensitivity analysis on satellite weight and rebalance frequency"
+                )
+            if feasibility_ratio is not None and feasibility_ratio < 1.5:
+                next_steps.append(
+                    f"2. Feasibility {feasibility_ratio:.2f} — margen delgado; "
+                    f"más capital o target más modesto lo haría robusto"
+                )
+            else:
+                next_steps.append("2. Test with smaller position sizes before live deployment")
+            if recommendation_score is not None and recommendation_score < 70:
+                next_steps.append(
+                    f"3. Score {recommendation_score:.0f}/100: falta Sharpe ≥0.5 para APPROVED "
+                    f"(hoy el score se arrastra por la relación retorno/riesgo, no por la cartera)"
+                )
+            else:
+                next_steps.append("3. Walk-forward validation before larger deployment")
 
         else:  # REJECTED
             next_steps.append("1. Review strategy parameters")

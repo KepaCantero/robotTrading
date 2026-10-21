@@ -70,6 +70,7 @@ _USECOLS = ["date", "Close", "Volume"]
 #: without a local CSV simply never surface). Curated, well-known tickers —
 #: the corpus holds hundreds of them but carries no category metadata.
 DIVIDEND_ETFS = {
+    "VT",  # núcleo global total-world: el objetivo dividendo NO debe ser 100% US
     "SCHD",
     "VIG",
     "VYM",

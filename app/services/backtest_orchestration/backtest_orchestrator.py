@@ -390,7 +390,7 @@ class BacktestOrchestrator:
             closes = sorted((q.timestamp, float(q.close if q.close else q.last)) for q in raw)
             if len(closes) < 2 or closes[0][1] <= 0:
                 continue
-            if best is None or closes[0][0] < best[1][0][0]:
+            if best is None or closes[0][0] < best[1][0][0]:  # pylint: disable=unsubscriptable-object
                 best = (candidate, closes)
             if closes[0][0] <= start_dt + tolerance:
                 break
@@ -654,7 +654,58 @@ class BacktestOrchestrator:
                 else None
             ),
             benchmark_curve=list((benchmark or {}).get("curve") or []),
+            dividend_tax_drag_pct=self._estimate_dividend_tax_drag(
+                config.symbols, metrics.total_return_pct, start_dt, end_dt
+            ),
         )
+
+    #: yield medio (anual) por símbolo de dividendo — estimación conservadora
+    #: para el drag fiscal; los precios ajustados incluyen distribuciones
+    #: pero el IRPF se paga cada año, no al final
+    _DIVIDEND_YIELDS: dict[str, float] = {
+        "SCHD": 0.035,
+        "VIG": 0.018,
+        "VYM": 0.030,
+        "DVY": 0.038,
+        "DGRO": 0.022,
+        "DGRW": 0.025,
+        "NOBL": 0.024,
+        "VYMI": 0.042,
+        "VT": 0.020,
+        "SPY": 0.013,
+        "BND": 0.032,
+        "HDV": 0.037,
+        "SDY": 0.028,
+        "DLN": 0.020,
+        "DTD": 0.030,
+        "PEY": 0.045,
+    }
+
+    @classmethod
+    def _estimate_dividend_tax_drag(
+        cls, symbols: list, total_return_pct, start_dt, end_dt
+    ) -> Decimal | None:
+        """Estima el IRPF pagado por dividendos distribuidos cada año.
+
+        Con precios ajustados el retorno ya incluye los dividendos brutos,
+        pero en España cada distribución tributa en la base del ahorro.
+        Estimación: yield medio de la cartera × tramo IRPF × años.
+        Devuelve None si no hay símbolos con yield conocido.
+        """
+        if not symbols:
+            return None
+        yields = [cls._DIVIDEND_YIELDS.get(sym, 0.0) for sym in symbols]
+        avg_yield = sum(yields) / len(yields)
+        if avg_yield <= 0:
+            return None
+        years = max((end_dt - start_dt).days / 365.25, 1)
+        # tramo base ahorro ~19% (conservador para capital < 200k)
+        irpf = 0.19
+        # drag anual compuesto: (1 - irpf)^años ≈ reducción del componente
+        # de dividendo sobre el retorno total
+        annual_drag = avg_yield * irpf
+        total_drag = (1 + annual_drag) ** years - 1  # coste compuesto
+        return Decimal(str(round(total_drag * 100, 2)))
 
     @staticmethod
     def _trade_pnl(trade) -> Decimal:
