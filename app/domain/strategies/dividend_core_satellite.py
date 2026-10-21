@@ -37,7 +37,7 @@ from app.domain.models.market_data import Quote
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.strategies.base import BaseStrategy
 
-DEFAULT_CONFIDENCE = 80.0
+DEFAULT_CONFIDENCE = 100.0
 DEFAULT_LIQUIDITY = 90.0
 DEFAULT_PRIORITY = 80.0
 
@@ -187,13 +187,10 @@ class DividendCoreSatelliteStrategy(BaseStrategy):
         """
         target: set[str] = set(self.core_symbols)
 
-        # satélite: solo top-k con momentum positivo
+        # satélite: top-k al primer rebalance, luego hold (sin timing:
+        # testear el filtro momentum del satélite redujo retorno también)
         sat_ranked = sorted(
-            (
-                (s, m)
-                for s, m in ((x, self._momentum(x)) for x in self.satellite_symbols)
-                if m is not None and m > 0
-            ),
+            ((s, m or 0.0) for s, m in ((x, self._momentum(x)) for x in self.satellite_symbols)),
             key=lambda kv: kv[1],
             reverse=True,
         )
