@@ -521,3 +521,60 @@ class TestPositionSizingHonorsConfig:
         entries = [t for t in result.trades if t.side == "buy"]
         deployed = float(entries[0].quantity) * float(entries[0].entry_price)
         assert deployed == pytest.approx(20_000, rel=0.01), "25% x confianza 0.8 = 20% del capital"
+
+
+class TestSimultaneousBuysShareTheDayPortfolio:
+    """El sizing NO puede ser secuencial sobre cash post-fill.
+
+    Cuatro buys del mismo día (despliegue de una cross-sectional) deben
+    dimensionar cada uno la MISMA cartera del día: r×n del capital inicial.
+    El bug histórico: cada buy usaba self.capital ya mermado por el buy
+    anterior → 1-(1-r)^n desplegado (59% en vez de 80% con r=0.2, n=4).
+    """
+
+    def test_four_simultaneous_bys_deploy_full_target(self):
+        symbols = ["AAA", "BBB", "CCC", "DDD"]
+        bars = []
+        signals = []
+        for sym in symbols:
+            bars.append(make_quote(sym, T0, "100", "102", "99", "100"))
+            bars.append(make_quote(sym, T0 + timedelta(days=1), "100", "101", "99", "100"))
+            buy = make_signal(sym, SignalType.BUY, T0, price="100")
+            buy.confidence = 100.0  # r puro, sin factor de confianza
+            signals.append(buy)
+        # timeline global intercalado por día (como el runner cross-sectional)
+        bars_by_day = sorted(bars, key=lambda q: (q.timestamp, q.symbol))
+
+        result = make_engine(max_position_size=Decimal("0.20")).run_backtest(bars_by_day, signals)
+
+        entries = [t for t in result.trades if t.side == "buy"]
+        assert len(entries) == 4, "los 4 buys del día deben ejecutar"
+        deployed = sum(float(t.quantity) * float(t.entry_price) for t in entries)
+        assert deployed == pytest.approx(80_000, rel=0.01), (
+            f"4 x 20% de la cartera del día = 80k de 100k; desplegó {deployed:,.0f} "
+            "(sizing secuencial habría dejado ~59k)"
+        )
+
+    def test_next_day_buys_size_the_new_portfolio(self):
+        """Un buy del día siguiente dimensiona la cartera YA con los fills
+        del día anterior — el snapshot se renueva cada día de cotización."""
+        bars = [
+            make_quote("AAA", T0, "100", "102", "99", "100"),
+            make_quote("AAA", T0 + timedelta(days=1), "100", "101", "99", "100"),
+            make_quote("BBB", T0 + timedelta(days=1), "100", "101", "99", "100"),
+            make_quote("BBB", T0 + timedelta(days=2), "100", "101", "99", "100"),
+        ]
+        first = make_signal("AAA", SignalType.BUY, T0, price="100")
+        first.confidence = 100.0
+        second = make_signal("BBB", SignalType.BUY, T0 + timedelta(days=1), price="100")
+        second.confidence = 100.0
+
+        result = make_engine(max_position_size=Decimal("0.25")).run_backtest(bars, [first, second])
+
+        entries = {t.symbol: t for t in result.trades if t.side == "buy"}
+        assert len(entries) == 2
+        a_dep = float(entries["AAA"].quantity) * float(entries["AAA"].entry_price)
+        b_dep = float(entries["BBB"].quantity) * float(entries["BBB"].entry_price)
+        # AAA: 25% de 100k; BBB (día distinto): 25% de los 75k restantes
+        assert a_dep == pytest.approx(25_000, rel=0.01)
+        assert b_dep == pytest.approx(18_750, rel=0.01)

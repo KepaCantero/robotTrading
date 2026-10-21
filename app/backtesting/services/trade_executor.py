@@ -119,6 +119,7 @@ class TradeExecutor:
         close_position_func: Callable,
         validate_profitability_func: Callable,
         position_size: Decimal | None = None,  # Pass from ComplianceEngine to avoid duplication
+        validation_capital: Decimal | None = None,
     ) -> tuple[Trade | None, Decimal]:
         """
         Execute a buy signal with all validations.
@@ -130,6 +131,10 @@ class TradeExecutor:
             close_position_func: Function to close existing positions
             validate_profitability_func: Function to validate trade profitability
             position_size: Pre-calculated position size from ComplianceEngine (avoids duplication)
+            validation_capital: Portfolio base for the max-position-% check
+                (defaults to `capital`). A rebalance day sizes every BUY on the
+                day's portfolio; validating against post-fill CASH would shrink
+                the cap per buy and silently reject the tail of the batch.
 
         Returns:
             Tuple of (executed_trade or None, updated_capital)
@@ -176,7 +181,7 @@ class TradeExecutor:
         try:
             position_value = position_size * current_price
             self.trading_validator.validate_position_size(
-                capital=capital,
+                capital=validation_capital if validation_capital is not None else capital,
                 position_size=position_value,
                 max_position_percent=self.config.max_position_size,
             )

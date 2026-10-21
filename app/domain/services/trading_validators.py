@@ -83,8 +83,14 @@ class TradingValidator:
 
         max_position = capital * max_position_percent
 
+        # Sizing prices the order on the signal bar; validation sees the fill
+        # price (slippage, next-bar open). A position sized exactly at the cap
+        # legitimately drifts a fraction over it by fill time — tolerate that
+        # drift, nothing more.
+        fill_drift_tolerance = Decimal("1.005")
+
         # CRITICAL: Check if position size exceeds maximum allowed
-        if position_size > max_position:
+        if position_size > max_position * fill_drift_tolerance:
             raise ValueError(
                 f"Position size ${position_size:.2f} exceeds maximum "
                 f"allowed ${max_position:.2f} ({max_position_percent * 100:.1f}% of capital). "

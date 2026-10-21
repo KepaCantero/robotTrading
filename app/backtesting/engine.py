@@ -206,6 +206,10 @@ class BacktestEngine:
         # Set starting capital for kill switch calculations (Hull Rule 13.1)
         self.compliance_engine.set_starting_capital(float(config.initial_capital))
 
+        #: sizing base shared by all BUYs of one trading day (see run loop)
+        self._sizing_capital: Decimal | None = None
+        self._sizing_day = None
+
         logger.info(f"BacktestEngine initialized for {strategy_name} with COMPLIANCE ENGINE")
 
     # ==========================================================================
@@ -400,6 +404,14 @@ class BacktestEngine:
         strategy_stats: dict[str, dict[str, int]] = {}
 
         for md in market_data:
+            # Sizing base per trading day: simultaneous buys (rebalance day of
+            # a cross-sectional strategy) must each size the SAME portfolio —
+            # sizing on post-fill capital deployed only 1-(1-r)^n of intended
+            day = md.timestamp.date()
+            if day != self._sizing_day:
+                self._sizing_day = day
+                self._sizing_capital = None
+
             # Execute signals matched on a previous bar of this symbol at the
             # OPEN of the current bar (t+1 execution, prevents look-ahead bias)
             self._execute_pending_signals(md)
@@ -565,6 +577,8 @@ class BacktestEngine:
         self.equity_tracker.reset()
         self.last_known_prices.clear()
         self._pending_signals.clear()
+        self._sizing_capital = None
+        self._sizing_day = None
 
     def _execute_learning_retraining(
         self, market_data: Quote, all_market_data: list[Quote]
@@ -815,10 +829,15 @@ class BacktestEngine:
             # max_position_size must govern: without it the sizer falls back
             # to the compliance singleton default (10%), silently capping
             # every strategy at ~8% per position and leaving most capital idle.
+            # Base: the FIRST buy of the trading day snapshots the portfolio
+            # (after same-day sells, if any); the rest of the day's buys size
+            # that same portfolio instead of the post-fill remains.
+            if self._sizing_capital is None:
+                self._sizing_capital = self.capital
             estimated_quantity = self.compliance_engine.calculate_position_size(
                 symbol=signal.symbol,
                 price=current_price,
-                capital=self.capital,
+                capital=self._sizing_capital,
                 confidence=signal.confidence if hasattr(signal, "confidence") else 100.0,
                 max_position_ratio=float(self.config.max_position_size),
             )
@@ -864,6 +883,9 @@ class BacktestEngine:
                 close_position_func=self._close_position,
                 validate_profitability_func=self._validate_trade_profitability,
                 position_size=estimated_quantity,  # Use quantity from ComplianceEngine
+                # the max-position-% check must use the day's portfolio (the
+                # sizing base), not post-fill cash — see _sizing_capital
+                validation_capital=self._sizing_capital,
             )
             if trade:
                 self.trades.append(trade)

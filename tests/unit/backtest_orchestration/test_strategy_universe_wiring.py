@@ -28,5 +28,10 @@ def test_per_symbol_strategy_unaffected_by_symbols():
 
 
 def test_without_symbols_defaults_are_kept():
+    from app.domain.strategies.dividend_core_satellite import DEFAULT_CORE, DEFAULT_SATELLITE
+
     strategy = BacktestOrchestrator()._build_strategy("dividend_tracking")
-    assert "VIG" in strategy.core_symbols
+    # v2 (agente paralelo): core global buy&hold — el contrato es "los
+    # defaults del módulo", no una lista concreta
+    assert strategy.core_symbols == list(DEFAULT_CORE)
+    assert strategy.satellite_symbols == list(DEFAULT_SATELLITE)

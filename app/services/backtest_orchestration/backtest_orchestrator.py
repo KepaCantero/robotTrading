@@ -302,11 +302,12 @@ class BacktestOrchestrator:
         if shared_strategy is not None:
             # estrategia cross-sectional: UNA instancia, timeline GLOBAL
             # intercalado por fecha (ver el universe completo en cada barra;
-            # alimentarla por bloques de símbolo rompería la cross-sección)
+            # alimentarla por bloques de símbolo rompería la cross-sección Y
+            # le daría look-ahead: un símbolo vería su futuro antes de que
+            # los demás tengan pasado)
+            quotes.sort(key=lambda q: (q.timestamp, q.symbol))
             signals.extend(
-                signal
-                for quote in sorted(quotes, key=lambda q: q.timestamp)
-                for signal in shared_strategy.generate_signals(quote)
+                signal for quote in quotes for signal in shared_strategy.generate_signals(quote)
             )
 
         if not quotes:
