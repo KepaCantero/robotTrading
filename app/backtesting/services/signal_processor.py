@@ -336,6 +336,24 @@ class SignalProcessor:
 
         # Validate trade using ComplianceEngine
         if trade_value > 0:
+            # capital ACTUAL de la estrategia (cash + posiciones valorizadas):
+            # usar el capital inicial como denominador hacía que la exposición
+            # nominal superara el tope al apreciar el equity y el envelope
+            # rechazaba BUYs a mitad de run.
+            current_strategy_capital = capital + sum(
+                qty * (last_known_prices.get(sym, Decimal("0")) or Decimal("0"))
+                for sym, qty in positions.items()
+            )
+            # estrategia declara su exposición objetivo (metadato de la señal):
+            # el envelope la respeta hasta ese tope; sin declaración, 80%.
+            strategy_cap = self.config.initial_capital
+            hint = (signal.metadata or {}).get("target_exposure") if signal.metadata else None
+            max_strategy_pct = None
+            if hint:
+                try:
+                    max_strategy_pct = Decimal(str(hint))
+                except Exception:
+                    max_strategy_pct = None
             is_valid, reason = self.compliance_engine.validate_risk_envelope(
                 symbol=signal.symbol,
                 trade_value=trade_value,
@@ -343,7 +361,8 @@ class SignalProcessor:
                 current_portfolio=current_portfolio_exposure,
                 strategy_positions=strategy_positions,
                 total_capital=self.total_portfolio_capital,
-                strategy_capital=self.config.initial_capital,
+                strategy_capital=max(current_strategy_capital, strategy_cap),
+                max_strategy_exposure_pct=max_strategy_pct,
             )
 
             if not is_valid:

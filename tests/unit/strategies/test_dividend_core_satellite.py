@@ -81,12 +81,14 @@ class TestDividendCoreSatellite:
         assert "CORE1" in sells and "CORE2" in sells, "el crash debe expulsar al núcleo"
         assert defensive_in, "con el núcleo apagado entra el refugio"
 
-    def test_never_buys_negative_momentum(self) -> None:
+    def test_never_buys_negative_momentum_satellite(self) -> None:
+        """El SATÉLITE nunca se compra con momentum negativo; el núcleo sí (buy&hold)."""
         s = make()
         down = [100 * (0.998**i) for i in range(70)]  # -13%
         trades = feed(s, {"CORE1": down, "CORE2": down, "SAT1": down, "DEF": [100] * 70})
         buys = {sym for sym, side in trades if side == "buy"}
-        assert not (buys & {"CORE1", "CORE2", "SAT1"}), "momentum negativo nunca se compra"
+        assert "SAT1" not in buys, "momentum negativo nunca se compra en el satélite"
+        assert "CORE1" in buys and "CORE2" in buys, "el núcleo es buy&hold, se compra igual"
 
 
 class TestWarmupDoesNotCommitPhantomHoldings:
@@ -107,10 +109,10 @@ class TestWarmupDoesNotCommitPhantomHoldings:
         warmup = feed(
             s,
             {
-                "CORE1": [100 + i for i in range(31)],
-                "CORE2": [100 + i for i in range(31)],
-                "SAT1": [50 + i for i in range(31)],
-                "DEF": [40 + i for i in range(31)],
+                "CORE1": [100 + i for i in range(30)],  # días 0-29: TODO antes de valid_from
+                "CORE2": [100 + i for i in range(30)],
+                "SAT1": [50 + i for i in range(30)],
+                "DEF": [40 + i for i in range(30)],
             },
         )
         assert warmup == [], "warm-up no puede emitir señales"
