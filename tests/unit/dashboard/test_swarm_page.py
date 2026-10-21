@@ -333,3 +333,32 @@ class TestPeriodHelpers:
     def test_spanish_provinces_cover_all_52(self):
         assert len(swarm.SPANISH_PROVINCES) == 52
         assert "Madrid" in swarm.SPANISH_PROVINCES
+
+
+class TestT21StepDialog:
+    """El output de T2.1 es el InvestmentProfile PLANO (claves top-level);
+    el diálogo esperaba payload['profile'] y mostraba '?' en todos los tiles."""
+
+    FLAT = {
+        "profile_id": "p1",
+        "capital_tier": "medium",
+        "risk_profile": "aggressive",
+        "enabled_modules": [{"name": "mean_reversion", "enabled": True}],
+        "required_annual_return_pct": "12.5",
+        "position_size_pct": "8",
+    }
+
+    def test_flat_profile_payload_is_used_directly(self):
+        profile = swarm.t21_profile_payload(self.FLAT)
+        assert profile["capital_tier"] == "medium"
+        assert profile["risk_profile"] == "aggressive"
+        assert len(profile["enabled_modules"]) == 1
+
+    def test_nested_result_wrapper_is_tolerated(self):
+        profile = swarm.t21_profile_payload({"profile": self.FLAT, "success": True})
+        assert profile["capital_tier"] == "medium"
+
+    def test_garbage_payload_renders_empty_not_crash(self):
+        assert swarm.t21_profile_payload(None) == {}
+        assert swarm.t21_profile_payload("boom") == {}
+        assert swarm.t21_profile_payload({}) == {}

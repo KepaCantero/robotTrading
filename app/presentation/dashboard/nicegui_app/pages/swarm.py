@@ -740,6 +740,19 @@ def _chip(text: str, klass: str = "c-idle") -> ui.label:
     return ui.label(str(text)).classes(f"sc-chip {klass}")
 
 
+def t21_profile_payload(payload: Any) -> dict:
+    """Normalise the T2.1 step payload to the InvestmentProfile dict.
+
+    The executor stores the profile ITSELF (flat: capital_tier, risk_profile,
+    enabled_modules, …) as the step output; the dialog used to expect it
+    nested under "profile" and rendered "?" everywhere.
+    """
+    if not isinstance(payload, dict):
+        return {}
+    nested = payload.get("profile")
+    return nested if isinstance(nested, dict) else payload
+
+
 def _render_step_visual(agent_id: str, payload: Any) -> None:
     """Friendly, chart-backed rendering of a step's output payload."""
     if not isinstance(payload, dict):
@@ -757,7 +770,7 @@ def _render_step_visual(agent_id: str, payload: Any) -> None:
             )
 
     elif agent_id == "t21":
-        profile = payload.get("profile") or {}
+        profile = t21_profile_payload(payload)
         modules = profile.get("enabled_modules") or []
         with ui.row().classes("w-full gap-sm wrap"):
             _metric_tile("Capital tier", profile.get("capital_tier", "?"), 0)
