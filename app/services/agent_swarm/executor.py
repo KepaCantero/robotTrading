@@ -348,9 +348,11 @@ class Capa2PipelineExecutor:
         ctx = _Ctx(request=request, target_monthly=self._resolve_target(request))
 
         if not request.symbols:
-            # sin selección manual: el universo se deriva del corpus de CSVs
-            # (escaneo costoso → hilo aparte para no bloquear el event loop)
-            auto = await asyncio.to_thread(auto_universe)
+            # sin selección manual: el universo se deriva del corpus de CSVs,
+            # consciente del objetivo (dividendos -> ETFs de dividendo del
+            # corpus; preservar capital -> defensivos) — escaneo costoso →
+            # hilo aparte para no bloquear el event loop
+            auto = await asyncio.to_thread(auto_universe, goal=request.objetivo_inversion)
             ctx.auto_symbols = auto.symbols
             ctx.auto_universe_summary = auto.summary()
             logger.info("Run %s %s", run_id, ctx.auto_universe_summary)

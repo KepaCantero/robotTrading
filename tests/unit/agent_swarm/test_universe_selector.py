@@ -58,6 +58,7 @@ class TestAutoUniverse:
         assert result.kept == 2
         assert result.dropped == {
             "unreadable": 0,
+            "out-of-goal": 0,
             "short-history": 1,
             "stale": 1,
             "illiquid": 1,
@@ -128,13 +129,31 @@ class TestExecutorWiring:
             dropped={"stale": 147},
             fallback_used=False,
         )
-        monkeypatch.setattr(executor_module, "auto_universe", lambda: fake)
+        monkeypatch.setattr(executor_module, "auto_universe", lambda **kw: fake)
 
         state = await Capa2PipelineExecutor().run(make_request())
 
         assert state.status == "completed"
         assert state.agents["t41"].input_payload["symbols"] == ["AAPL", "MSFT"]
         assert state.agents["t41"].warnings[0].startswith("auto universe")
+
+    async def test_goal_is_passed_to_auto_universe(self, monkeypatch):
+        seen = {}
+
+        def _capture(**kwargs):
+            seen.update(kwargs)
+            return AutoUniverseResult(
+                symbols=["SCHD"], scanned=1, kept=1, dropped={}, fallback_used=False
+            )
+
+        monkeypatch.setattr(executor_module, "auto_universe", _capture)
+
+        state = await Capa2PipelineExecutor().run(
+            make_request(objetivo_inversion="MAXIMIZAR_DIVIDENDOS")
+        )
+
+        assert state.status == "completed"
+        assert seen.get("goal") == "MAXIMIZAR_DIVIDENDOS"
 
     async def test_explicit_symbols_skip_auto_universe(self, monkeypatch):
         def _boom() -> None:
@@ -147,3 +166,107 @@ class TestExecutorWiring:
         assert state.status == "completed"
         assert state.agents["t41"].input_payload["symbols"] == ["AAPL"]
         assert not state.agents["t41"].warnings
+
+
+class TestGoalAwareUniverse:
+    def test_dividend_goal_restricts_to_curated_dividend_etfs(self, tmp_path):
+        for sym in ("SCHD", "VIG", "VYM", "DGRO", "DVY", "SDY", "NOBL", "PEY", "FDVV", "DLN"):
+            write_csv(tmp_path, sym, 700)
+        write_csv(tmp_path, "SPY", 700, volume=9_000_000)  # mucho más líquido
+        write_csv(tmp_path, "NVDA", 700, volume=9_000_000)
+
+        result = auto_universe(tmp_path, today=TODAY, goal="maximizar_dividendos")
+
+        assert set(result.symbols) <= {
+            "SCHD",
+            "VIG",
+            "VYM",
+            "DGRO",
+            "DVY",
+            "SDY",
+            "NOBL",
+            "PEY",
+            "FDVV",
+            "DLN",
+        }
+        assert result.goal_filter == "MAXIMIZAR_DIVIDENDOS"
+        assert "SPY" not in result.symbols
+        assert "out-of-goal" in result.dropped
+
+    def test_capital_preservation_goal_picks_defensive_names(self, tmp_path):
+        for sym in ("BND", "TLT", "LQD", "AGG", "IEF", "GLD", "JNJ", "XLU", "VPU", "KO"):
+            write_csv(tmp_path, sym, 700)
+        write_csv(tmp_path, "TSLA", 700, volume=9_000_000)
+
+        result = auto_universe(tmp_path, today=TODAY, goal="CAPITAL_PRESERVATION")
+
+        assert "TSLA" not in result.symbols
+        assert {"BND", "TLT", "GLD"} <= set(result.symbols)
+
+    def test_goal_with_too_few_survivors_falls_back_to_generic(self, tmp_path):
+        write_csv(tmp_path, "SCHD", 700)
+        write_csv(tmp_path, "SPY", 700, volume=5_000_000)
+        write_csv(tmp_path, "QQQ", 700, volume=4_000_000)
+
+        result = auto_universe(tmp_path, k=2, today=TODAY, goal="MAXIMIZAR_DIVIDENDOS")
+
+        assert result.goal_filter == ""  # recaída en pantalla genérica
+        assert result.symbols == ["SPY", "QQQ"]
+
+    def test_unknown_goal_is_generic(self, tmp_path):
+        write_csv(tmp_path, "SPY", 700)
+
+        result = auto_universe(tmp_path, today=TODAY, goal="MAXIMIZAR_CAPITAL")
+
+        assert result.goal_filter == ""
+        assert result.symbols == ["SPY"]
+
+
+class TestFamilyDiversification:
+    def test_generic_screen_caps_us_index_copies(self, tmp_path):
+        # 5 ETFs del mismo índice, más líquidos que el resto
+        for i, sym in enumerate(("SPY", "IVV", "VOO", "DIA", "IWM")):
+            write_csv(tmp_path, sym, 700, volume=9_000_000 - i)
+        # suficientes singletons (sin familia) para llenar k sin relleno diferido
+        for sym, vol in {
+            "GLD": 1_000_000,
+            "JPM": 900_000,
+            "KO": 800_000,
+            "CAT": 700_000,
+            "BA": 600_000,
+        }.items():
+            write_csv(tmp_path, sym, 700, volume=vol)
+
+        result = auto_universe(tmp_path, k=8, today=TODAY)
+
+        assert sum(1 for s in result.symbols if s in {"SPY", "IVV", "VOO", "DIA", "IWM"}) == 3
+        assert {"GLD", "JPM", "KO", "CAT", "BA"} <= set(result.symbols)
+        assert result.diversified is True
+
+    def test_deferred_over_cap_symbols_fill_remaining_slots(self, tmp_path):
+        for i, sym in enumerate(("SPY", "IVV", "VOO", "DIA", "IWM")):
+            write_csv(tmp_path, sym, 700, volume=9_000_000 - i)
+
+        result = auto_universe(tmp_path, k=5, today=TODAY)
+
+        assert len(result.symbols) == 5  # 3 capped + 2 deferred rellenan
+
+    def test_goal_filtered_screen_is_not_capped(self, tmp_path):
+        # sin tope de familia: son precisamente el universo elegido
+        for i, sym in enumerate(
+            ("SCHD", "VIG", "VYM", "DGRO", "DVY", "SDY", "NOBL", "PEY", "FDVV", "DLN")
+        ):
+            write_csv(tmp_path, sym, 700, volume=5_000_000 - i)
+
+        result = auto_universe(tmp_path, k=10, today=TODAY, goal="MAXIMIZAR_DIVIDENDOS")
+
+        assert len(result.symbols) == 10
+        assert result.diversified is False
+
+    def test_family_of_known_shapes(self):
+        from app.services.agent_swarm.universe_selector import family_of
+
+        assert family_of("SPY") == "us-index"
+        assert family_of("7203.T") == "japan"
+        assert family_of("ITX.MC") == "europe"
+        assert family_of("WEIRDTOCKER") == "WEIRDTOCKER"

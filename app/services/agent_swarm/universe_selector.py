@@ -3,7 +3,11 @@
 When a swarm request carries no explicit symbols the universe is derived
 from the CSVs in ``data/historical``: a deterministic quality screen
 (minimum history, freshness, liquidity floor) followed by a top-K ranking
-by average dollar volume. Every decision the screen makes is reported
+by average dollar volume. With a recognised investment goal the screen is
+first restricted to that goal's curated set (dividend ETFs, defensive
+names); the generic ranking caps symbols per structural family so a
+liquidity top doesn't collapse into the same mega-caps and three copies
+of the S&P 500. Every decision the screen makes is reported
 (scanned / kept / dropped per reason) so logs and the UI can show exactly
 what was picked and why.
 
@@ -62,6 +66,129 @@ LIQUIDITY_WINDOW = 252
 #: columns read from each CSV — nothing else enters memory
 _USECOLS = ["date", "Close", "Volume"]
 
+#: objective-aware candidate sets (intersected with the corpus; symbols
+#: without a local CSV simply never surface). Curated, well-known tickers —
+#: the corpus holds hundreds of them but carries no category metadata.
+DIVIDEND_ETFS = {
+    "SCHD",
+    "VIG",
+    "VYM",
+    "DGRO",
+    "DVY",
+    "HDV",
+    "SDY",
+    "NOBL",
+    "PEY",
+    "SPHD",
+    "FDL",
+    "DLN",
+    "DVYE",
+    "VIGI",
+    "RDVI",
+    "FDVV",
+    "DTD",
+    "DON",
+    "IDV",
+    "DWX",
+    "SDIV",
+    "SPYD",
+    "SCHY",
+    "DTN",
+    "OEDV",
+    "EMD",
+    "HIY",
+    "FVD",
+    "DGRS",
+    "TDVD",
+}
+DEFENSIVE_SYMBOLS = {
+    "BND",
+    "AGG",
+    "IEF",
+    "TLT",
+    "LQD",
+    "SCHZ",
+    "BIV",
+    "VGIT",
+    "VCSH",
+    "MUB",
+    "GLD",
+    "XLV",
+    "XLP",
+    "XLU",
+    "VPU",
+    "VDC",
+    "VHT",
+    "JNJ",
+    "PG",
+    "KO",
+    "WMT",
+    "MCD",
+}
+
+#: goal (as the UI sends it) → corpus filter
+GOAL_FILTERS: dict[str, set[str]] = {
+    "MAXIMIZAR_DIVIDENDOS": DIVIDEND_ETFS,
+    "CAPITAL_PRESERVATION": DEFENSIVE_SYMBOLS,
+}
+
+#: minimum goal-filtered survivors before falling back to the generic screen
+GOAL_FILTER_MIN = 8
+
+#: structural families for the generic screen: a raw liquidity ranking
+#: always surfaces the same mega-caps and three copies of the S&P 500
+#: (SPY/IVV/VOO). Capping per family forces diversity without abandoning
+#: the liquidity-first ordering. Symbols in no family are never capped.
+_FAMILIES: dict[str, frozenset[str]] = {
+    frozenset({"SPY", "IVV", "VOO", "QQQ", "DIA", "IWM", "RSP", "VTI", "EFA", "EEM"}): "us-index",
+    frozenset(
+        {"AAPL", "MSFT", "GOOGL", "META", "AMZN", "NVDA", "TSLA", "AVGO", "ORCL", "CRM"}
+    ): "mega-tech",
+    frozenset({"SMH", "SOXX", "AMD", "INTC", "TSM", "MU"}): "semiconductors",
+    frozenset({"TLT", "LQD", "BND", "AGG", "IEF", "BIV", "SHY", "VGIT", "VCSH"}): "bonds",
+    frozenset({"GLD", "SLV", "USO", "DBC", "GSG"}): "commodities",
+    frozenset(
+        {
+            "XLF",
+            "XLE",
+            "XLK",
+            "XLV",
+            "XLI",
+            "XLP",
+            "XLU",
+            "XLY",
+            "XLB",
+            "XLC",
+            "VDC",
+            "VCR",
+            "VDE",
+            "VFH",
+            "VHT",
+            "VIS",
+            "VGT",
+            "VAW",
+            "VNQ",
+            "VPU",
+            "VOX",
+        }
+    ): "sector-etfs",
+    frozenset({"IBEX", "SAN", "BBVA"}): "spain",
+}
+_FAMILY_BY_SYMBOL = {sym: fam for syms, fam in _FAMILIES.items() for sym in syms}
+#: max symbols kept per family in the generic screen
+FAMILY_CAP = 3
+
+
+def family_of(symbol: str) -> str:
+    """Structural family of a symbol (own name = uncapped singleton)."""
+    if symbol in _FAMILY_BY_SYMBOL:
+        return _FAMILY_BY_SYMBOL[symbol]
+    if symbol.endswith(".T"):
+        return "japan"
+    if "." in symbol:  # .MC .DE .PA .AS … European exchanges
+        return "europe"
+    return symbol
+
 
 @dataclass(frozen=True)
 class CorpusSymbol:
@@ -95,9 +222,14 @@ class AutoUniverseResult:
     kept: int
     dropped: dict[str, int]
     fallback_used: bool
+    goal_filter: str = ""
+    diversified: bool = False
 
     def summary(self) -> str:
-        one_liner = "auto universe: "
+        one_liner = "auto universe"
+        if self.goal_filter:
+            one_liner += f" ({self.goal_filter} goal filter)"
+        one_liner += ": "
         if self.fallback_used:
             return one_liner + f"corpus unusable ({self.scanned} CSVs) -> fallback DEFAULT_UNIVERSE"
         dropped = ", ".join(
@@ -107,7 +239,9 @@ class AutoUniverseResult:
             one_liner
             + f"{self.scanned} CSVs scanned -> {self.kept} valid"
             + (f" (dropped: {dropped})" if dropped else "")
-            + f" -> top {len(self.symbols)} by liquidity"
+            + f" -> top {len(self.symbols)}"
+            + (" by liquidity" if not self.goal_filter else " by liquidity in-goal")
+            + (" with family cap" if self.diversified else "")
         )
 
 
@@ -167,26 +301,36 @@ def auto_universe(
     data_dir: Path | str = DEFAULT_DATA_DIR,
     k: int = AUTO_UNIVERSE_SIZE,
     today: date | None = None,
+    goal: str | None = None,
 ) -> AutoUniverseResult:
     """Derive the run universe from the corpus (deterministic).
 
     Filters: enough history (``MIN_BARS``), fresh data (``MAX_STALE_DAYS``),
-    enough liquidity (``MIN_DOLLAR_VOLUME``); then ranks the survivors by
-    average dollar volume (ties broken alphabetically) and keeps the top
-    ``k``. Falls back to ``DEFAULT_UNIVERSE`` — loudly — when nothing
-    survives the screen.
+    enough liquidity (``MIN_DOLLAR_VOLUME``). With a recognised ``goal`` the
+    candidates are first restricted to that goal's curated set (dividend
+    ETFs / defensive names); too few survivors falls back to the generic
+    screen. The generic ranking caps ``FAMILY_CAP`` symbols per structural
+    family (a raw liquidity top always surfaces the same mega-caps and
+    three copies of the S&P 500). Falls back to ``DEFAULT_UNIVERSE`` —
+    loudly — when nothing survives the screen.
     """
     effective_today = today or date.today()
     scan = scan_corpus(Path(data_dir))
+    goal_key = (goal or "").upper().strip()
+    goal_filter = GOAL_FILTERS.get(goal_key)
+    goal_label = goal_key if goal_filter else ""
     dropped: dict[str, int] = {
         "unreadable": len(scan.unreadable),
+        "out-of-goal": 0,
         "short-history": 0,
         "stale": 0,
         "illiquid": 0,
     }
     candidates: list[CorpusSymbol] = []
     for sym in scan.symbols:
-        if sym.bars < MIN_BARS:
+        if goal_filter and sym.symbol not in goal_filter:
+            dropped["out-of-goal"] += 1
+        elif sym.bars < MIN_BARS:
             dropped["short-history"] += 1
         elif (effective_today - sym.last_date).days > MAX_STALE_DAYS:
             dropped["stale"] += 1
@@ -194,6 +338,14 @@ def auto_universe(
             dropped["illiquid"] += 1
         else:
             candidates.append(sym)
+
+    if goal_filter and len(candidates) < GOAL_FILTER_MIN:
+        logger.warning(
+            "Auto universe: only %d %s candidates in corpus -> generic screen",
+            len(candidates),
+            goal_key,
+        )
+        return auto_universe(data_dir=data_dir, k=k, today=today, goal=None)
 
     scanned = len(scan.symbols) + len(scan.unreadable)
     if not candidates:
@@ -211,11 +363,37 @@ def auto_universe(
         )
 
     ranked = sorted(candidates, key=lambda s: (-s.avg_dollar_volume, s.symbol))
-    picked = [s.symbol for s in ranked[:k]]
+    if goal_filter:
+        picked = [s.symbol for s in ranked[:k]]
+    else:
+        picked = _diversify(ranked, k)
     return AutoUniverseResult(
         symbols=picked,
         scanned=scanned,
         kept=len(candidates),
         dropped=dropped,
         fallback_used=False,
+        goal_filter=goal_label,
+        diversified=not goal_filter,
     )
+
+
+def _diversify(ranked: list[CorpusSymbol], k: int) -> list[str]:
+    """Top-k by liquidity with at most ``FAMILY_CAP`` per structural family.
+
+    Deferred (over-cap) symbols fill the remaining slots in rank order so
+    the result still has ``k`` names when the corpus allows it.
+    """
+    picked: list[str] = []
+    deferred: list[str] = []
+    counts: dict[str, int] = {}
+    for sym in ranked:
+        family = family_of(sym.symbol)
+        if counts.get(family, 0) >= FAMILY_CAP:
+            deferred.append(sym.symbol)
+            continue
+        counts[family] = counts.get(family, 0) + 1
+        picked.append(sym.symbol)
+        if len(picked) == k:
+            return picked
+    return [*picked, *deferred][:k]
