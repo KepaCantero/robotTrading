@@ -48,8 +48,8 @@ DEFAULT_PRIORITY = 80.0
 #: US solapados (91.7% misma exposición). Los precios son AJUSTADOS: el retorno
 #: ya incluye distribuciones; la distinción acumulativo/reparto es fiscal y
 #: vive en la documentación de usuario, no en el motor.
-DEFAULT_CORE = ["VT"]
-DEFAULT_SATELLITE = ["SCHD", "VIG", "VYMI"]
+DEFAULT_CORE = ["SCHD"]
+DEFAULT_SATELLITE = ["VIG", "VYMI", "DVY"]
 DEFAULT_DEFENSIVE = "BND"
 
 #: clasificación por rol cuando la estrategia recibe el universo del run:
