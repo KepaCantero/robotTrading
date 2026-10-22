@@ -52,6 +52,7 @@ class EquityCurveTracker:
         # State
         self.equity_curve: list[tuple[datetime, Decimal]] = []
         self.max_drawdown = Decimal("0")
+        self.max_drawdown_pct = Decimal("0")
         self.peak_equity = initial_capital
 
     def update_equity_curve(
@@ -104,11 +105,17 @@ class EquityCurveTracker:
         if portfolio_value > self.peak_equity:
             self.peak_equity = portfolio_value
 
-        # Calculate drawdown as negative absolute value (not percentage)
-        # max_drawdown must be <= 0 per Pydantic validation
+        # Track the DEEPEST percentage drawdown directly, measured against
+        # the running peak at that moment. Storing only dollar depth and
+        # dividing later by the FINAL peak understates any drawdown that
+        # happened before the account grew further (e.g. -28% in 2020
+        # read as -15% once equity doubled by 2026). The dollar depth is
+        # kept from the same point so abs/pct stays coherent.
         if self.peak_equity > 0:
             current_drawdown = portfolio_value - self.peak_equity  # Negative or zero
-            if current_drawdown < self.max_drawdown:
+            dd_pct = current_drawdown / self.peak_equity * Decimal("100")
+            if dd_pct < self.max_drawdown_pct:
+                self.max_drawdown_pct = dd_pct
                 self.max_drawdown = current_drawdown
 
     def get_equity_curve(self) -> list[tuple[datetime, Decimal]]:
@@ -134,14 +141,10 @@ class EquityCurveTracker:
         Get maximum drawdown as percentage.
 
         Returns:
-            Maximum drawdown percentage (negative value)
+            Maximum drawdown percentage (negative value, measured against
+            the running peak at the deepest point)
         """
-        if self.peak_equity > 0:
-            return min(
-                Decimal("0"),
-                (self.max_drawdown / self.peak_equity * 100),
-            )
-        return Decimal("0")
+        return self.max_drawdown_pct
 
     def get_peak_equity(self) -> Decimal:
         """
@@ -182,6 +185,7 @@ class EquityCurveTracker:
         """Reset equity curve state."""
         self.equity_curve.clear()
         self.max_drawdown = Decimal("0")
+        self.max_drawdown_pct = Decimal("0")
         self.peak_equity = self.initial_capital
 
     def _get_entry_price_fallback(

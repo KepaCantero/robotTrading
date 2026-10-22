@@ -360,7 +360,12 @@ class SignalProcessor:
                 strategy_name=self.strategy_name,
                 current_portfolio=current_portfolio_exposure,
                 strategy_positions=strategy_positions,
-                total_capital=self.total_portfolio_capital,
+                # equity marcado a mercado (cash + posiciones valorizadas),
+                # con el capital externo multi-estrategia como suelo: un
+                # denominador congelado en el capital inicial hacía que el
+                # propio crecimiento de la cartera disparara el 95% y el
+                # envelope bloqueara todos los BUYs para siempre.
+                total_capital=max(current_strategy_capital, self.total_portfolio_capital),
                 strategy_capital=max(current_strategy_capital, strategy_cap),
                 max_strategy_exposure_pct=max_strategy_pct,
             )

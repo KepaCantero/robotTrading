@@ -352,6 +352,16 @@ class BacktestOrchestrator:
         # nunca llamaba — los veredictos salían sin validación out-of-sample).
         gate = self._walk_forward_gate(engine_result, engine.config, probe)
         benchmark = self._load_benchmark(config, loader, start_dt, end_dt)
+        dividend_bench = self._load_dividend_benchmark(config, loader, start_dt, end_dt)
+        if dividend_bench and benchmark:
+            # para dividendos, el excess vs SPY es informativo pero el
+            # vs equal-weight del propio universo es el benchmark honesto
+            benchmark["universe_ew_return_pct"] = dividend_bench["return_pct"]
+            benchmark["excess_vs_universe_ew"] = (
+                round(float(engine_result.total_return) - dividend_bench["return_pct"], 2)
+                if engine_result.total_return is not None
+                else None
+            )
 
         return self._map_engine_result(config, engine_result, start_dt, end_dt, gate, benchmark)
 
@@ -361,6 +371,55 @@ class BacktestOrchestrator:
     #: a benchmark "covers" the window if its first quote falls within this
     #: fraction of the span from the requested start
     _BENCHMARK_COVERAGE_TOLERANCE = 0.05
+
+    def _load_dividend_benchmark(self, config, loader, start_dt, end_dt) -> dict | None:
+        """Benchmark honesto para dividendos: equal-weight buy&hold del universo.
+
+        SPY es un índice de mega-caps tech; para una cartera de dividendos
+        el punto de comparación correcto es "simplemente mantener este mismo
+        universo equal-weight" — si la rotación activa no bate al hold
+        pasivo del propio universo, no aporta valor.
+        """
+
+        symbols = list(config.symbols or [])
+        if len(symbols) < 2:
+            return None
+
+        curves = []
+        for sym in symbols[:6]:  # máximo 6 para rendimiento
+            try:
+                raw = loader.load_market_data(sym, start_dt, end_dt, "1d", "csv")
+                closes = sorted((q.timestamp, float(q.close if q.close else q.last)) for q in raw)
+                if len(closes) < 10:
+                    continue
+                curves.append(closes)
+            except Exception:
+                continue
+
+        if len(curves) < 2:
+            return None
+
+        # equal-weight: normalizar cada curva a 100 y promediar
+        import collections
+
+        by_ts = collections.defaultdict(list)
+        for closes in curves:
+            base = closes[0][1]
+            for ts, px in closes:
+                by_ts[ts].append(px / base * 100.0)
+
+        merged = sorted(by_ts.items())
+        curve = [(ts, sum(vals) / len(vals)) for ts, vals in merged]
+        if not curve or curve[0][1] <= 0:
+            return None
+
+        ret_pct = (curve[-1][1] / curve[0][1] - 1) * 100
+        sampled = curve[:: max(1, len(curve) // 250)]
+        return {
+            "symbol": "UNIVERSE-EW",
+            "return_pct": round(ret_pct, 2),
+            "curve": [(ts.isoformat(), round(v, 2)) for ts, v in sampled],
+        }
 
     def _load_benchmark(self, config, loader, start_dt, end_dt) -> dict | None:
         """Buy&hold reference over the same window (default SPY).
@@ -550,11 +609,18 @@ class BacktestOrchestrator:
         else:
             annual_return = Decimal("-100")
 
-        # daily returns from the equity curve → volatility + VaR(95)
+        # daily returns from the equity curve → volatility + VaR(95). One
+        # point per DAY (last quote of the day): the raw curve holds one
+        # point per symbol per day and per-quote "returns" are same-day
+        # re-markings that understate volatility.
+        by_day: dict[object, Decimal] = {}
+        for point in engine_result.equity_curve or []:
+            by_day[point[0]] = Decimal(str(point[1]))
+        daily_equity = list(by_day.values())
         daily_returns = [
-            (equity[i] / equity[i - 1] - Decimal("1")) * Decimal("100")
-            for i in range(1, len(equity))
-            if equity[i - 1] > 0
+            (daily_equity[i] / daily_equity[i - 1] - Decimal("1")) * Decimal("100")
+            for i in range(1, len(daily_equity))
+            if daily_equity[i - 1] > 0
         ]
         if len(daily_returns) >= 2:
             mean_ret = sum(daily_returns) / Decimal(len(daily_returns))
@@ -580,7 +646,10 @@ class BacktestOrchestrator:
             sharpe_ratio=_metric(performance.sharpe_ratio).quantize(Decimal("0.01")),
             sortino_ratio=_metric(performance.sortino_ratio).quantize(Decimal("0.01")),
             calmar_ratio=_metric(performance.calmar_ratio).quantize(Decimal("0.01")),
-            max_drawdown_pct=_metric(performance.max_drawdown).quantize(Decimal("0.01")),
+            # percent units ([-100, 0]): performance.max_drawdown is a decimal
+            # fraction and putting it raw here showed "-0.18%" for a real
+            # -18/-28% drawdown on the dashboard.
+            max_drawdown_pct=_metric(performance.max_drawdown_percentage).quantize(Decimal("0.01")),
             volatility_pct=volatility,
             var_95_pct=var95,
             total_trades=len(trades),
@@ -664,8 +733,27 @@ class BacktestOrchestrator:
                 else None
             ),
             benchmark_curve=list((benchmark or {}).get("curve") or []),
+            universe_ew_return_pct=(
+                Decimal(str((benchmark or {}).get("universe_ew_return_pct"))).quantize(
+                    Decimal("0.01")
+                )
+                if (benchmark or {}).get("universe_ew_return_pct") is not None
+                else None
+            ),
+            excess_vs_universe_ew_pct=(
+                Decimal(str((benchmark or {}).get("excess_vs_universe_ew"))).quantize(
+                    Decimal("0.01")
+                )
+                if (benchmark or {}).get("excess_vs_universe_ew") is not None
+                else None
+            ),
             dividend_tax_drag_pct=self._estimate_dividend_tax_drag(
                 config.symbols, metrics.total_return_pct, start_dt, end_dt
+            ),
+            tax_efficiency=self._estimate_accumulating_advantage(
+                config.symbols,
+                metrics.total_return_pct,
+                max((end_dt - start_dt).days / 365.25, 1),
             ),
         )
 
@@ -690,6 +778,54 @@ class BacktestOrchestrator:
         "DTD": 0.030,
         "PEY": 0.045,
     }
+
+    @classmethod
+    def _estimate_accumulating_advantage(
+        cls, symbols: list, total_return_pct, years: float
+    ) -> dict | None:
+        """Compara fiscalidad de distribución vs acumulación UCITS (España).
+
+        ETFs de distribución (US: SCHD, VYM, DVY...) tributan cada dividendo
+        anualmente en la base del ahorro. ETFs UCITS de acumulación (Irlanda)
+        difieren el impuesto hasta la venta. El motor reporta ambos escenarios.
+        """
+        if not symbols or years <= 0:
+            return None
+        yields = [cls._DIVIDEND_YIELDS.get(sym, 0.0) for sym in symbols]
+        avg_yield = sum(yields) / len(yields)
+        if avg_yield <= 0:
+            return None
+
+        # Escenario distribución: IRPF anual sobre el componente de dividendo
+        annual_irpf = 0.19  # tramo conservador < 6k (base del ahorro)
+        dist_drag_annual = avg_yield * annual_irpf
+        # coste compuesto total del drag de distribución
+        dist_total_drag = (1 + dist_drag_annual) ** years - 1
+
+        # Escenario acumulación: IRPF solo al final sobre toda la ganancia
+        # (el diferimiento permite que el capital no pagado siga compuesto)
+        total_gain = float(total_return_pct) / 100 if total_return_pct else 0
+        if total_gain > 0:
+            accum_tax_at_exit = total_gain * 0.21  # 21% tramo medio
+            # en distribución, cada año pierdes el IRPF que podría componer
+            dist_effective_return = (1 + avg_yield * (1 - annual_irpf) + 0.005) ** years
+            accum_effective_return = (1 + avg_yield + 0.005) ** years * (1 - 0.21)
+        else:
+            accum_tax_at_exit = 0
+            dist_effective_return = 1.0
+            accum_effective_return = 1.0
+
+        return {
+            "avg_portfolio_yield_pct": round(avg_yield * 100, 2),
+            "distributing_drag_total_pct": round(dist_total_drag * 100, 2),
+            "accumulating_tax_at_exit_pct": round(accum_tax_at_exit * 100, 2),
+            "recommendation": (
+                "accumulating UCITS is more tax-efficient for long horizons "
+                "(dividends compound untaxed until exit)"
+                if accum_effective_return > dist_effective_return
+                else "distributing is acceptable for income-focused strategies"
+            ),
+        }
 
     @classmethod
     def _estimate_dividend_tax_drag(
@@ -806,8 +942,8 @@ class BacktestOrchestrator:
                     "consider adjusting parameters"
                 )
 
-            # Check max drawdown (should be < 20%)
-            if result.metrics.max_drawdown_pct > Decimal("20"):
+            # Check max drawdown (should stay above -20%)
+            if result.metrics.max_drawdown_pct < Decimal("-20"):
                 warnings.append(
                     f"⚠  High max drawdown ({result.metrics.max_drawdown_pct:.2f}%) - "
                     "consider adding risk management"

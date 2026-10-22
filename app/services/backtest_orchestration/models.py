@@ -200,8 +200,13 @@ class BacktestResult:
     benchmark_symbol: str = ""
     benchmark_return_pct: Decimal | None = None
     excess_return_pct: Decimal | None = None
+    #: equal-weight buy&hold of the run's own universe — the honest
+    #: benchmark for a dividend strategy (SPY is mega-cap tech)
+    universe_ew_return_pct: Decimal | None = None
+    excess_vs_universe_ew_pct: Decimal | None = None
     benchmark_curve: list[tuple[str, str]] = field(default_factory=list)
     dividend_tax_drag_pct: Decimal | None = None
+    tax_efficiency: dict | None = None
 
     # Execution timing
     execution_timestamp: datetime = field(default_factory=datetime.utcnow)
@@ -257,6 +262,16 @@ class BacktestResult:
             ),
             "excess_return_pct": (
                 str(self.excess_return_pct) if self.excess_return_pct is not None else None
+            ),
+            "universe_ew_return_pct": (
+                str(self.universe_ew_return_pct)
+                if self.universe_ew_return_pct is not None
+                else None
+            ),
+            "excess_vs_universe_ew_pct": (
+                str(self.excess_vs_universe_ew_pct)
+                if self.excess_vs_universe_ew_pct is not None
+                else None
             ),
             "benchmark_curve": [{"ts": ts, "value": v} for ts, v in self.benchmark_curve]
             if self.benchmark_curve

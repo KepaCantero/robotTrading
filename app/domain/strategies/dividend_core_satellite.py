@@ -49,15 +49,41 @@ DEFAULT_PRIORITY = 80.0
 #: ya incluye distribuciones; la distinción acumulativo/reparto es fiscal y
 #: vive en la documentación de usuario, no en el motor.
 DEFAULT_CORE = ["SCHD"]
-DEFAULT_SATELLITE = ["VIG", "VYMI", "DVY"]
+DEFAULT_SATELLITE = ["VYMI", "VYM", "DVY", "VIG"]
 DEFAULT_DEFENSIVE = "BND"
+
+#: yield anual estimado (%) para sesgar la selección hacia renta cuando
+#: el objetivo es "maximizar dividendos" — el satélite se rankea por
+#: yield × momentum, no solo momentum (que favorece growth de yield bajo)
+DIVIDEND_YIELDS: dict[str, float] = {
+    "VYMI": 4.2,
+    "SPYD": 4.5,
+    "DVY": 3.8,
+    "HDV": 3.7,
+    "PEY": 4.3,
+    "SCHD": 3.4,
+    "VYM": 3.0,
+    "SDY": 2.8,
+    "NOBL": 2.4,
+    "DLN": 2.0,
+    "VIG": 1.8,
+    "DGRO": 2.0,
+    "DGRW": 1.4,
+    "VT": 2.0,
+    "SPY": 1.3,
+    "BND": 3.2,
+    "IDV": 4.0,
+    "DWX": 3.5,
+    "FGD": 3.6,
+    "PID": 4.8,
+}
 
 #: clasificación por rol cuando la estrategia recibe el universo del run:
 #: high-yield conocido → satélite; renta fija conocida → refugio (primera
 #: que aparezca); el resto → núcleo. Universos sin satélites ni refugio
 #: (p.ej. el automático del dashboard) degradan a núcleo puro con filtro
 #: de momentum — mejor que fallar con cero señales.
-_HIGH_YIELD = {"VYM", "DVY", "PEY", "HDV", "SPHD"}
+_HIGH_YIELD = {"VYM", "DVY", "VYMI", "PEY", "HDV", "SPHD", "SPYD", "IDV", "DWX", "FGD", "PID"}
 _DEFENSIVE_CANDIDATES = ("BND", "BIV", "AGG", "IEF", "SCHZ")
 
 
@@ -91,10 +117,15 @@ class DividendCoreSatelliteStrategy(BaseStrategy):
                 config.get("satellite_symbols") or DEFAULT_SATELLITE
             )
             self.defensive_symbol: str = str(config.get("defensive_symbol") or DEFAULT_DEFENSIVE)
+        # Default: winner of the 2016-2026 sweep (13 combos, WF-gated):
+        # 12-2 momentum + semiannual rebalance → +103%/CAGR 7.35%/DD -24.5%
+        # against +84%/-27.9% of the old 12-1/quarterly. Rebalancing more
+        # often only adds whipsaw; slower (rb189+) escapes crashes too late
+        # (DD -34%, WF FAIL).
         self.lookback_days: int = int(config.get("lookback_days", 252))
-        self.skip_recent_days: int = int(config.get("skip_recent_days", 21))
-        self.satellite_top_k: int = int(config.get("satellite_top_k", 1))
-        self.rebalance_days: int = int(config.get("rebalance_days", 63))
+        self.skip_recent_days: int = int(config.get("skip_recent_days", 42))
+        self.satellite_top_k: int = int(config.get("satellite_top_k", 2))
+        self.rebalance_days: int = int(config.get("rebalance_days", 126))
         self.min_history: int = int(config.get("min_history", 200))
         # Exposición objetivo de la estrategia: el risk envelope la respeta
         # hasta este tope (estrategias sin declaración siguen al 80%)
@@ -147,7 +178,10 @@ class DividendCoreSatelliteStrategy(BaseStrategy):
         # target_exposure (con 1 símbolo VT ≈ 90%); núcleos multi-símbolo
         # reparten el target entre ellos. El satélite queda limitado por
         # lo que sobre del target tras el núcleo.
-        return round(min(0.9, self.target_exposure / max(1, len(self.core_symbols))), 2)
+        return round(
+            min(0.25, self.target_exposure / max(1, len(self.core_symbols) + self.satellite_top_k)),
+            2,
+        )
 
     def get_required_parameters(self) -> list[str]:
         return ["lookback_days", "skip_recent_days", "satellite_top_k", "rebalance_days"]
@@ -176,25 +210,33 @@ class DividendCoreSatelliteStrategy(BaseStrategy):
         return recent / old - 1.0
 
     def _target_holdings(self) -> set[str]:
-        """Núcleo buy&hold + satélite momentum + refugio solo en crash general.
+        """Núcleo buy&hold + satélite yield×momentum + refugio en crash general.
 
         El núcleo es COMPRA Y MANTENER (la evidencia 1985-2024 le da ~12.4%/yr
         Sharpe 0.88; testear el filtro momentum sobre el núcleo — tanto 12-1
         como SMA-10m de Faber — REDUJO el retorno aquí: 21% y 12% vs 82% del
-        buy&hold). El satélite sí filtra por momentum (es el tramo frágil) y
-        el refugio entra solo cuando TODO el universo (núcleo+satélite) está
-        en momentum negativo — crash general, no un mes malo del núcleo.
+        buy&hold). El satélite se rankea por YIELD × momentum positivo: para
+        un objetivo de renta, momentum solo favorece al growth de yield bajo
+        (VIG 1.8% desplaza a VYMI 4.2%) y yield solo ignora los crashes; el
+        producto exige ambas cosas. El refugio entra solo cuando TODO el
+        universo (núcleo+satélite) está en momentum negativo — crash general,
+        no un mes malo del núcleo.
         """
         target: set[str] = set(self.core_symbols)
 
-        # satélite: top-k al primer rebalance, luego hold (sin timing:
-        # testear el filtro momentum del satélite redujo retorno también)
-        sat_ranked = sorted(
-            ((s, m or 0.0) for s, m in ((x, self._momentum(x)) for x in self.satellite_symbols)),
+        # satélite: top-k por yield × momentum POSITIVO (una sola pasada —
+        # la versión anterior rankeaba dos veces y la primera admitía
+        # momentum negativo, que era justo lo que el filtro quería evitar)
+        ranked = sorted(
+            (
+                (sym, DIVIDEND_YIELDS.get(sym, 2.5) / 100.0 * mom)
+                for sym, mom in ((s, self._momentum(s)) for s in self.satellite_symbols)
+                if mom is not None and mom > 0
+            ),
             key=lambda kv: kv[1],
             reverse=True,
         )
-        target |= {s for s, _m in sat_ranked[: self.satellite_top_k]}
+        target |= {sym for sym, _score in ranked[: self.satellite_top_k]}
 
         # refugio: núcleo Y satélites todos en momentum negativo = crash general
         all_negative = all(
@@ -202,18 +244,6 @@ class DividendCoreSatelliteStrategy(BaseStrategy):
         )
         if all_negative and self._momentum(self.defensive_symbol) is not None:
             target = {self.defensive_symbol}
-
-        # satélite: solo top-k con momentum positivo
-        sat_ranked = sorted(
-            (
-                (s, m)
-                for s, m in ((x, self._momentum(x)) for x in self.satellite_symbols)
-                if m and m > 0
-            ),
-            key=lambda kv: kv[1],
-            reverse=True,
-        )
-        target |= {s for s, _m in sat_ranked[: self.satellite_top_k]}
 
         return target
 

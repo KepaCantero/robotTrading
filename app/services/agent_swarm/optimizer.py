@@ -27,6 +27,19 @@ PARAM_GRIDS: dict[str, dict[str, list[Any]]] = {
     "momentum_modular": {
         "lookback_period": [10, 20, 30],
     },
+    # bracketing the 2016-2026 sweep winner (lb252/sk42/rb126/k2) so the
+    # grid search explores its neighbourhood, not the whole space
+    "dividend_tracking": {
+        "lookback_days": [189, 252, 315],
+        "skip_recent_days": [21, 42, 63],
+        "rebalance_days": [63, 126, 189],
+        "satellite_top_k": [1, 2, 3],
+    },
+    "low_volatility": {
+        "lookback_days": [63, 126, 252],
+        "rebalance_days": [21, 63, 126],
+        "top_k": [3, 4, 5],
+    },
 }
 
 # Parameters the strategies accept directly in their config dict (fallback

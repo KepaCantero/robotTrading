@@ -411,6 +411,11 @@ class BacktestEngine:
             if day != self._sizing_day:
                 self._sizing_day = day
                 self._sizing_capital = None
+                # Kill switch is DAILY (Hull Rule 13.1): a new simulated day
+                # must clear the previous day's tally, otherwise the breaker
+                # latches forever once its own rejection stops new trades from
+                # ever rolling the day over.
+                self.compliance_engine.reset_daily_tracking()
 
             # Execute signals matched on a previous bar of this symbol at the
             # OPEN of the current bar (t+1 execution, prevents look-ahead bias)
@@ -794,8 +799,9 @@ class BacktestEngine:
         strategy_name = signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
 
         # COMPLIANCE: Check kill switch FIRST (Hull Rule 13.1)
-        # If kill switch is active, block all trading immediately
-        if self.compliance_engine.check_kill_switch():
+        # If kill switch is active, block new ENTRIES; exits stay allowed so
+        # the strategy can still de-risk on the very day the breaker trips.
+        if self.compliance_engine.check_kill_switch() and signal.signal_type != "SELL":
             logger.warning(
                 f"COMPLIANCE BLOCK: {signal.symbol} {signal.signal_type} (strategy={strategy_name}): "
                 f"Kill switch active - trade rejected"

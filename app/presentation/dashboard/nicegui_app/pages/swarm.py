@@ -471,14 +471,17 @@ def extract_result_metrics(results: dict) -> dict:
     metrics = inner.get("metrics") or {}
     recommendation = results.get("recommendation") or {}
     decision = results.get("deployment_decision") or {}
-    # max_drawdown_pct is a FRACTION by engine contract — % for display
-    drawdown = _as_float(metrics.get("max_drawdown_pct")) * 100
+    # max_drawdown_pct is already in percent units ([-100, 0])
+    drawdown = _as_float(metrics.get("max_drawdown_pct"))
     return {
         "total_return": metrics.get("total_return_pct"),
         "sharpe": metrics.get("sharpe_ratio"),
         "drawdown": round(drawdown, 2),
         "feasibility": backtest.get("feasibility_ratio"),
         "strategy": recommendation.get("recommended_strategy"),
+        "universe_ew": inner.get("universe_ew_return_pct"),
+        "excess_vs_universe_ew": inner.get("excess_vs_universe_ew_pct"),
+        "tax_efficiency": inner.get("tax_efficiency"),
         "verdict": decision.get("status"),
         "reasons": list(decision.get("reasons") or [])[:4],
         "next_steps": list(decision.get("next_steps") or [])[:3],
@@ -1977,6 +1980,25 @@ def render(
                         f"Market context: {metrics['benchmark_symbol']} buy&hold did "
                         f"{bench:+,.1f}% over the same period{excess_txt}."
                     ).classes("help q-mt-sm")
+
+                if metrics.get("universe_ew") is not None:
+                    ew = _as_float(metrics.get("universe_ew"))
+                    xs = metrics.get("excess_vs_universe_ew")
+                    xs_txt = f" ({_as_float(xs):+,.1f}% vs this strategy)" if xs is not None else ""
+                    ui.label(
+                        f"Dividend benchmark: holding this same universe equal-weight "
+                        f"did {ew:+,.1f}%{xs_txt} — the honest peer comparison for a "
+                        "dividend strategy."
+                    ).classes("help q-mt-xs")
+
+                te = metrics.get("tax_efficiency")
+                if isinstance(te, dict) and te.get("avg_portfolio_yield_pct") is not None:
+                    ui.label(
+                        f"Tax note (Spain): portfolio yield ~{te.get('avg_portfolio_yield_pct')}%/yr. "
+                        f"Distribution ETFs pay ~{te.get('distributing_drag_total_pct')}% IRPF drag "
+                        f"over the period vs {te.get('accumulating_tax_at_exit_pct')}% deferred "
+                        f"for accumulating UCITS — {te.get('recommendation')}."
+                    ).classes("help")
 
                 if metrics.get("dividend_tax_drag") is not None:
                     drag = _as_float(metrics.get("dividend_tax_drag"))

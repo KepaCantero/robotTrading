@@ -119,7 +119,7 @@ class TestExtractResultMetrics:
                     "metrics": {
                         "total_return_pct": "5.0",
                         "sharpe_ratio": "1.2",
-                        "max_drawdown_pct": "-0.1625",
+                        "max_drawdown_pct": "-16.25",
                     },
                     "symbols": ["SCHD", "VIG", "VYM"],
                 },
@@ -135,7 +135,7 @@ class TestExtractResultMetrics:
         metrics = swarm.extract_result_metrics(results)
         assert metrics["total_return"] == "5.0"
         assert metrics["sharpe"] == "1.2"
-        assert metrics["drawdown"] == -16.25  # fracción del motor → % al mostrar
+        assert metrics["drawdown"] == -16.25  # percent units, sin conversión
         assert metrics["symbols"] == ["SCHD", "VIG", "VYM"]
         assert metrics["feasibility"] == "1.39"
         assert metrics["strategy"] == "momentum_modular"

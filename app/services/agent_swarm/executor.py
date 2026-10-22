@@ -702,8 +702,18 @@ class Capa2PipelineExecutor:
         sharpe = float(getattr(metrics, "sharpe_ratio", 0) or 0) if metrics else 0.0
         max_dd = abs(float(getattr(metrics, "max_drawdown_pct", 0) or 0)) if metrics else 100.0
         feasibility = float(getattr(backtest, "feasibility_ratio", 0) or 0) if backtest else 0.0
-        excess = float(getattr(backtest, "excess_return_pct", 0) or 0) if backtest else -100.0
-        wf_passed = bool(getattr(backtest, "walk_forward_passed", False)) if backtest else False
+        # excess contra el benchmark HONESTO de la estrategia: para dividendos
+        # el equal-weight del propio universo (SPY es mega-cap tech y resta
+        # puntos estructuralmente); si no hay, el benchmark de mercado
+        payload = getattr(backtest, "backtest_result", None)
+        excess = -100.0
+        if payload is not None:
+            ew = getattr(payload, "excess_vs_universe_ew_pct", None)
+            mkt = getattr(payload, "excess_return_pct", None)
+            source = ew if ew is not None else mkt
+            if source is not None:
+                excess = float(source)
+        wf_passed = bool(getattr(payload, "walk_forward_passed", False)) if payload else False
 
         sharpe_pts = 30 if sharpe >= 1.0 else 20 if sharpe >= 0.5 else 10 if sharpe >= 0 else 0
         dd_pts = 25 if max_dd < 15 else 15 if max_dd < 25 else 5 if max_dd < 35 else 0
