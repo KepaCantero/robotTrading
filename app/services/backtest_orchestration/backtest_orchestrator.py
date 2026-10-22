@@ -357,6 +357,7 @@ class BacktestOrchestrator:
             # para dividendos, el excess vs SPY es informativo pero el
             # vs equal-weight del propio universo es el benchmark honesto
             benchmark["universe_ew_return_pct"] = dividend_bench["return_pct"]
+            benchmark["universe_ew_sharpe"] = dividend_bench.get("sharpe")
             benchmark["excess_vs_universe_ew"] = (
                 round(float(engine_result.total_return) - dividend_bench["return_pct"], 2)
                 if engine_result.total_return is not None
@@ -399,25 +400,45 @@ class BacktestOrchestrator:
         if len(curves) < 2:
             return None
 
-        # equal-weight: normalizar cada curva a 100 y promediar
+        # equal-weight de RETORNOS DIARIOS (rebalanceo diario): la media de
+        # los retornos de los símbolos que cotizaron cada día, capitalizada.
+        # Construir la curva por precios promedia saltos de composición (un
+        # símbolo que entra al índice mueve la media sin retorno real) y
+        # marcas parciales intradía — un "Sharpe" de 10.65 salía de ahí.
         import collections
 
-        by_ts = collections.defaultdict(list)
+        day_returns: dict[object, list[float]] = collections.defaultdict(list)
         for closes in curves:
-            base = closes[0][1]
-            for ts, px in closes:
-                by_ts[ts].append(px / base * 100.0)
+            for i in range(1, len(closes)):
+                prev_ts, prev_px = closes[i - 1]
+                ts, px = closes[i]
+                if ts != prev_ts and prev_px > 0:
+                    day_returns[ts].append(px / prev_px - 1)
 
-        merged = sorted(by_ts.items())
-        curve = [(ts, sum(vals) / len(vals)) for ts, vals in merged]
+        days = sorted(day_returns)
+        rets = [sum(day_returns[d]) / len(day_returns[d]) for d in days]
+        if not rets:
+            return None
+        equity = 100.0
+        curve: list[tuple[object, float]] = []
+        for d, r in zip(days, rets):
+            equity *= 1 + r
+            curve.append((d, equity))
         if not curve or curve[0][1] <= 0:
             return None
 
-        ret_pct = (curve[-1][1] / curve[0][1] - 1) * 100
+        ret_pct = (curve[-1][1] / 100.0 - 1) * 100
+        # Sharpe de la serie EW (rf=0: es referencia RELATIVA — el score
+        # compara el Sharpe de la estrategia contra el de SU universo)
+        mean = sum(rets) / len(rets)
+        var = sum((r - mean) ** 2 for r in rets) / max(1, len(rets) - 1)
+        sd = var**0.5
+        ew_sharpe = mean * (252**0.5) / sd if sd > 0 else 0.0
         sampled = curve[:: max(1, len(curve) // 250)]
         return {
             "symbol": "UNIVERSE-EW",
             "return_pct": round(ret_pct, 2),
+            "sharpe": round(ew_sharpe, 4),
             "curve": [(ts.isoformat(), round(v, 2)) for ts, v in sampled],
         }
 
@@ -738,6 +759,13 @@ class BacktestOrchestrator:
                     Decimal("0.01")
                 )
                 if (benchmark or {}).get("universe_ew_return_pct") is not None
+                else None
+            ),
+            universe_ew_sharpe=(
+                Decimal(str((benchmark or {}).get("universe_ew_sharpe"))).quantize(
+                    Decimal("0.0001")
+                )
+                if (benchmark or {}).get("universe_ew_sharpe") is not None
                 else None
             ),
             excess_vs_universe_ew_pct=(

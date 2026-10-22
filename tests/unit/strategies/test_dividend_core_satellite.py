@@ -1,8 +1,9 @@
 """Unit tests del core-satellite de dividendos (comportamiento clave).
 
 Con barras sintéticas deterministas: el núcleo en tendencia alcista se
-compra; cuando su momentum 12-1 se vuelve negativo se vende y el refugio
-defensivo entra; el satélite solo admite momentum positivo.
+compra; un oso PROFUNDO (momentum < core_exit_momentum) lo expulsa a
+efectivo; un bache superficial (2018-Q4/2022) NO lo expulsa; el satélite
+solo admite momentum positivo.
 """
 
 from __future__ import annotations
@@ -70,20 +71,42 @@ class TestDividendCoreSatellite:
         assert "CORE1" in buys and "CORE2" in buys
         assert "DEF" not in buys
 
-    def test_crash_exits_core_and_goes_defensive(self) -> None:
+    def test_deep_crash_exits_core_to_cash(self) -> None:
+        """El oso PROFUNDO (-55%) expulsa el núcleo a EFECTIVO — sin bono.
+
+        El refugio-a-BNO a cadencia de rebalance vendió en el suelo de 2022
+        y re-entró tras el rebote (77% vs 127% del mismo run sin él); el
+        refugio ahora es simplemente no mantener renta variable en oso
+        profundo, y no compra ningún defensivo.
+        """
         s = make()
         up = [100 * (1.002**i) for i in range(60)]
         crash = up + [up[-1] * (0.98**i) for i in range(1, 40)]  # -55% tras el pico
         flat = [100] * len(crash)
         trades = feed(s, {"CORE1": crash, "CORE2": crash, "SAT1": crash, "DEF": flat})
         sells = {sym for sym, side in trades if side == "sell"}
-        defensive_in = ("DEF", "buy") in trades
-        assert "CORE1" in sells and "CORE2" in sells, "el crash debe expulsar al núcleo"
-        assert defensive_in, "con el núcleo apagado entra el refugio"
+        buys = {sym for sym, side in trades if side == "buy"}
+        assert "CORE1" in sells and "CORE2" in sells, "el oso profundo debe expulsar al núcleo"
+        assert "DEF" not in buys, "no hay compra de defensivo: el refugio es efectivo"
+
+    def test_shallow_dip_keeps_core(self) -> None:
+        """Un bache superficial (-10%, tipo 2018-Q4/2022) NO expulsa el núcleo."""
+        s = make()
+        up = [100 * (1.002**i) for i in range(60)]
+        dip = up + [up[-1] * (0.994**i) for i in range(1, 20)]  # -11% tras el pico
+        flat = [100] * len(dip)
+        trades = feed(s, {"CORE1": dip, "CORE2": dip, "SAT1": dip, "DEF": flat})
+        sells = {sym for sym, side in trades if side == "sell"}
+        assert "CORE1" not in sells and "CORE2" not in sells, "bache superficial: el núcleo aguanta"
 
     def test_never_buys_negative_momentum_satellite(self) -> None:
-        """El SATÉLITE nunca se compra con momentum negativo; el núcleo sí (buy&hold)."""
+        """Con el filtro absoluto ACTIVADO (config), el satélite con momentum
+        negativo nunca se compra; el núcleo sí (buy&hold). Por defecto el
+        filtro está OFF (la evidencia 2016-2026: -20pp retorno por +6pp DD).
+        """
         s = make()
+        s.satellite_entry_momentum = 0.02
+        s.satellite_exit_momentum = -0.02
         down = [100 * (0.998**i) for i in range(70)]  # -13%
         trades = feed(s, {"CORE1": down, "CORE2": down, "SAT1": down, "DEF": [100] * 70})
         buys = {sym for sym, side in trades if side == "buy"}

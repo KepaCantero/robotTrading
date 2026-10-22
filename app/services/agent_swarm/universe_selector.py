@@ -70,8 +70,15 @@ _USECOLS = ["date", "Close", "Volume"]
 #: without a local CSV simply never surface). Curated, well-known tickers —
 #: the corpus holds hundreds of them but carries no category metadata.
 DIVIDEND_ETFS = {
-    "VT",  # núcleo global total-world: el objetivo dividendo NO debe ser 100% US
+    # SOLO ETFs de dividendo: VT (acciones globales totales, sin filtro de
+    # dividendo) diluye el factor con ~22% del capital — el vehículo
+    # internacional coherente es VYMI. BND tampoco: el refugio-a-BND a
+    # cadencia de rebalance vendió en el suelo de 2022 y re-entró tras el
+    # rebote (77% vs 127% del mismo run sin él).
     "SCHD",
+    "QDIV",  # iShares MSCI World Quality Dividend UCITS Acc — núcleo
+    # quality-global ACUMULADOR (fiscalmente superior en España); solo
+    # entra en ventanas donde su historia (desde 2018) alcanza
     "VIG",
     "VYM",
     "DGRO",

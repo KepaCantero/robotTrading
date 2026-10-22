@@ -203,6 +203,7 @@ class BacktestResult:
     #: equal-weight buy&hold of the run's own universe — the honest
     #: benchmark for a dividend strategy (SPY is mega-cap tech)
     universe_ew_return_pct: Decimal | None = None
+    universe_ew_sharpe: Decimal | None = None
     excess_vs_universe_ew_pct: Decimal | None = None
     benchmark_curve: list[tuple[str, str]] = field(default_factory=list)
     dividend_tax_drag_pct: Decimal | None = None
@@ -267,6 +268,9 @@ class BacktestResult:
                 str(self.universe_ew_return_pct)
                 if self.universe_ew_return_pct is not None
                 else None
+            ),
+            "universe_ew_sharpe": (
+                str(self.universe_ew_sharpe) if self.universe_ew_sharpe is not None else None
             ),
             "excess_vs_universe_ew_pct": (
                 str(self.excess_vs_universe_ew_pct)

@@ -27,12 +27,13 @@ PARAM_GRIDS: dict[str, dict[str, list[Any]]] = {
     "momentum_modular": {
         "lookback_period": [10, 20, 30],
     },
-    # bracketing the 2016-2026 sweep winner (lb252/sk42/rb126/k2) so the
-    # grid search explores its neighbourhood, not the whole space
+    # bracketing the 2016-2026 sweep winner (semiannual rebalance, hysteresis
+    # ±2% on satellites, deep-bear-only core guard) so the grid search
+    # explores its neighbourhood
     "dividend_tracking": {
-        "lookback_days": [189, 252, 315],
-        "skip_recent_days": [21, 42, 63],
         "rebalance_days": [63, 126, 189],
+        "skip_recent_days": [21, 42, 63],
+        "satellite_exit_momentum": [-0.05, -0.02, 0.0],
         "satellite_top_k": [1, 2, 3],
     },
     "low_volatility": {

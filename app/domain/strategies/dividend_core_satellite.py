@@ -30,7 +30,9 @@ alimenta así por `is_cross_sectional`).
 
 from __future__ import annotations
 
+import math
 from datetime import datetime
+from decimal import Decimal
 from typing import Any
 
 from app.domain.models.market_data import Quote
@@ -117,22 +119,46 @@ class DividendCoreSatelliteStrategy(BaseStrategy):
                 config.get("satellite_symbols") or DEFAULT_SATELLITE
             )
             self.defensive_symbol: str = str(config.get("defensive_symbol") or DEFAULT_DEFENSIVE)
-        # Default: winner of the 2016-2026 sweep (13 combos, WF-gated):
-        # 12-2 momentum + semiannual rebalance → +103%/CAGR 7.35%/DD -24.5%
-        # against +84%/-27.9% of the old 12-1/quarterly. Rebalancing more
-        # often only adds whipsaw; slower (rb189+) escapes crashes too late
-        # (DD -34%, WF FAIL).
         self.lookback_days: int = int(config.get("lookback_days", 252))
         self.skip_recent_days: int = int(config.get("skip_recent_days", 42))
         self.satellite_top_k: int = int(config.get("satellite_top_k", 2))
         self.rebalance_days: int = int(config.get("rebalance_days", 126))
         self.min_history: int = int(config.get("min_history", 200))
+        # Guardias de tendencia por manga (con histéresis y cooldown):
+        # - núcleo buy&hold salvo oso PROFUNDO (12-2 < -15%): COVID sí,
+        #   2018-Q4/2022 no (evita el látigo que destruía retorno)
+        # - satélites high-yield (el tramo frágil): rotación RELATIVA por
+        #   yield×momentum en cada rebalance; el timing ABSOLUTO (salir con
+        #   momentum negativo) costó 20pp de retorno por 6pp de DD en el
+        #   barrido 2016-2026 (95% vs 115%) — desactivado por defecto
+        #   (umbrales ±1 = siempre candidatos), disponible vía config
+        self.core_exit_momentum: float = float(config.get("core_exit_momentum", -0.15))
+        self.core_reentry_momentum: float = float(config.get("core_reentry_momentum", 0.05))
+        self.satellite_exit_momentum: float = float(config.get("satellite_exit_momentum", -1.0))
+        self.satellite_entry_momentum: float = float(config.get("satellite_entry_momentum", -1.0))
+        # Guardia SMA del núcleo (Faber): el momentum 12-2 mide año-contra-año
+        # y NO ve los crashes en V (en el fondo COVID SCHD seguía a solo -5%
+        # de su precio de hace un año: la guardia de momentum nunca disparó y
+        # el núcleo aguantó el -29% entero). El cruce bajo SMA200 sí captura
+        # el oso rápido; se evalúa POR BARRA solo del núcleo y con buffer.
+        # EXPERIMENTAL y OFF por defecto: el barrido 2016-2026 mostró que los
+        # cruces SMA de estos ETFs churnean 58-90 operaciones y destruyen
+        # 40-60pp de retorno (52% vs 95-118% sin ella) — cada V-shape de la
+        # década castigó el filtro.
+        self.sma_guard_days: int = int(config.get("sma_guard_days", 0))
+        self.sma_guard_buffer: float = float(config.get("sma_guard_buffer", 0.02))
         # Exposición objetivo de la estrategia: el risk envelope la respeta
         # hasta este tope (estrategias sin declaración siguen al 80%)
         self.target_exposure: float = float(config.get("target_exposure", 0.95))
+        # Reparto del exposure entre mangas: núcleo la mitad, satélites casi
+        # la otra mitad (VYMI con peso REAL ~20%, no el 4% de antes)
+        self.core_share: float = float(config.get("core_share", 0.50))
+        self.satellite_share: float = float(config.get("satellite_share", 0.45))
 
         self._closes: dict[str, list[tuple[datetime, float]]] = {}
         self._holdings: set[str] = set()
+        self._guard_exits: set[str] = set()
+        self._sma_exits: set[str] = set()
         self._last_rebalance: datetime | None = None
         #: el runner fija la fecha desde la que las señales son ejecutables;
         #: antes (warm-up) solo se acumula historia para los indicadores —
@@ -151,17 +177,41 @@ class DividendCoreSatelliteStrategy(BaseStrategy):
 
         if self.signals_valid_from is not None and market_data.timestamp < self.signals_valid_from:
             return []
+
+        signals: list[Signal] = []
+
+        # Guardia SMA del NÚCLEO por barra (con buffer): único interruptor
+        # capaz de ver un crash en V a tiempo. Solo aplica al núcleo.
+        sym = market_data.symbol
+        if self.sma_guard_days > 0 and sym in self.core_symbols:
+            sma = self._sma(sym)
+            if sma is not None:
+                if sym in self._holdings and close < sma * (1 - self.sma_guard_buffer):
+                    signals.append(self._signal(market_data, sym, SignalType.SELL))
+                    self._holdings.discard(sym)
+                    self._sma_exits.add(sym)
+                elif sym in self._sma_exits and close > sma * (1 + self.sma_guard_buffer):
+                    signals.append(self._signal(market_data, sym, SignalType.BUY))
+                    self._holdings.add(sym)
+                    self._sma_exits.discard(sym)
+
+        # La cartera se decide en el rebalance (semiannual por defecto): la
+        # rotación por-barra triplicaba las operaciones (30 vs 10) picando
+        # en cada cruce de cero del momentum y DESTRUYÓ retorno (35% vs
+        # 127% del mismo universo) — la evidencia y la fiscalidad española
+        # penalizan cada ida y vuelta.
         if not self._rebalance_due(market_data.timestamp):
-            return []
+            return signals
         self._last_rebalance = market_data.timestamp
 
-        target = self._target_holdings()
+        desired = self._desired_holdings()
         signals: list[Signal] = []
-        for sym in sorted(self._holdings - target):
-            signals.append(self._signal(market_data, sym, SignalType.SELL))
-        for sym in sorted(target - self._holdings):
-            signals.append(self._signal(market_data, sym, SignalType.BUY))
-        self._holdings = target
+        for held in sorted(self._holdings - desired):
+            signals.append(self._signal(market_data, held, SignalType.SELL))
+        for wanted in sorted(desired - self._holdings):
+            signals.append(self._signal(market_data, wanted, SignalType.BUY))
+        self._holdings = desired
+
         return signals
 
     #: días de historia que necesita antes de la primera señal (calendario)
@@ -169,19 +219,19 @@ class DividendCoreSatelliteStrategy(BaseStrategy):
     def suggested_warmup_days(self) -> int:
         return int((self.lookback_days + self.skip_recent_days + self.rebalance_days) * 1.6)
 
-    #: tamaño de posición que permite desplegar el núcleo completo, sin
-    #: superar el techo del validador del motor (trade_executor: ≤25%; por
-    #: encima rechaza TODAS las compras en silencio)
+    #: tamaño de posición máximo (la unidad de manga mayor, ≤ techo del
+    #: validador del motor 25%; por encima rechaza TODAS las compras).
+    #: CEIL: el techo debe quedar por encima del peso mayor usado — con
+    #: round() hacia abajo, un satélite al 21.38% contra techo 21.0%
+    #: rechazaba TODAS las compras satélite del run.
     @property
     def suggested_max_position_size(self) -> float:
-        # el NÚCLEO lleva el peso dominante: su posición puede llegar al
-        # target_exposure (con 1 símbolo VT ≈ 90%); núcleos multi-símbolo
-        # reparten el target entre ellos. El satélite queda limitado por
-        # lo que sobre del target tras el núcleo.
-        return round(
-            min(0.25, self.target_exposure / max(1, len(self.core_symbols) + self.satellite_top_k)),
-            2,
-        )
+        max_unit = max(self._position_weight(s) for s in self.core_symbols + self.satellite_symbols)
+        return math.ceil(min(0.25, max_unit) * 100) / 100
+
+    def get_position_size(self, signal: Signal, portfolio: Any) -> Decimal:
+        """Fracción de cartera por manga (el motor la usa para el sizing)."""
+        return Decimal(str(self._position_weight(signal.symbol)))
 
     def get_required_parameters(self) -> list[str]:
         return ["lookback_days", "skip_recent_days", "satellite_top_k", "rebalance_days"]
@@ -198,6 +248,14 @@ class DividendCoreSatelliteStrategy(BaseStrategy):
             return ready >= max(2, len(self.core_symbols) // 2)
         return (now - self._last_rebalance).days >= self.rebalance_days
 
+    def _sma(self, symbol: str) -> float | None:
+        """Media móvil simple de cierres de los últimos `sma_guard_days` días."""
+        series = self._closes.get(symbol)
+        if not series or len(series) < self.sma_guard_days:
+            return None
+        window = series[-self.sma_guard_days :]
+        return sum(price for _ts, price in window) / len(window)
+
     def _momentum(self, symbol: str) -> float | None:
         """Momentum 12-1 sobre precios AJUSTADOS (incluye dividendos)."""
         series = self._closes.get(symbol)
@@ -209,43 +267,81 @@ class DividendCoreSatelliteStrategy(BaseStrategy):
             return None
         return recent / old - 1.0
 
-    def _target_holdings(self) -> set[str]:
-        """Núcleo buy&hold + satélite yield×momentum + refugio en crash general.
+    def _desired_holdings(self) -> set[str]:
+        """Cartera objetivo con HISTÉRESIS de estado, evaluada solo en rebalance.
 
-        El núcleo es COMPRA Y MANTENER (la evidencia 1985-2024 le da ~12.4%/yr
-        Sharpe 0.88; testear el filtro momentum sobre el núcleo — tanto 12-1
-        como SMA-10m de Faber — REDUJO el retorno aquí: 21% y 12% vs 82% del
-        buy&hold). El satélite se rankea por YIELD × momentum positivo: para
-        un objetivo de renta, momentum solo favorece al growth de yield bajo
-        (VIG 1.8% desplaza a VYMI 4.2%) y yield solo ignora los crashes; el
-        producto exige ambas cosas. El refugio entra solo cuando TODO el
-        universo (núcleo+satélite) está en momentum negativo — crash general,
-        no un mes malo del núcleo.
+        NÚCLEO: buy&hold (la evidencia 1985-2024 le da ~12.4%/yr Sharpe 0.88;
+        los filtros de momentum suaves sobre el núcleo REDUJERON el retorno
+        aquí: 21% y 12% vs 82% del hold). Única guardia: oso PROFUNDO
+        (momentum < core_exit_momentum: COVID sí; 2018-Q4/2022 no) y
+        re-entrada solo con recuperación clara (> core_reentry_momentum).
+
+        SATÉLITES: rankeados por YIELD × momentum (momentum solo favorece al
+        growth de yield bajo —VIG 1.8% desplaza a VYMI 4.2%— y yield solo
+        ignora los crashes). Mantenido mientras momentum > exit (banda de
+        histéresis: entró con > +2%, aguanta hasta < -2%) y rotación
+        RELATIVA al top-k en cada rebalance.
         """
-        target: set[str] = set(self.core_symbols)
+        target: set[str] = set()
 
-        # satélite: top-k por yield × momentum POSITIVO (una sola pasada —
-        # la versión anterior rankeaba dos veces y la primera admitía
-        # momentum negativo, que era justo lo que el filtro quería evitar)
-        ranked = sorted(
-            (
-                (sym, DIVIDEND_YIELDS.get(sym, 2.5) / 100.0 * mom)
-                for sym, mom in ((s, self._momentum(s)) for s in self.satellite_symbols)
-                if mom is not None and mom > 0
-            ),
-            key=lambda kv: kv[1],
-            reverse=True,
-        )
-        target |= {sym for sym, _score in ranked[: self.satellite_top_k]}
+        for sym in self.core_symbols:
+            momentum = self._momentum(sym)
+            if momentum is None:
+                target.add(sym)  # sin historia suficiente: semántica buy&hold
+            elif sym in self._holdings:
+                if momentum > self.core_exit_momentum:
+                    target.add(sym)
+                else:
+                    self._guard_exits.add(sym)  # expulsado por oso profundo
+            elif sym in self._sma_exits:
+                continue  # re-entra solo cuando el precio recupere la SMA (por barra)
+            elif sym in self._guard_exits:
+                if momentum > self.core_reentry_momentum:
+                    target.add(sym)
+                    self._guard_exits.discard(sym)
+            else:
+                # despliegue INICIAL: buy&hold — el umbral de re-entrada solo
+                # aplica tras una expulsión por oso (si no, un núcleo con
+                # momentum +2% en el arranque nunca se compraba y la cartera
+                # vivía medio vacía para siempre)
+                target.add(sym)
 
-        # refugio: núcleo Y satélites todos en momentum negativo = crash general
-        all_negative = all(
-            (self._momentum(sym) or 0) <= 0 for sym in self.core_symbols + self.satellite_symbols
-        )
-        if all_negative and self._momentum(self.defensive_symbol) is not None:
-            target = {self.defensive_symbol}
+        candidates: list[tuple[str, float]] = []
+        for sym in self.satellite_symbols:
+            momentum = self._momentum(sym)
+            if momentum is None:
+                continue
+            threshold = (
+                self.satellite_exit_momentum
+                if sym in self._holdings
+                else self.satellite_entry_momentum
+            )
+            if momentum > threshold:
+                candidates.append((sym, DIVIDEND_YIELDS.get(sym, 2.5) / 100.0 * momentum))
+        candidates.sort(key=lambda kv: kv[1], reverse=True)
+        target |= {sym for sym, _score in candidates[: self.satellite_top_k]}
 
         return target
+
+    def _position_weight(self, symbol: str) -> float:
+        """Peso de la posición como fracción del capital de sizing (5-25%).
+
+        El núcleo reparte `core_share` del target PONDERADO POR YIELD (un
+        objetivo de renta pondera por aportación de renta: SCHD 3.4% pesa
+        más que VIG 1.8% — y de paso alinea la cartera con sus mejores
+        factores); los satélites reparten `satellite_share` entre el top-k
+        (el internacional high-yield —VYMI— lleva peso REAL ~20%, no el 4%
+        de la cartera uniforme anterior).
+        """
+        if symbol in self.core_symbols:
+            yields = {s: DIVIDEND_YIELDS.get(s, 2.5) for s in self.core_symbols}
+            share = yields.get(symbol, 2.5) / max(0.1, sum(yields.values()))
+            unit = self.target_exposure * self.core_share * share
+        elif symbol == self.defensive_symbol and self.defensive_symbol:
+            unit = self.target_exposure * 0.9
+        else:
+            unit = self.target_exposure * self.satellite_share / max(1, self.satellite_top_k)
+        return round(min(0.25, max(0.05, unit)), 4)
 
     def _signal(self, quote: Quote, symbol: str, side: SignalType) -> Signal:
         return Signal(
@@ -262,6 +358,7 @@ class DividendCoreSatelliteStrategy(BaseStrategy):
             metadata={
                 "strategy": self.name,
                 "target_exposure": str(self.target_exposure),
+                "position_weight": str(self._position_weight(symbol)),
                 "tier": (
                     "defensive"
                     if symbol == self.defensive_symbol

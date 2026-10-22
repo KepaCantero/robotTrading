@@ -714,9 +714,31 @@ class Capa2PipelineExecutor:
             if source is not None:
                 excess = float(source)
         wf_passed = bool(getattr(payload, "walk_forward_passed", False)) if payload else False
+        ew_sharpe = float(getattr(payload, "universe_ew_sharpe", 0) or 0) if payload else 0.0
 
-        sharpe_pts = 30 if sharpe >= 1.0 else 20 if sharpe >= 0.5 else 10 if sharpe >= 0 else 0
-        dd_pts = 25 if max_dd < 15 else 15 if max_dd < 25 else 5 if max_dd < 35 else 0
+        # Sharpe RELATIVO al del propio universo EW: la pregunta correcta es
+        # si el diseño activo conserva la eficiencia-riesgo de su universo,
+        # no si alcanza el listón institucional 1.0 que ni el propio mercado
+        # supera en muchas décadas (SPY 2016-2026 ≈ 0.8).
+        if ew_sharpe > 0.05:
+            ratio = sharpe / ew_sharpe
+            sharpe_pts = 30 if ratio >= 1.0 else 20 if ratio >= 0.75 else 10 if ratio >= 0.5 else 0
+        else:
+            sharpe_pts = 30 if sharpe >= 1.0 else 20 if sharpe >= 0.5 else 10 if sharpe >= 0 else 0
+        # DD por NORMA ACCIONARIAL: <20% excepcional, <25% sólido, <30% un
+        # oso normal, <40% doloroso. Las bandas anteriores (<15 para el
+        # máximo) no las cumplía NI SPY en 2016-2026.
+        dd_pts = (
+            25
+            if max_dd < 20
+            else 15
+            if max_dd < 25
+            else 10
+            if max_dd < 30
+            else 5
+            if max_dd < 40
+            else 0
+        )
         feas_pts = (
             25
             if feasibility >= 2.0
