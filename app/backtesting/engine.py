@@ -403,12 +403,23 @@ class BacktestEngine:
         # Track matching stats by strategy
         strategy_stats: dict[str, dict[str, int]] = {}
 
+        last_md = None
         for md in market_data:
             # Sizing base per trading day: simultaneous buys (rebalance day of
             # a cross-sectional strategy) must each size the SAME portfolio —
             # sizing on post-fill capital deployed only 1-(1-r)^n of intended
             day = md.timestamp.date()
             if day != self._sizing_day:
+                # Cierre del día PREVIO: marcar la cartera UNA VEZ por día,
+                # cuando todos los símbolos ya tienen su último precio. La
+                # marca por cotización mezclaba precios de días distintos
+                # dentro del mismo punto (el primer símbolo del crash en su
+                # mínimo, el resto aún al cierre previo) y suavizaba los
+                # drawdowns ~7pp (COVID: -29% engine vs -36% cierre diario).
+                if last_md is not None:
+                    self.equity_tracker.update_equity_curve(
+                        last_md.timestamp, self.capital, self.last_known_prices
+                    )
                 self._sizing_day = day
                 self._sizing_capital = None
                 # Kill switch is DAILY (Hull Rule 13.1): a new simulated day
@@ -421,14 +432,9 @@ class BacktestEngine:
             # OPEN of the current bar (t+1 execution, prevents look-ahead bias)
             self._execute_pending_signals(md)
 
-            # Track the current price for this symbol BEFORE updating equity curve
+            # Track the current price for this symbol
             current_md_price = get_price(md)
             self.last_known_prices[md.symbol] = current_md_price
-
-            # Update equity curve
-            self.equity_tracker.update_equity_curve(
-                md.timestamp, self.capital, self.last_known_prices
-            )
 
             # Execute learning engine retraining if needed
             self._execute_learning_retraining(md, market_data)
@@ -455,6 +461,14 @@ class BacktestEngine:
                 market_data=md,
                 trades=self.trades,
                 close_position_func=self._close_position,
+            )
+            last_md = md
+
+        # Último día: cierre marcado con los precios finales antes de cerrar
+        # posiciones (el cierre forzado ya no debe mover la curva)
+        if last_md is not None:
+            self.equity_tracker.update_equity_curve(
+                last_md.timestamp, self.capital, self.last_known_prices
             )
 
         # Close any remaining positions using the last price for each symbol
@@ -839,13 +853,34 @@ class BacktestEngine:
             # (after same-day sells, if any); the rest of the day's buys size
             # that same portfolio instead of the post-fill remains.
             if self._sizing_capital is None:
-                self._sizing_capital = self.capital
+                # Base de sizing = PATRIMONIO marcado (caja + posiciones al
+                # último cierre), NO la caja restante: un símbolo que entra
+                # meses después (VYMI tras acumular historia) se dimensionaba
+                # contra el cash sobrante (31k en vez del equity 93k) y el
+                # libro quedaba crónicamente infra-desplegado (~76%).
+                self._sizing_capital = self.equity_tracker.get_current_portfolio_value(
+                    self.capital, self.last_known_prices
+                )
+            # Peso declarado por la estrategia para ESTA señal (mangas con
+            # pesos distintos: core vs satélite); el contrato del executor
+            # (5-25%) se mantiene como clamp.
+            sizing_ratio = float(self.config.max_position_size)
+            declared = (signal.metadata or {}).get("position_weight")
+            if declared is not None:
+                try:
+                    sizing_ratio = min(0.25, max(0.05, float(declared)))
+                except (TypeError, ValueError):
+                    logger.warning(
+                        "Invalid position_weight %r on %s signal; using config default",
+                        declared,
+                        signal.symbol,
+                    )
             estimated_quantity = self.compliance_engine.calculate_position_size(
                 symbol=signal.symbol,
                 price=current_price,
                 capital=self._sizing_capital,
                 confidence=signal.confidence if hasattr(signal, "confidence") else 100.0,
-                max_position_ratio=float(self.config.max_position_size),
+                max_position_ratio=sizing_ratio,
             )
 
             # Build price history for compliance engine validation

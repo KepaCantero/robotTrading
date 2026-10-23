@@ -358,13 +358,22 @@ class ValidationEngine:
                 "consider adjusting parameters"
             )
 
-        # Validate max drawdown
+        # Validate max drawdown against the DECLARED risk tolerance: a
+        # 100%-equity dividend book with mandated VYMI cannot fall less than
+        # SPY itself (-33.7% in COVID) — an unconditional -30%/-20% bar
+        # contradicts an aggressive profile by construction.
+        dd_tolerance = {
+            "aggressive": Decimal("35"),
+            "moderate": Decimal("30"),
+            "conservative": Decimal("25"),
+        }.get((getattr(request, "risk_profile", "") or "").lower(), Decimal("30"))
         if (
             request.backtest_max_drawdown_pct is not None
-            and request.backtest_max_drawdown_pct > Decimal("20")
+            and request.backtest_max_drawdown_pct > dd_tolerance
         ):
             warnings.append(
-                f"⚠️  High max drawdown ({request.backtest_max_drawdown_pct:.2f}%) - "
+                f"⚠️  High max drawdown ({request.backtest_max_drawdown_pct:.2f}% > "
+                f"{dd_tolerance:.0f}% tolerance for {request.risk_profile or 'default'} risk) - "
                 "consider adding risk management"
             )
 

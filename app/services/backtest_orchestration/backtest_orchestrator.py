@@ -350,7 +350,7 @@ class BacktestOrchestrator:
         # Gate R5/R6/DATA-001: estabilidad walk-forward OBLIGATORIA sobre el
         # MISMO motor (antes vivía en un orquestador gemelo que el producto
         # nunca llamaba — los veredictos salían sin validación out-of-sample).
-        gate = self._walk_forward_gate(engine_result, engine.config, probe)
+        gate = self._walk_forward_gate(engine_result, engine.config, probe, config.risk_profile)
         benchmark = self._load_benchmark(config, loader, start_dt, end_dt)
         dividend_bench = self._load_dividend_benchmark(config, loader, start_dt, end_dt)
         if dividend_bench and benchmark:
@@ -493,7 +493,23 @@ class BacktestOrchestrator:
     _WF_VOL_FLOOR = 0.15
     _WF_TRADING_DAYS = 252
 
-    def _walk_forward_gate(self, engine_result, engine_config, probe) -> dict:
+    #: tolerancia de drawdown por perfil de riesgo declarado: exigirle a una
+    #: cartera 100% renta variable de dividendo con VYMI obligatorio que caiga
+    #: MENOS que el propio SPY (-33.7% en COVID) contradice un perfil Alto —
+    #: el umbral -30% era de riesgo Medio puesto por inercia
+    _DD_TOLERANCE_BY_RISK: dict[str, float] = {
+        "aggressive": 0.35,
+        "alto": 0.35,
+        "high": 0.35,
+        "moderate": 0.30,
+        "medio": 0.30,
+        "conservative": 0.25,
+        "bajo": 0.25,
+    }
+
+    def _walk_forward_gate(
+        self, engine_result, engine_config, probe, risk_profile: str = ""
+    ) -> dict:
         """R5/R6/DATA-001 stability gate on the run's own equity curve.
 
         The strategy parameters are fixed a priori (no re-optimization inside
@@ -562,8 +578,12 @@ class BacktestOrchestrator:
             failures.append(
                 f"R5 consistency {consistency:.0%} ({profitable}/{n} profitable windows) < 60%"
             )
-        if worst["mdd"] < -0.30:
-            failures.append(f"R5 worst-window drawdown {worst['mdd']:.0%} < -30%")
+        dd_limit = self._DD_TOLERANCE_BY_RISK.get((risk_profile or "").lower(), 0.30)
+        if worst["mdd"] < -dd_limit:
+            failures.append(
+                f"R5 worst-window drawdown {worst['mdd']:.0%} < -{dd_limit:.0%} "
+                f"(risk profile: {risk_profile or 'default'})"
+            )
         if mean_sharpe <= 0:
             failures.append(f"R5 mean window Sharpe {mean_sharpe:.2f} <= 0")
         n_parameters = max(1, len(getattr(probe, "get_required_parameters", list)() or []))

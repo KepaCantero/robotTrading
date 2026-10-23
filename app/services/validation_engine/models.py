@@ -81,6 +81,10 @@ class ValidationRequest:
     # None = not run; False = ran and failed -> critical failure.
     walk_forward_passed: bool | None = None
     walk_forward_failures: list[str] = field(default_factory=list)
+    # Perfil de riesgo declarado (aggressive/moderate/conservative): calibra
+    # la tolerancia de drawdown — exigirle -30% a un perfil Alto contradice
+    # al propio SPY (-33.7% en COVID)
+    risk_profile: str = ""
 
 
 @dataclass

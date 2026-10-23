@@ -556,8 +556,10 @@ class TestSimultaneousBuysShareTheDayPortfolio:
         )
 
     def test_next_day_buys_size_the_new_portfolio(self):
-        """Un buy del día siguiente dimensiona la cartera YA con los fills
-        del día anterior — el snapshot se renueva cada día de cotización."""
+        """Un buy del día siguiente dimensiona contra el PATRIMONIO marcado
+        (caja + posiciones al último cierre), no contra la caja restante —
+        si no, cada símbolo que entra tarde queda crónicamente
+        infra-dimensionado (VYMI: 6.6k en vez de 21.4k, libro al 76%)."""
         bars = [
             make_quote("AAA", T0, "100", "102", "99", "100"),
             make_quote("AAA", T0 + timedelta(days=1), "100", "101", "99", "100"),
@@ -575,6 +577,7 @@ class TestSimultaneousBuysShareTheDayPortfolio:
         assert len(entries) == 2
         a_dep = float(entries["AAA"].quantity) * float(entries["AAA"].entry_price)
         b_dep = float(entries["BBB"].quantity) * float(entries["BBB"].entry_price)
-        # AAA: 25% de 100k; BBB (día distinto): 25% de los 75k restantes
+        # AAA: 25% de 100k; BBB (día distinto): 25% del EQUITY 100k
+        # (75k caja + 25k en AAA marcado al cierre), no 25% de los 75k
         assert a_dep == pytest.approx(25_000, rel=0.01)
-        assert b_dep == pytest.approx(18_750, rel=0.01)
+        assert b_dep == pytest.approx(25_000, rel=0.01)

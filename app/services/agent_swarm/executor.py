@@ -652,6 +652,7 @@ class Capa2PipelineExecutor:
             tax_rate=self._effective_tax_rate(ctx),
             walk_forward_passed=ctx.backtest.backtest_result.walk_forward_passed,
             walk_forward_failures=list(ctx.backtest.backtest_result.validation_failures),
+            risk_profile=ctx.profile.risk_profile.value,
         )
 
     def _effective_tax_rate(self, ctx: _Ctx) -> Decimal:
@@ -904,6 +905,7 @@ class Capa2PipelineExecutor:
 
     def _t101_input(self, ctx: _Ctx) -> dict:
         m = ctx.backtest.backtest_result.metrics
+        payload = ctx.backtest.backtest_result
         return {
             "validation_report": {
                 "overall_status": "APPROVED" if ctx.validation.passed else "REJECTED",
@@ -918,6 +920,11 @@ class Capa2PipelineExecutor:
                 "total_return": float(m.total_return_pct),
                 "max_drawdown": abs(float(m.max_drawdown_pct)),
                 "win_rate": float(m.win_rate_pct),
+                "universe_ew_return_pct": (
+                    float(payload.universe_ew_return_pct)
+                    if getattr(payload, "universe_ew_return_pct", None) is not None
+                    else 0.0
+                ),
             },
             "recommendation": {
                 "score": float(ctx.recommendation.overall_score),
