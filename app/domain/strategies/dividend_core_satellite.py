@@ -78,6 +78,8 @@ DIVIDEND_YIELDS: dict[str, float] = {
     "DWX": 3.5,
     "FGD": 3.6,
     "PID": 4.8,
+    "VHYL": 3.6,
+    "IDVY": 4.2,
 }
 
 #: clasificación por rol cuando la estrategia recibe el universo del run:
@@ -85,7 +87,21 @@ DIVIDEND_YIELDS: dict[str, float] = {
 #: que aparezca); el resto → núcleo. Universos sin satélites ni refugio
 #: (p.ej. el automático del dashboard) degradan a núcleo puro con filtro
 #: de momentum — mejor que fallar con cero señales.
-_HIGH_YIELD = {"VYM", "DVY", "VYMI", "PEY", "HDV", "SPHD", "SPYD", "IDV", "DWX", "FGD", "PID"}
+_HIGH_YIELD = {
+    "VYM",
+    "DVY",
+    "VYMI",
+    "PEY",
+    "HDV",
+    "SPHD",
+    "SPYD",
+    "IDV",
+    "DWX",
+    "FGD",
+    "PID",
+    "VHYL",
+    "IDVY",
+}
 _DEFENSIVE_CANDIDATES = ("BND", "BIV", "AGG", "IEF", "SCHZ")
 
 

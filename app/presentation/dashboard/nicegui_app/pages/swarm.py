@@ -170,14 +170,19 @@ _SECTOR_MAP: dict[str, str] = {
 }
 
 
-#: universo de ETFs de dividendo (core crecimiento + high-yield + refugio);
-#: VIG/DGRO/DGRW/SCHD/VYM/BND solo tienen ~10 años de histórico
-DIVIDEND_ETF_UNIVERSE = ["VIG", "DGRO", "DGRW", "SCHD", "VYM", "DVY", "BND"]
+#: universo de ETFs de dividendo U2 — re-seleccionado OOS-limpio sobre
+#: 2016-2024 (Sharpe 0.67, el mejor de 6 candidatos) y validado virgen en
+#: 2024-2026 (Sharpe 1.35). Un ETF por función: calidad US (SCHD), alto
+#: yield US amplio (VYM), alto yield internacional (VYMI), crecimiento de
+#: dividendo (VIG). Sin BND (el refugio-a-bono vendió en el suelo de 2022:
+#: 77% vs 127% del mismo run) ni DGRO/DGRW (solapados con VIG/SCHD).
+DIVIDEND_ETF_UNIVERSE = ["SCHD", "VYM", "VYMI", "VIG"]
 
 #: universo de dividendo con histórico profundo (2003-2007 en adelante) para
 #: horizontes largos: con el universo de 10 años un run de 20 años se
-#: truncaría silenciosamente a la década disponible
-DEEP_DIVIDEND_ETF_UNIVERSE = ["SDY", "DLN", "DVY", "PEY", "BIV"]
+#: truncaría silenciosamente a la década disponible. Solo ETFs de dividendo
+#: (BIV fuera: es un bono, no un generador de renta)
+DEEP_DIVIDEND_ETF_UNIVERSE = ["SDY", "DLN", "DVY", "PEY"]
 
 #: a partir de este horizonte (meses) el preset de dividendos usa el universo profundo
 LONG_HORIZON_MONTHS = 180
@@ -1196,6 +1201,7 @@ def render(
                                 "dividend_tracking": "Dividend ETFs (core-satellite)",
                                 "dividend_etf_rotation": "Dividend ETFs (rotation)",
                                 "low_volatility": "Low volatility (sector ETFs)",
+                                "static_ew": "Static equal-weight (passive)",
                             },
                             value="mean_reversion",
                             label="Strategy (real engine)",

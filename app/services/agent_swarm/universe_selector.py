@@ -79,6 +79,9 @@ DIVIDEND_ETFS = {
     "QDIV",  # iShares MSCI World Quality Dividend UCITS Acc — núcleo
     # quality-global ACUMULADOR (fiscalmente superior en España); solo
     # entra en ventanas donde su historia (desde 2018) alcanza
+    "VHYL",  # Vanguard FTSE All-World High Dividend Yield UCITS Acc:
+    # acumulador irlandés ~3.6% yield, 13.4 años de historial (2013+)
+    "IDVY",  # iShares Euro Dividend UCITS Acc ~4.2% yield, 18.8 años (2008+)
     "VIG",
     "VYM",
     "DGRO",

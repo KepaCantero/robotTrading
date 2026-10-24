@@ -94,24 +94,38 @@ class TestStrategyQualityInVerdict:
     """Los baremos de calidad (Chan 2013) del StrategyValidator entran al T5."""
 
     def test_deep_drawdown_downgrades_approve_to_conditional(self):
+        """DD por ENCIMA de la tolerancia declarada degrada; dentro, no.
+
+        Sin perfil (tolerancia 30%): -30% está DENTRO → sigue APPROVE con
+        aviso informativo del baremo Chan; -35% la supera → CONDITIONAL.
+        """
         import asyncio
 
         from app.services.validation_engine.models import ValidationRequest
         from app.services.validation_engine.validation_engine import ValidationEngine
 
-        req = ValidationRequest(
+        base = dict(
             profile_id="q",
             input_id="q",
             initial_capital=D("100000"),
             target_monthly_return_eur=D("150"),
             backtest_feasibility_ratio=D("1.5"),
             backtest_sharpe_ratio=D("1.2"),
-            backtest_max_drawdown_pct=D("30"),
             walk_forward_passed=True,
         )
-        res = asyncio.run(ValidationEngine().validate(req))
-        assert res.overall_recommendation == "CONDITIONAL"
-        assert any("25%" in w for w in res.warnings)
+        dentro = asyncio.run(
+            ValidationEngine().validate(
+                ValidationRequest(**base, backtest_max_drawdown_pct=D("30"))
+            )
+        )
+        assert dentro.overall_recommendation == "APPROVE", "30% dentro de tolerancia 30%"
+        fuera = asyncio.run(
+            ValidationEngine().validate(
+                ValidationRequest(**base, backtest_max_drawdown_pct=D("35"))
+            )
+        )
+        assert fuera.overall_recommendation == "CONDITIONAL", "35% supera tolerancia 30%"
+        assert any("25%" in w for w in fuera.warnings), "aviso informativo del baremo Chan"
 
     def test_low_sharpe_warns_but_does_not_block(self):
         import asyncio

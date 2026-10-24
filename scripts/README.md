@@ -9,6 +9,7 @@ Operational, QA, and maintenance scripts for the project.
 ```
 scripts/
 ├── check_all.sh               # EL script de calidad (solo lectura; --fix aplica)
+├── quant_protocol.py          # Harness cuantitativo: ventanas múltiples + Sharpe deflactado
 ├── generate_requirements.py   # Sincroniza los specs .requirements/app/ con app/
 ├── production_audit.py        # Audita código vs spec (GAP/STALE), exit 1 si drift
 ├── start_paper_trading.sh     # Start API + dashboard for paper trading
@@ -24,6 +25,7 @@ scripts/
 | Script | Purpose | Usage |
 |--------|--------|-------|
 | `check_all.sh` | QA completo: ruff, black, isort, flake8, pylint, mypy, bandit (+ radon/vulture/semgrep/pip-audit si están) | `./scripts/check_all.sh [--core\|--fix\|--strict]` |
+| `quant_protocol.py` | Carteras estáticas (EW/yield-weight) en ventana completa + sub-ventanas de estrés + OOS, con Sharpe deflactado (Bailey & López de Prado). Validar ANTES de optimizar | `python scripts/quant_protocol.py --symbols SCHD VYM VYMI VIG --rf 1.2 --trials 68` |
 | `generate_requirements.py` | Regenera los 1.170 specs de `.requirements/app/` y borra huérfanos; idempotente | `python scripts/generate_requirements.py [--dry-run]` |
 | `production_audit.py` | Verifica cada archivo de `app/` contra su spec: GAP (falta en código) y STALE (spec desactualizada) | `python scripts/production_audit.py` |
 | `start_paper_trading.sh` | Start API server + dashboard (NiceGUI) | `./scripts/start_paper_trading.sh` |

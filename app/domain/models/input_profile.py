@@ -183,6 +183,12 @@ class InputProfile(BaseModel):
         ..., ge=1, le=600, description="Investment horizon in months (1-50 years)"
     )
 
+    #: edad del inversor — contexto de suitability (T6.1): alinea renta con
+    #: etapa vital y detecta horizontes que sobrepasan los 85 años
+    investor_age: int | None = Field(
+        default=None, ge=18, le=100, description="Investor age (years), optional"
+    )
+
     # Optional Parameters
     constraints: dict | None = Field(
         default=None, description="Optional constraints (sector limits, etc.)"
@@ -390,6 +396,17 @@ class InputProcessor:
                 "Warning: short investment horizon (< 12 months) with alto risk tolerance "
                 "may expose capital to unnecessary volatility."
             )
+
+        # Check horizon vs investor age: a horizon stretching past age 85 is
+        # improbable — the plan should be revisited, not silently accepted
+        if profile.investor_age is not None:
+            horizon_years = profile.investment_horizon / 12.0
+            if profile.investor_age + horizon_years > 85:
+                warnings.append(
+                    f"Warning: investment horizon ({horizon_years:.0f}y) takes a "
+                    f"{profile.investor_age}-year-old past 85 — verify the plan's "
+                    "time horizon or the age provided."
+                )
 
         # Check capital size vs objective
         if (

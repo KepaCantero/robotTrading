@@ -132,7 +132,15 @@ class ValidationEngine:
                             f"Strategy quality: max drawdown {abs(request.backtest_max_drawdown_pct)}% "
                             "exceeds 25% (Chan 2013) — over-leverage or flawed risk management"
                         )
-                        if result.overall_recommendation == "APPROVE":
+                        # la degradación respeta la tolerancia DECLARADA: un
+                        # perfil Alto con una cartera 100% renta variable de
+                        # dividendo no se degrada por caer menos que el propio
+                        # SPY (-33.7% en COVID); el aviso de Chan es informativo
+                        dd_tolerance = self._dd_tolerance_for(request)
+                        if (
+                            abs(request.backtest_max_drawdown_pct) > dd_tolerance
+                            and result.overall_recommendation == "APPROVE"
+                        ):
                             result.overall_recommendation = "CONDITIONAL"
                             result.confidence_level = "medium"
 
@@ -362,11 +370,7 @@ class ValidationEngine:
         # 100%-equity dividend book with mandated VYMI cannot fall less than
         # SPY itself (-33.7% in COVID) — an unconditional -30%/-20% bar
         # contradicts an aggressive profile by construction.
-        dd_tolerance = {
-            "aggressive": Decimal("35"),
-            "moderate": Decimal("30"),
-            "conservative": Decimal("25"),
-        }.get((getattr(request, "risk_profile", "") or "").lower(), Decimal("30"))
+        dd_tolerance = self._dd_tolerance_for(request)
         if (
             request.backtest_max_drawdown_pct is not None
             and request.backtest_max_drawdown_pct > dd_tolerance
@@ -378,6 +382,15 @@ class ValidationEngine:
             )
 
         return warnings
+
+    @staticmethod
+    def _dd_tolerance_for(request: ValidationRequest) -> Decimal:
+        """Tolerancia de drawdown (%) según el perfil de riesgo declarado."""
+        return {
+            "aggressive": Decimal("35"),
+            "moderate": Decimal("30"),
+            "conservative": Decimal("25"),
+        }.get((getattr(request, "risk_profile", "") or "").lower(), Decimal("30"))
 
     def _determine_overall_status(
         self,

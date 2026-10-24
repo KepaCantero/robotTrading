@@ -537,6 +537,8 @@ class Capa2PipelineExecutor:
             "investment_horizon": ctx.request.investment_horizon,
             "constraints": ctx.request.constraints or {},
         }
+        if ctx.request.investor_age is not None:
+            user_input["investor_age"] = ctx.request.investor_age
         if ctx.request.tax_province:
             from app.domain.models.input_profile import TaxResidence
 

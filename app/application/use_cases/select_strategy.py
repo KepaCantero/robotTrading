@@ -567,8 +567,35 @@ class StrategySelector:
         # Adjust for capital tier
         score += self._adjust_score_for_capital(strategy_name, profile.capital_flag)
 
+        # Adjust for investor age (suitability by life stage)
+        score += self._adjust_score_for_age(strategy_name, profile)
+
         # Clamp to valid range
         return max(Decimal("0"), min(Decimal("100"), score))
+
+    def _adjust_score_for_age(self, strategy_name: str, profile: InputProfile) -> Decimal:
+        """Ajuste de suitability por etapa vital.
+
+        Reglas conservadoras y simétricas:
+        - La renta (dividendos) alinea con la etapa de jubilación (≥55): +5.
+        - Un inversor muy joven (<30) con objetivo de renta pierde compound
+          de largo plazo: -5 en estrategias de dividendo.
+        - Un horizonte que sobrepasa los 85 años del inversor es improbable:
+          -10 en cualquier estrategia (revisar el horizonte declarado).
+        """
+        age = getattr(profile, "investor_age", None)
+        if age is None:
+            return Decimal("0")
+        adjustment = Decimal("0")
+        if "dividend" in strategy_name:
+            if age >= 55:
+                adjustment += Decimal("5")
+            elif age < 30:
+                adjustment -= Decimal("5")
+        horizon_years = profile.investment_horizon / 12.0
+        if age + horizon_years > 85:
+            adjustment -= Decimal("10")
+        return adjustment
 
     def _adjust_score_for_risk_tolerance(
         self, strategy_name: str, risk_tolerance: RiskTolerance

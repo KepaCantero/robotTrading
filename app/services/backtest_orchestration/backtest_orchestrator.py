@@ -192,6 +192,10 @@ class BacktestOrchestrator:
         # menor vol realizada del universo sectorial, equiponderado, poca
         # rotación) — Blitz & van Vliet 2007, Baker/Bradley/Wurgler 2011.
         "low_volatility": "app.domain.strategies.low_volatility:LowVolatilityStrategy",
+        # conclusión ejecutable del protocolo cuantitativo (criterio 6):
+        # cuando el equiponderado pasivo batió a toda gestión medida, la
+        # cartera desplegable ES el pasivo — esta estrategia lo backtestea
+        "static_ew": "app.domain.strategies.static_ew:StaticEqualWeightStrategy",
     }
     #: warm-up bars fed to the strategy before the execution window
     _WARMUP_DAYS = 180
@@ -228,6 +232,8 @@ class BacktestOrchestrator:
             strategy = strategy_cls({"name": name, "enabled": True, "symbols": symbols})
         elif name == "low_volatility" and symbols:
             strategy = strategy_cls({"name": name, "enabled": True, "universe": symbols})
+        elif name == "static_ew" and symbols:
+            strategy = strategy_cls({"name": name, "enabled": True, "symbols": symbols})
         else:
             strategy = strategy_cls({"name": name, "enabled": True})
         # Optimizer overrides: the strategy's __init__ prioritises its YAML

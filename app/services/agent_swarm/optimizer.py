@@ -41,6 +41,11 @@ PARAM_GRIDS: dict[str, dict[str, list[Any]]] = {
         "rebalance_days": [21, 63, 126],
         "top_k": [3, 4, 5],
     },
+    # el pasivo solo tiene UN grado de libertad honesto: la cadencia de
+    # re-balance (más frecuente = más coste sin señal que lo justifique)
+    "static_ew": {
+        "rebalance_days": [126, 252, 365],
+    },
 }
 
 # Parameters the strategies accept directly in their config dict (fallback
