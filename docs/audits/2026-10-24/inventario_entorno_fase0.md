@@ -48,10 +48,17 @@ Comprobaciones de solo lectura sobre el Mac que alojará la producción paper (p
 ## Línea base de la suite
 
 - Antes del fix: pytest abortaba en colección (0 tests ejecutados).
-- Tras el fix: ver `baseline_suite_2026-10-24.txt` junto a este fichero (resumen oficial;
-  ejecución completa `-q --tb=no`). Los fallos preexistentes no se tocan en Fase 0: se registran
-  como línea base y su resolución se planifica por fases (§ Fase 0 del plan: «resolver … los
-  fallos preexistentes antes de declarar la suite validada»).
+- **Tras el fix (24-10-2026, 20:39 min): `756 failed, 11071 passed, 75 skipped, 70 errors`**
+  — 11.969 tests colectados, 0 errores de colección. Detalle completo de fallos/errores en
+  `baseline_suite_2026-10-24.txt` (junto a este fichero).
+- Los 756 fallos y 70 errores son la línea base de deuda conocida; su resolución se planifica
+  por fases (§ Fase 0 del plan: «resolver … los fallos preexistentes antes de declarar la suite
+  validada»). Nota: repo multi-agente; otros cambios sin comprometer convivían en el árbol
+  durante la ejecución, así que algunos fallos pueden corresponder a trabajo en vuelo de otro
+  agente.
+- Dependencias: **sin lockfile** (solo `requirements-dev.txt`); `pyproject.toml` no declara
+  `alpaca-trade-api`, `asyncpg` ni ningún cliente IBKR (A19 confirmado; la elección de cliente
+  IBKR —`ib_insync`/`ib_async`/`ibapi`— es decisión de Fase 3).
 
 ## Entornos dev/integración/paper (pendiente de Fase 0-cont/Fase 6)
 
