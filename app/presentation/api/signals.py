@@ -22,6 +22,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from pydantic import BaseModel
 
 from app.domain.models.signal import MarketData, Signal, SignalType
+from app.presentation.api.security import Principal, require_roles
 from app.shared.config.di_container import get_signal_scorer_service as di_get_signal_scorer_service
 
 from . import audit_logger, get_correlation_id
@@ -259,8 +260,10 @@ async def get_next_actionable_signal(
 async def execute_signal(
     signal_id: str,
     background_tasks: BackgroundTasks,
+    principal: Principal = Depends(require_roles("trader", "admin")),
     service: SignalScorerService = Depends(get_signal_scorer_service),
 ) -> dict[str, Any]:
+    del principal  # autoriza vía Depends; el cuerpo no lo necesita
     """
     Execute a trading signal.
 
@@ -376,8 +379,10 @@ async def get_signals_by_symbol(
 @router.post("/clear-expired")
 async def clear_expired_signals(
     max_age_minutes: int = 60,
+    principal: Principal = Depends(require_roles("admin")),
     service: SignalScorerService = Depends(get_signal_scorer_service),
 ) -> dict[str, Any]:
+    del principal  # autoriza vía Depends; el cuerpo no lo necesita
     """
     Clear signals older than specified age.
 
@@ -406,8 +411,10 @@ async def clear_expired_signals(
 async def update_thresholds(
     confidence_threshold: float,
     liquidity_threshold: float,
+    principal: Principal = Depends(require_roles("admin")),
     service: SignalScorerService = Depends(get_signal_scorer_service),
 ) -> dict[str, Any]:
+    del principal  # autoriza vía Depends; el cuerpo no lo necesita
     """
     Update minimum thresholds for signal evaluation.
 
@@ -447,8 +454,10 @@ async def update_thresholds(
 @router.post("/position-size-limit")
 async def update_position_size_limit(
     max_percent: float,
+    principal: Principal = Depends(require_roles("admin")),
     service: SignalScorerService = Depends(get_signal_scorer_service),
 ) -> dict[str, Any]:
+    del principal  # autoriza vía Depends; el cuerpo no lo necesita
     """
     Update maximum position size limit.
 

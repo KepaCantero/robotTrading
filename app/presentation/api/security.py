@@ -15,14 +15,16 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import hmac
+import json
 import logging
 import os
 import time
 import traceback
 from collections import defaultdict
+from dataclasses import dataclass
 from datetime import datetime
 from functools import wraps
-from typing import TYPE_CHECKING, Callable, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Callable, TypeVar, cast
 
 from fastapi import HTTPException, Request, Response, status
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -35,6 +37,9 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 F = TypeVar("F", bound=Callable[..., object])
+
+# Roles válidos del principal único (Fase 1 del plan de producción paper).
+VALID_ROLES: tuple[str, ...] = ("viewer", "trader", "admin")
 
 
 # ============================================================================
@@ -220,16 +225,18 @@ def rate_limit(
     def decorator(func: F) -> F:
         @wraps(func)
         async def wrapper(*args: object, **kwargs: object) -> object:
-            # Try to extract Request from kwargs
+            # Extract Request from positional args or ANY keyword argument
+            # value (A14: http_request-named parameters skipped rate limiting).
             request: Request | None = None
             for arg in args:
                 if isinstance(arg, Request):
                     request = arg
                     break
             if not request:
-                request_candidate = kwargs.get("request")
-                if isinstance(request_candidate, Request):
-                    request = request_candidate
+                for value in kwargs.values():
+                    if isinstance(value, Request):
+                        request = value
+                        break
 
             if not request:
                 # No request object, skip rate limiting
@@ -413,22 +420,83 @@ def _get_configured_api_keys() -> list[str]:
     return keys
 
 
-def get_user_from_request(request: Request) -> dict[str, str] | None:
+# Roles por defecto de una clave sin mapeo explícito: puede consultar y
+# operar, pero no ejecutar acciones administrativas (resets, umbrales,
+# despliegue). El rol admin NUNCA se concede automáticamente (A13).
+DEFAULT_API_KEY_ROLES: tuple[str, ...] = ("viewer", "trader")
+
+
+def _get_key_roles_map() -> dict[str, tuple[str, ...]]:
+    """Read the key→roles mapping from the API_KEY_ROLES variable.
+
+    Format: JSON object mapping a FULL key to the list of roles, e.g.::
+
+        API_KEY_ROLES='{"aaaa...": ["admin"], "bbbb...": ["viewer"]}'
+
+    Keys absent from the map keep DEFAULT_API_KEY_ROLES. Unknown roles are
+    ignored with a warning (never widened).
     """
-    Extract user information from the request.
+    raw = os.getenv("API_KEY_ROLES", "").strip()
+    if not raw:
+        return {}
+    try:
+        parsed: Any = json.loads(raw)
+    except ValueError:
+        logger.warning("API_KEY_ROLES is not valid JSON: role mapping ignored")
+        return {}
+    if not isinstance(parsed, dict):
+        logger.warning("API_KEY_ROLES must be a JSON object: role mapping ignored")
+        return {}
+    mapping: dict[str, tuple[str, ...]] = {}
+    for key, roles in parsed.items():
+        if not isinstance(key, str) or not isinstance(roles, list):
+            continue
+        clean = tuple(r for r in roles if isinstance(r, str) and r in VALID_ROLES)
+        if len(clean) != len(roles):
+            logger.warning(
+                "API_KEY_ROLES contains unknown roles for key %s...: ignored",
+                key[:8],
+            )
+        if clean:
+            mapping[key] = clean
+    return mapping
 
-    API key authentication: the X-API-Key header must match one of the keys
-    configured via API_ACCESS_KEYS or API_KEY (compared in constant time).
-    Keys are never accepted based on length or format alone.
 
-    Fail-closed: if authentication is enabled and no keys are configured,
-    every request is rejected.
+@dataclass(frozen=True)
+class Principal:
+    """Authenticated identity shared by every router (Fase 1).
 
-    Args:
-        request: FastAPI Request object
+    One principal object travels through dependencies and decorators alike;
+    roles gate authorization (403) while its mere presence proves
+    authentication (401 otherwise).
+    """
 
-    Returns:
-        Optional[Dict]: User information if authenticated, None otherwise
+    user_id: str
+    roles: tuple[str, ...]
+    auth_method: str
+    key_prefix: str = ""
+
+    def has_any_role(self, *allowed: str) -> bool:
+        """True if the principal holds at least one of ``allowed``."""
+        return any(role in self.roles for role in allowed)
+
+    def as_user_dict(self) -> dict[str, Any]:
+        """Legacy dict shape consumed by ``require_auth`` and logs."""
+        return {
+            "id": self.user_id,
+            "type": self.auth_method,
+            "roles": list(self.roles),
+            "key_prefix": self.key_prefix,
+        }
+
+
+def get_principal_from_request(request: Request) -> Principal | None:
+    """Resolve the single Principal from the request, fail-closed.
+
+    X-API-Key must constant-time match a key configured via
+    API_ACCESS_KEYS/API_KEY; its roles come from API_KEY_ROLES or the
+    default (viewer, trader). Bearer tokens stay rejected while JWT is
+    unimplemented. No request is authenticated by key length or format.
     """
     global _api_keys_missing_logged
 
@@ -446,12 +514,15 @@ def get_user_from_request(request: Request) -> dict[str, str] | None:
                 _api_keys_missing_logged = True
             return None
         _api_keys_missing_logged = False
-        if any(
-            hmac.compare_digest(api_key.encode("utf-8"), key.encode("utf-8"))
-            for key in configured_keys
-        ):
-            # Mask the key for logging - never expose full key
-            return {"id": "api_key_user", "type": "api_key", "key_prefix": api_key[:8]}
+        for key in configured_keys:
+            if hmac.compare_digest(api_key.encode("utf-8"), key.encode("utf-8")):
+                roles = _get_key_roles_map().get(key, DEFAULT_API_KEY_ROLES)
+                return Principal(
+                    user_id=f"api_key_{key[:8]}",
+                    roles=roles,
+                    auth_method="api_key",
+                    key_prefix=api_key[:8],
+                )
         return None
 
     # JWT bearer authentication is not implemented yet: reject unvalidated
@@ -460,11 +531,94 @@ def get_user_from_request(request: Request) -> dict[str, str] | None:
     if auth_header and auth_header.startswith("Bearer "):
         return None
 
-    # Check request state for user set by middleware
-    if hasattr(request.state, "user"):
-        return request.state.user
+    # A previously resolved principal on request state (set by
+    # get_current_principal upstream in the same request).
+    return getattr(request.state, "principal", None)
 
-    return None
+
+async def get_current_principal(request: Request) -> Principal:
+    """FastAPI dependency: authenticate or raise 401 (never 500).
+
+    Mounted at router level for protect-by-default; endpoints that need
+    authorization use require_roles instead/as well.
+    """
+    if not SecurityConfig.AUTH_ENABLED:
+        # Auth explicitly disabled (development flag): anonymous principal.
+        principal = Principal(user_id="anonymous", roles=(), auth_method="disabled")
+        request.state.principal = principal
+        request.state.user = principal.as_user_dict()
+        return principal
+
+    principal = get_principal_from_request(request)
+    if principal is None:
+        logger.warning(
+            "Authentication failed: no valid credentials",
+            extra={"path": request.url.path, "method": request.method},
+        )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "error": "Authentication required",
+                "message": "Valid authentication credentials required",
+            },
+            headers={"WWW-Authenticate": 'Bearer realm="algotrading", X-API-Key'},
+        )
+
+    request.state.principal = principal
+    # Backwards-compatible attribute for code reading request.state.user.
+    request.state.user = principal.as_user_dict()
+    return principal
+
+
+def require_roles(*allowed_roles: str) -> Callable[[Request], Any]:
+    """FastAPI dependency factory: require at least one of ``allowed_roles``.
+
+    Usage::
+
+        @router.post("/reset")
+        async def reset(principal: Principal = Depends(require_roles("admin"))):
+            ...
+    """
+    valid = tuple(role for role in allowed_roles if role in VALID_ROLES)
+    if len(valid) != len(allowed_roles):
+        raise ValueError(
+            f"Unknown roles {set(allowed_roles) - set(VALID_ROLES)}; valid: {VALID_ROLES}"
+        )
+
+    async def dependency(request: Request) -> Principal:
+        principal = await get_current_principal(request)
+        if valid and not principal.has_any_role(*valid):
+            logger.warning(
+                "Authorization failed: insufficient permissions",
+                extra={
+                    "user_id": principal.user_id,
+                    "required_roles": list(valid),
+                    "user_roles": list(principal.roles),
+                },
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "error": "Insufficient permissions",
+                    "message": f"This endpoint requires one of the following roles: {', '.join(valid)}",
+                    "required_roles": list(valid),
+                },
+            )
+        return principal
+
+    return dependency
+
+
+def get_user_from_request(request: Request) -> dict[str, Any] | None:
+    """
+    Extract user information from the request (legacy dict shape).
+
+    Delegates to get_principal_from_request so decorators and dependencies
+    share ONE authentication source; the returned dict carries the
+    principal's roles.
+    """
+    principal = get_principal_from_request(request)
+    return principal.as_user_dict() if principal else None
 
 
 def require_auth(
@@ -496,16 +650,19 @@ def require_auth(
     def decorator(func: F) -> F:
         @wraps(func)
         async def wrapper(*args: object, **kwargs: object) -> object:
-            # Extract Request from args or kwargs
+            # Extract Request from positional args or ANY keyword argument
+            # value: FastAPI injects parameters by name, and several routers
+            # declare it as http_request (A14).
             request: Request | None = None
             for arg in args:
                 if isinstance(arg, Request):
                     request = arg
                     break
             if not request:
-                request_candidate = kwargs.get("request")
-                if isinstance(request_candidate, Request):
-                    request = request_candidate
+                for value in kwargs.values():
+                    if isinstance(value, Request):
+                        request = value
+                        break
 
             if not request:
                 logger.warning("Authentication check failed: No request object")

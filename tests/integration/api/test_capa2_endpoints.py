@@ -22,9 +22,13 @@ from app.main import app
 
 @pytest_asyncio.fixture
 async def client():
-    """Create async HTTP client for testing."""
+    """Create async HTTP client for testing (authenticated operator key)."""
     transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+    async with AsyncClient(
+        transport=transport,
+        base_url="http://test",
+        headers={"X-API-Key": "test-integration-key-1"},
+    ) as ac:
         yield ac
 
 

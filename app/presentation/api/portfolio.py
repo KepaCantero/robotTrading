@@ -29,6 +29,7 @@ from pydantic import BaseModel
 from requests.exceptions import HTTPError, RequestException
 
 from app.domain.models.portfolio import AssetUniverse, MarketRegimeData, Position
+from app.presentation.api.security import Principal, require_roles
 from app.services.portfolio_service import PortfolioService
 from app.shared.config.di_container import get_portfolio_service as di_get_portfolio_service
 
@@ -665,6 +666,7 @@ async def get_circuit_breaker_status(
 async def reset_circuit_breaker(
     name: str,
     http_request: Request,
+    principal: Annotated[Principal, Depends(require_roles("admin"))],
     service: Annotated[PortfolioService, Depends(get_portfolio_service)],
 ) -> dict[str, str]:
     """
@@ -704,7 +706,11 @@ async def reset_circuit_breaker(
             action="circuit_breaker_reset",
             method=http_request.method,
             path=http_request.url.path,
-            details={"circuit_breaker_name": name},
+            details={
+                "circuit_breaker_name": name,
+                "user_id": principal.user_id,
+                "user_roles": list(principal.roles),
+            },
         )
         return {"message": f"Circuit breaker {name} reset successfully"}
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:

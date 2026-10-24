@@ -114,6 +114,10 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
                 "correlation_id": get_correlation_id(),
             }
         },
+        # Preserve protocol headers carried by the exception (e.g.
+        # WWW-Authenticate on 401) so standards-compliant clients and the
+        # auth acceptance matrix see them.
+        headers=dict(exc.headers) if exc.headers else None,
     )
 
 
@@ -148,6 +152,10 @@ async def starlette_http_exception_handler(
                 "correlation_id": get_correlation_id(),
             }
         },
+        # Preserve protocol headers carried by the exception (e.g.
+        # WWW-Authenticate on 401) so standards-compliant clients and the
+        # auth acceptance matrix see them.
+        headers=dict(exc.headers) if exc.headers else None,
     )
 
 

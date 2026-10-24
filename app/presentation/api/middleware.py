@@ -1,264 +1,33 @@
 """
-Authentication and security middleware for AlgoTrading API.
+Security and observability middleware for AlgoTrading API.
 
-Provides middleware for:
-1. Authentication for sensitive operations (API-006)
-2. Correlation ID tracking (API-006)
-3. Request validation and security headers
+Authentication is NOT handled here anymore (Fase 1, hallazgos A02/A15):
+the AuthMiddleware that accepted a hard-coded development key and answered
+500 to missing credentials was deleted at the root. Protect-by-default
+authentication and role-based authorization now live in
+app/presentation/api/security.py as FastAPI dependencies
+(get_current_principal / require_roles) mounted on the routers in main.py.
 
-GAP Fixes:
-- API-006: Added authentication for deployment operations
-- API-006: Added authentication for strategy operations
-- API-006: Added authentication for optimization write operations
-- API-006: Added correlation ID tracking for all requests
+Remaining middleware provides:
+- Correlation ID tracking (API-006)
+- Security headers
+- Request logging
 """
 
 from __future__ import annotations
 
 import logging
 import uuid
-from typing import TYPE_CHECKING, Callable, ClassVar
+from typing import TYPE_CHECKING, Callable
 
-from fastapi import HTTPException, Request, Response, status
 from starlette.middleware.base import BaseHTTPMiddleware
-
-from app.shared.config.config import get_settings
+from starlette.requests import Request
+from starlette.responses import Response
 
 if TYPE_CHECKING:
     from starlette.types import ASGIApp
 
 logger = logging.getLogger(__name__)
-
-
-class AuthMiddleware(BaseHTTPMiddleware):
-    """
-    Authentication middleware for sensitive operations.
-
-    This middleware provides authentication for sensitive API operations.
-    In production, this validates JWT tokens. For development, it provides
-    a simplified authentication mechanism.
-
-    Authentication can be provided via:
-    - Authorization: Bearer <token> header (JWT tokens in production)
-    - X-API-Key: <api_key> header (API key authentication)
-
-    Paths that require authentication:
-    - /deployment/*: All deployment validation operations
-    - /strategies/* (write operations): POST, PUT, DELETE, PATCH
-    - /optimization/* (write operations): POST, PUT, DELETE, PATCH
-    """
-
-    # Paths that require authentication for write operations
-    WRITE_OPERATION_PATHS: ClassVar[set[str]] = {
-        "/strategies",
-        "/optimization",
-    }
-
-    # Paths that require authentication for all operations
-    ALWAYS_AUTHENTICATE: ClassVar[set[str]] = {
-        "/deployment",
-    }
-
-    # Write HTTP methods
-    WRITE_METHODS: ClassVar[set[str]] = {"POST", "PUT", "DELETE", "PATCH"}
-
-    def __init__(
-        self,
-        app: ASGIApp,
-        require_auth: bool = True,
-        debug_mode: bool = False,
-    ) -> None:
-        """
-        Initialize the authentication middleware.
-
-        Args:
-            app: The ASGI application
-            require_auth: Whether to require authentication (can be disabled for development)
-            debug_mode: Enable debug mode for testing
-        """
-        super().__init__(app)
-        self.require_auth = require_auth
-        self.debug_mode = debug_mode
-        self.settings = get_settings()
-        self._valid_api_keys: set[str] | None = None
-
-    @property
-    def valid_api_keys(self) -> set[str]:
-        """
-        Get valid API keys from settings.
-
-        Returns:
-            Set of valid API keys
-        """
-        if self._valid_api_keys is None:
-            # In production, load from secure vault or environment
-            api_keys = (
-                self.settings.model_extra.get("api_keys", "") if self.settings.model_extra else ""
-            )
-            if api_keys:
-                self._valid_api_keys = set(api_keys.split(","))
-            else:
-                # Default development key
-                self._valid_api_keys = {"dev-api-key-12345"}
-        return self._valid_api_keys
-
-    def _requires_authentication(self, path: str, method: str) -> bool:
-        """
-        Check if a request requires authentication.
-
-        Args:
-            path: Request path
-            method: HTTP method
-
-        Returns:
-            True if authentication is required
-        """
-        # Check if path requires authentication for all operations
-        for auth_path in self.ALWAYS_AUTHENTICATE:
-            if path.startswith(auth_path):
-                return True
-
-        # Check if path requires authentication for write operations
-        if method in self.WRITE_METHODS:
-            for write_path in self.WRITE_OPERATION_PATHS:
-                if path.startswith(write_path):
-                    return True
-
-        return False
-
-    def _validate_bearer_token(self, token: str) -> bool:
-        """
-        Validate a bearer token (JWT).
-
-        In production, this validates JWT tokens using proper cryptography.
-        For development, we use a simple validation mechanism.
-
-        Args:
-            token: The bearer token to validate
-
-        Returns:
-            True if token is valid
-        """
-        # In production, use proper JWT validation:
-        # from jose import jwt
-        # try:
-        #     payload = jwt.decode(
-        #         token,
-        #         self.settings.secret_key,
-        #         algorithms=[self.settings.jwt_algorithm],
-        #     )
-        #     return payload.get("sub") is not None
-        # except JWTError:
-        #     return False
-
-        # Development mode: accept any token starting with "dev-"
-        if self.debug_mode and token.startswith("dev-"):
-            logger.debug("Accepted dev token (debug mode)")
-            return True
-
-        # Check if it matches a known API key format
-        return token in self.valid_api_keys
-
-    def _validate_api_key(self, api_key: str) -> bool:
-        """
-        Validate an API key.
-
-        Args:
-            api_key: The API key to validate
-
-        Returns:
-            True if API key is valid
-        """
-        return api_key in self.valid_api_keys
-
-    async def dispatch(self, request: Request, call_next: Callable) -> Response:
-        """
-        Process request and validate authentication.
-
-        Args:
-            request: The incoming request
-            call_next: The next middleware/route handler
-
-        Returns:
-            Response: The response from the route handler
-
-        Raises:
-            HTTPException: If authentication is required but not provided
-        """
-        path = request.url.path
-        method = request.method
-
-        # Check if authentication is required
-        if not self.require_auth:
-            # Authentication disabled (development mode)
-            logger.debug(f"Auth bypassed for {method} {path}")
-            return await call_next(request)
-
-        if not self._requires_authentication(path, method):
-            # No authentication required for this path/method
-            return await call_next(request)
-
-        # Check for Bearer token in Authorization header
-        auth_header = request.headers.get("Authorization", "")
-        bearer_token = None
-
-        if auth_header.startswith("Bearer "):
-            bearer_token = auth_header[7:].strip()  # Remove "Bearer " prefix
-
-        # Check for API key
-        api_key = request.headers.get("X-API-Key", "")
-
-        # Validate credentials
-        authenticated = False
-        auth_method = None
-
-        if bearer_token and self._validate_bearer_token(bearer_token):
-            authenticated = True
-            auth_method = "bearer_token"
-            # Extract user info from token in production
-            request.state.user_id = "authenticated_user"
-            request.state.auth_method = auth_method
-
-        elif api_key and self._validate_api_key(api_key):
-            authenticated = True
-            auth_method = "api_key"
-            request.state.user_id = f"api_key_{api_key[:8]}"
-            request.state.auth_method = auth_method
-
-        if not authenticated:
-            logger.warning(
-                f"Authentication failed for {method} {path}",
-                extra={
-                    "has_bearer_token": bool(bearer_token),
-                    "has_api_key": bool(api_key),
-                    "client_host": request.client.host if request.client else None,
-                },
-            )
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail={
-                    "error": "Authentication required",
-                    "message": "This operation requires authentication. "
-                    "Please provide a valid Bearer token or API key.",
-                    "path": path,
-                },
-                headers={
-                    "WWW-Authenticate": "Bearer",
-                    "X-Authenticate-Methods": "Bearer, X-API-Key",
-                },
-            )
-
-        logger.info(
-            f"Request authenticated via {auth_method}",
-            extra={
-                "method": method,
-                "path": path,
-                "auth_method": auth_method,
-                "user_id": getattr(request.state, "user_id", "unknown"),
-            },
-        )
-
-        return await call_next(request)
 
 
 class CorrelationIdMiddleware(BaseHTTPMiddleware):
@@ -402,7 +171,6 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
 
 
 __all__ = [
-    "AuthMiddleware",
     "CorrelationIdMiddleware",
     "RequestLoggingMiddleware",
     "SecurityHeadersMiddleware",

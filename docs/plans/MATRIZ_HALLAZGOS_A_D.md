@@ -12,8 +12,8 @@ sin validación completa), **validado** (prueba de aceptación verde). Método d
 
 | ID | Sev | Título | Ubicación (24-10-2026) | Estado | Fase |
 |---|---|---|---|---|---|
-| A01 | P1 | Operaciones sensibles sin autenticar | `app/presentation/api/portfolio.py` † | abierto | 1 |
-| A02 | P1 | Clave dev aceptada en producción | `middleware.py:102` ✔ `dev-api-key-12345` | abierto | 1 |
+| A01 | P1 | Operaciones sensibles sin autenticar | routers con `Depends(get_current_principal)` | **validado** (F1) | 1 |
+| A02 | P1 | Clave dev aceptada en producción | `AuthMiddleware` eliminada; solo `API_ACCESS_KEYS` | **validado** (F1) | 1 |
 | A03 | P1 | Límites por API desconectados de ejecución (3 RiskGates) | `order_manager.py` † | abierto | 2 |
 | A04 | P1 | STOP se salta RiskGates | `order_manager.py:158` ✔ `if order_price is not None` | abierto | 2 |
 | A05 | P1 | Precio fijo 100 en validación | `order_manager.py:155` ✔ `Decimal("100")` | abierto | 2 |
@@ -24,9 +24,9 @@ sin validación completa), **validado** (prueba de aceptación verde). Método d
 | A10 | P1 | Venta completa pierde el efectivo | `paper_adapter.py:333-335` ✔ `return` antes del abono | abierto | 3 |
 | A11 | P1 | Variables ML con resultados futuros | `training_data_preparator.py:771` † | abierto | 5 |
 | A12 | P1 | Fallo de CV temporal → split aleatorio | `supervised_learning_engine.py:251-256` ✔ fallback | abierto | 5 |
-| A13 | P2 | Auth válida inutilizable con roles | `security.py:555` † | abierto | 1 |
-| A14 | P2 | Decoradores no ven `http_request` | `security.py:498-508` ✔ wrapper args/kwargs | abierto | 1 |
-| A15 | P2 | Fallo auth global responde 500 | `middleware.py:237` † | abierto | 1 |
+| A13 | P2 | Auth válida inutilizable con roles | `Principal` con roles vía `API_KEY_ROLES` | **validado** (F1) | 1 |
+| A14 | P2 | Decoradores no ven `http_request` | wrapper escanea kwargs por valor | **validado** (F1) | 1 |
+| A15 | P2 | Fallo auth global responde 500 | AuthMiddleware eliminada; 401 + headers | **validado** (F1) | 1 |
 | A16 | P2 | SUBMITTED aunque rechazada | `live_trading.py:183-191` ✔ incondicional | abierto | 2 |
 | A17 | P2 | Nueva orden cancela monitor de la anterior | `trading_bridge_orchestrator.py:428` † | abierto | 2 |
 | A18 | P2 | Validación numérica incompleta | `risk_gates.py:188` † | abierto | 2 |
@@ -63,6 +63,7 @@ diario. La aceptación (invariancia al orden, todos los activos declarados) sigu
 | Fecha | Hallazgo | Cambio | Estado nuevo |
 |---|---|---|---|
 | 2026-10-24 | (colección) | `get_order_manager_for_api` sin parámetros para `Depends`; 5 endpoints de `live_trading.py` actualizados; test de seguridad re-keyed; eliminado `tests/integration/metrics_database` (módulo purgado en `561071a4`). Colección: 7 errores → **0** (11.969 tests). | — |
+| 2026-10-24 | A01, A02, A13, A14, A15 | **Fase 1 auth**: `AuthMiddleware` eliminada de raíz (mataba la clave dev y respondía 500); principal único `Principal` con roles viewer/trader/admin (`API_ACCESS_KEYS` + `API_KEY_ROLES`; default viewer+trader, admin nunca automático); dependencias `get_current_principal`/`require_roles` en los 13 routers (solo `/health` público); roles por endpoint (resets/umbrales → admin; órdenes/señales → trader); `require_auth`/`rate_limit` reconocen `http_request`; el handler global preserva `WWW-Authenticate`; audit del reset con identidad y timestamp. Aceptación: `tests/api/test_auth_matrix.py` **41/41** (matriz rutas × credenciales contra la app real). Tests de integración actualizados honestamente (conftest con clave operadora admin). Regresión vs línea base en tests/api, tests/integration/api y tests/unit/core: **0 nuevos**. | **validado** |
 
 ## Pruebas de aceptación
 

@@ -70,7 +70,7 @@ MAX_POSITION_PCT_LIMIT = 0.40  # max_concentration (max position weight, fractio
 
 
 @router.post("/start")
-@require_auth()
+@require_auth(roles=["trader", "admin"])
 async def start_live_trading(
     request: Request,
     orchestrator: TradingBridgeOrchestrator = Depends(get_trading_bridge_orchestrator),
@@ -92,7 +92,7 @@ async def start_live_trading(
 
 
 @router.post("/stop")
-@require_auth()
+@require_auth(roles=["trader", "admin"])
 async def stop_live_trading(
     request: Request,
     orchestrator: TradingBridgeOrchestrator = Depends(get_trading_bridge_orchestrator),
@@ -136,7 +136,7 @@ async def get_bridge_status(
 
 
 @router.post("/orders")
-@require_auth()
+@require_auth(roles=["trader", "admin"])
 async def place_order(
     request: Request,
     symbol: str,
@@ -216,7 +216,7 @@ async def get_order_status(
 
 
 @router.delete("/orders/{order_id}")
-@require_auth()
+@require_auth(roles=["trader", "admin"])
 async def cancel_order(
     request: Request,
     order_id: str,
@@ -240,7 +240,7 @@ async def cancel_order(
 
 
 @router.post("/orders/cancel-all")
-@require_auth()
+@require_auth(roles=["trader", "admin"])
 async def cancel_all_orders(
     request: Request,
     order_manager: OrderManager = Depends(get_order_manager_for_api),
@@ -396,7 +396,7 @@ async def get_position(
 
 
 @router.post("/risk/validate", response_model=None)
-@require_auth()
+@require_auth(roles=["trader", "admin"])
 async def validate_order_risk(
     request: Request,
     symbol: str,
@@ -466,7 +466,7 @@ async def get_risk_limits(
 
 
 @router.patch("/risk/limits")
-@require_auth()
+@require_auth(roles=["trader", "admin"])
 async def update_risk_limits(
     request: Request,
     max_position_size: float | None = None,
@@ -836,7 +836,7 @@ async def get_daily_return(
 
 
 @router.post("/rules")
-@require_auth()
+@require_auth(roles=["trader", "admin"])
 async def create_alert_to_trade_rule(
     request: Request,
     rule_data: dict,
@@ -866,7 +866,7 @@ async def create_alert_to_trade_rule(
 
 
 @router.delete("/rules/{rule_id}")
-@require_auth()
+@require_auth(roles=["trader", "admin"])
 async def delete_alert_to_trade_rule(
     request: Request,
     rule_id: str,

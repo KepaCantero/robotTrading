@@ -16,8 +16,9 @@ class TestCostAnalysisAPI:
     """Test cases for Cost Analysis API endpoints."""
 
     def setup_method(self):
-        """Set up test fixtures."""
-        self.client = TestClient(app)
+        """Set up test fixtures (authenticated operator key: routers are
+        protected by default since Fase 1)."""
+        self.client = TestClient(app, headers={"X-API-Key": "test-integration-key-1"})
         self.base_time = datetime.utcnow()
 
         # Sample trade data for API requests

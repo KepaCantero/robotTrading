@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from app.shared.config.config import Settings
 
 import uvicorn
-from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -67,9 +67,12 @@ from app.presentation.api.health import router as health_router
 from app.presentation.api.live_trading import router as live_trading_router
 from app.presentation.api.market_data import router as market_data_router
 
-# API-006 FIX: Import authentication and security middleware
+# API-006 FIX: security and observability middleware
+# Authentication is NOT middleware anymore (Fase 1, A02/A15): the
+# AuthMiddleware with its hard-coded dev key was deleted. Protect-by-default
+# auth is the get_current_principal FastAPI dependency, mounted on every
+# router below (all but /health); role checks use require_roles.
 from app.presentation.api.middleware import (
-    AuthMiddleware,
     CorrelationIdMiddleware,
     RequestLoggingMiddleware,
     SecurityHeadersMiddleware,
@@ -79,6 +82,7 @@ from app.presentation.api.optimization import router as optimization_router
 from app.presentation.api.paper_trading import router as paper_trading_router
 from app.presentation.api.portfolio import router as portfolio_router
 from app.presentation.api.portfolio_analytics import router as portfolio_analytics_router
+from app.presentation.api.security import get_current_principal
 from app.presentation.api.signals import router as signals_router
 from app.presentation.api.strategies import router as strategies_router
 from app.presentation.api.trading_error_handler import router as trading_error_handler_router
@@ -217,13 +221,6 @@ app.add_middleware(AuditMiddleware)
 app.add_middleware(CorrelationIdMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RequestLoggingMiddleware)
-# Note: AuthMiddleware is added last (executed first) to check auth before other middleware
-# Authentication is enabled in production, can be disabled via environment variable
-app.add_middleware(
-    AuthMiddleware,
-    require_auth=not get_app_settings().debug,  # Require auth in production only
-    debug_mode=get_app_settings().debug,
-)
 
 # ============================================================================
 # API-008: Comprehensive Exception Handlers with Error Logging
@@ -285,24 +282,33 @@ app.add_exception_handler(
     cast("Callable[[Request, Any], Response]", generic_exception_handler),
 )
 
-# Include API routers
+# ============================================================================
+# Include API routers — protect-by-default (Fase 1, A01)
+# ============================================================================
+# Every router except /health requires an authenticated principal. Reads are
+# open to any principal (viewer+); mutating endpoints add require_roles in
+# their own modules. /health stays public for readiness probes; "/" exposes
+# only version metadata.
+AUTH: list[Any] = [Depends(get_current_principal)]
+
 app.include_router(health_router)
-app.include_router(capa2_router)
-app.include_router(portfolio_router)
-app.include_router(signals_router)
-app.include_router(strategies_router)
-app.include_router(momentum_router)
-app.include_router(assets_router)
-app.include_router(market_data_router)
-app.include_router(paper_trading_router)
-app.include_router(portfolio_analytics_router)
-app.include_router(cost_analysis_router)
-app.include_router(optimization_router)
-app.include_router(live_trading_router)
+app.include_router(capa2_router, dependencies=AUTH)
+app.include_router(portfolio_router, dependencies=AUTH)
+app.include_router(signals_router, dependencies=AUTH)
+app.include_router(strategies_router, dependencies=AUTH)
+app.include_router(momentum_router, dependencies=AUTH)
+app.include_router(assets_router, dependencies=AUTH)
+app.include_router(market_data_router, dependencies=AUTH)
+app.include_router(paper_trading_router, dependencies=AUTH)
+app.include_router(portfolio_analytics_router, dependencies=AUTH)
+app.include_router(cost_analysis_router, dependencies=AUTH)
+app.include_router(optimization_router, dependencies=AUTH)
+app.include_router(live_trading_router, dependencies=AUTH)
 app.include_router(
     trading_error_handler_router,
     prefix="/trading-error-handler",
     tags=["Trading Error Handler"],
+    dependencies=AUTH,
 )
 
 # SRE Error Budget System (Rule 20)
