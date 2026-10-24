@@ -22,7 +22,7 @@ from app.presentation.api.live_trading import (
     MAX_POSITION_PCT_LIMIT,
     get_alert_to_trade_mapper,
     get_broker_connector,
-    get_order_manager,
+    get_order_manager_for_api,
     get_risk_gates,
     get_trading_bridge_orchestrator,
     router,
@@ -91,7 +91,7 @@ def client(monkeypatch, risk_gates):
     mapper = Mock()
 
     app.dependency_overrides[get_trading_bridge_orchestrator] = lambda: orchestrator
-    app.dependency_overrides[get_order_manager] = lambda: order_manager
+    app.dependency_overrides[get_order_manager_for_api] = lambda: order_manager
     app.dependency_overrides[get_risk_gates] = lambda: risk_gates
     app.dependency_overrides[get_broker_connector] = lambda: broker
     app.dependency_overrides[get_alert_to_trade_mapper] = lambda: mapper

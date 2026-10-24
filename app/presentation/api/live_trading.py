@@ -40,7 +40,7 @@ from app.services.live_trading.broker_connector import (
     OrderType,
     get_broker_connector,
 )
-from app.services.live_trading.order_manager import OrderManager, get_order_manager
+from app.services.live_trading.order_manager import OrderManager, get_order_manager_for_api
 from app.services.live_trading.risk_gates import RiskGates, get_risk_gates
 from app.services.live_trading.trading_audit_trail import TradingAuditTrail, get_trading_audit_trail
 from app.services.live_trading.trading_bridge_orchestrator import (
@@ -145,7 +145,7 @@ async def place_order(
     order_type: str = "MARKET",
     price: float | None = None,
     stop_price: float | None = None,
-    order_manager: OrderManager = Depends(get_order_manager),
+    order_manager: OrderManager = Depends(get_order_manager_for_api),
 ) -> dict:
     """Place a direct order (not from alert).
 
@@ -197,7 +197,7 @@ async def place_order(
 @router.get("/orders/{order_id}")
 async def get_order_status(
     order_id: str,
-    order_manager: OrderManager = Depends(get_order_manager),
+    order_manager: OrderManager = Depends(get_order_manager_for_api),
 ) -> dict:
     """Get current status of an order."""
     try:
@@ -220,7 +220,7 @@ async def get_order_status(
 async def cancel_order(
     request: Request,
     order_id: str,
-    order_manager: OrderManager = Depends(get_order_manager),
+    order_manager: OrderManager = Depends(get_order_manager_for_api),
 ) -> dict:
     """Cancel an open order."""
     try:
@@ -243,7 +243,7 @@ async def cancel_order(
 @require_auth()
 async def cancel_all_orders(
     request: Request,
-    order_manager: OrderManager = Depends(get_order_manager),
+    order_manager: OrderManager = Depends(get_order_manager_for_api),
 ) -> dict:
     """Cancel all pending orders."""
     try:
@@ -263,7 +263,7 @@ async def list_orders(
     status: str | None = None,
     symbol: str | None = None,
     limit: int = Query(100, ge=1, le=1000),
-    order_manager: OrderManager = Depends(get_order_manager),
+    order_manager: OrderManager = Depends(get_order_manager_for_api),
 ) -> dict:
     """List orders with optional filtering.
 

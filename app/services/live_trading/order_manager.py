@@ -601,3 +601,14 @@ def get_order_manager(
         _manager = OrderManager(broker=broker, risk_gates=RiskGates(broker=broker))
 
     return _manager
+
+
+def get_order_manager_for_api() -> OrderManager:
+    """Proveedor sin parámetros para ``Depends()`` de FastAPI.
+
+    ``get_order_manager(broker: BrokerConnector | None)`` no puede usarse
+    como dependencia: FastAPI intenta materializar la anotación del
+    parámetro ``broker`` en un campo y el registro de la ruta falla al
+    importar ``app.main`` (rompía la colección de 7 ficheros de tests).
+    """
+    return get_order_manager()
