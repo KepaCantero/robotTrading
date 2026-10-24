@@ -23,6 +23,7 @@ import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
+from uuid import uuid4
 
 from fastapi import Depends
 
@@ -96,6 +97,26 @@ class RiskCheckResult:
             self.warnings = []
 
 
+@dataclass(frozen=True)
+class OrderReservation:
+    """Value reserved by a pending order until it reaches a terminal state.
+
+    Fase 2 (A06): risk validation counts reserved orders so several
+    concurrent orders cannot each pass against the same buying power or
+    concentration headroom. Released on fill/cancel/reject.
+    """
+
+    reservation_id: str
+    symbol: str
+    side: OrderSide
+    quantity: Decimal
+    price: Decimal
+
+    @property
+    def value(self) -> Decimal:
+        return self.quantity * self.price
+
+
 class RiskGates:
     """
     Pre-trade risk validation system.
@@ -134,13 +155,16 @@ class RiskGates:
 
         # Tracking
         # Chan #15: 5% Daily Loss Circuit Breaker
-        self.start_of_day_capital = Decimal(
-            "0"
-        )  # Track starting capital for daily loss calculations
+        self.start_of_day_capital = Decimal("0")  # Session base for daily loss calculations (A07)
         self.daily_pnl = Decimal("0")
         self.max_intraday_value = Decimal("0")
         self.current_drawdown = Decimal("0")
         self.circuit_breaker_active = False
+
+        # Fase 2 (A06): value reserved by in-flight orders, released on
+        # terminal states. Survives only in memory; A09 persistence of the
+        # intent keeps recovery coherent across restarts.
+        self.reservations: dict[str, OrderReservation] = {}
 
         logger.info(
             f"✅ RiskGates initialized with centralized config "
@@ -157,11 +181,16 @@ class RiskGates:
         """
         Validate order against risk limits.
 
+        All checks run for every order type — the caller must resolve a real
+        validation price first (Fase 2, A04/A05: no order reaches the broker
+        without passing these gates).
+
         Args:
             symbol: Stock symbol
             side: BUY or SELL
-            quantity: Number of shares
-            price: Order price
+            quantity: Number of shares (finite, > 0)
+            price: Validation price (finite, > 0; a real quote or explicit
+                order price — never a placeholder)
 
         Returns:
             RiskCheckResult
@@ -170,10 +199,33 @@ class RiskGates:
         warnings = []
         risk_level = RiskLevel.LOW
 
-        # CRITICAL CHECK 0: Circuit breaker
+        # Check 0: numeric sanity (A18) — no NaN/inf/zero/negative values
+        # may cross the risk gates.
+        numeric_problem = self._numeric_violation(quantity, price)
+        if numeric_problem:
+            return RiskCheckResult(False, RiskLevel.CRITICAL, [numeric_problem])
+
+        order_value = quantity * price
+
+        # CRITICAL CHECK: Circuit breaker (A08) — blocks risk-INCREASING
+        # orders, never verified reduce-only closes.
         if self.circuit_breaker_active:
-            violations.append("Trading halted: circuit breaker active due to excessive losses")
-            return RiskCheckResult(False, RiskLevel.CRITICAL, violations)
+            positions = await self.broker.get_positions()
+            held = positions[symbol].quantity if positions.get(symbol) else Decimal("0")
+            pending_sells = self._reserved_quantity(symbol, OrderSide.SELL)
+            reducible = held - pending_sells
+            if side == OrderSide.SELL and quantity <= reducible:
+                warnings.append(
+                    "Circuit breaker active: reduce-only close allowed "
+                    f"({quantity} <= held {held} - pending sells {pending_sells})"
+                )
+                risk_level = RiskLevel.MEDIUM
+            else:
+                violations.append(
+                    "Trading halted: circuit breaker active "
+                    "(only verified reduce-only closes are accepted)"
+                )
+                return RiskCheckResult(False, RiskLevel.CRITICAL, violations)
 
         # Get account info
         account = await self.broker.get_account_info()
@@ -181,46 +233,72 @@ class RiskGates:
             violations.append("Cannot access account information")
             return RiskCheckResult(False, RiskLevel.CRITICAL, violations)
 
-        # Get current positions
-        await self.broker.get_positions()
+        # Session base for the daily loss limit: first validated order of a
+        # session fixes the base (A07: one implementation, explicit base).
+        # Never poisoned by a missing/zero equity snapshot.
+        if (self.start_of_day_capital is None or self.start_of_day_capital <= 0) and (
+            account.equity is not None and account.equity > 0
+        ):
+            self.start_of_day_capital = account.equity
 
-        # Check 1: Position size
-        order_value = quantity * price
-        if order_value > self.max_position_size:
+        positions = await self.broker.get_positions()
+        current_symbol_value = (
+            positions[symbol].market_value if positions.get(symbol) else Decimal("0")
+        )
+
+        # Reserved value from in-flight orders (A06)
+        reserved_buy_value = self._reserved_value(side=OrderSide.BUY)
+        reserved_sell_value = self._reserved_value(side=OrderSide.SELL)
+        reserved_symbol_value = self._reserved_value(symbol=symbol, side=OrderSide.BUY)
+
+        # Check 1: Position size (post-trade symbol exposure incl. pending)
+        projected_symbol_value = current_symbol_value + reserved_symbol_value
+        if side == OrderSide.BUY:
+            projected_symbol_value += order_value
+        if projected_symbol_value > self.max_position_size:
             violations.append(
-                f"Order value €{order_value} exceeds max position size €{self.max_position_size}"
+                f"Projected {symbol} exposure €{projected_symbol_value} exceeds "
+                f"max position size €{self.max_position_size}"
             )
             risk_level = RiskLevel.HIGH
 
-        # Check 2: Buying power (for buy orders)
-        if side == OrderSide.BUY and order_value > account.buying_power:
-            violations.append(
-                f"Order value €{order_value} exceeds available buying power €{account.buying_power}"
-            )
-            risk_level = RiskLevel.CRITICAL
+        # Check 2: Buying power (A06) — this order PLUS every reserved buy
+        if side == OrderSide.BUY:
+            projected_buy_usage = order_value + reserved_buy_value
+            if projected_buy_usage > account.buying_power:
+                violations.append(
+                    f"Order value €{order_value} + pending buys €{reserved_buy_value} "
+                    f"exceeds available buying power €{account.buying_power}"
+                )
+                risk_level = RiskLevel.CRITICAL
 
-        # Check 3: Concentration
-        portfolio_value = account.portfolio_value
-        if portfolio_value > 0:
-            position_weight = order_value / portfolio_value
+        # Check 3: Concentration (post-trade, projected)
+        portfolio_after = account.portfolio_value + (
+            order_value if side == OrderSide.BUY else Decimal("0")
+        )
+        if portfolio_after > 0:
+            position_weight = projected_symbol_value / portfolio_after
             if position_weight > self.max_concentration:
                 warnings.append(
-                    f"Position weight {position_weight:.1%} exceeds target {self.max_concentration:.1%}"
+                    f"Projected {symbol} weight {position_weight:.1%} exceeds "
+                    f"target {self.max_concentration:.1%}"
                 )
                 risk_level = max(risk_level, RiskLevel.MEDIUM)
 
-        # Check 4: Leverage
-        if account.buying_power > 0:
-            leverage = (
-                account.portfolio_value / account.equity if account.equity > 0 else Decimal("1")
-            )
+        # Check 4: Leverage (projected, A06) — gross exposure after this
+        # order and reserved buys over equity.
+        if account.equity > 0:
+            gross_after = account.portfolio_value + reserved_buy_value - reserved_sell_value
+            if side == OrderSide.BUY:
+                gross_after += order_value
+            leverage = gross_after / account.equity
             if leverage > self.max_leverage:
                 violations.append(
-                    f"Current leverage {leverage:.2f}x exceeds max {self.max_leverage:.2f}x"
+                    f"Projected leverage {leverage:.2f}x exceeds max {self.max_leverage:.2f}x"
                 )
                 risk_level = max(risk_level, RiskLevel.HIGH)
 
-        # Check 5: Cash reserve (for sell orders, check if buy)
+        # Check 5: Cash reserve (for buy orders)
         if side == OrderSide.BUY:
             cash_pct = (
                 account.cash_available / account.portfolio_value
@@ -232,8 +310,9 @@ class RiskGates:
                     f"Cash reserve {cash_pct:.1%} below target {self.min_cash_reserve:.1%}"
                 )
 
-        # Check 6: Daily loss limit (CRITICAL)
-        daily_loss_passed, daily_loss_msg = await self.check_daily_loss(abs(self.daily_pnl))
+        # Check 6: Daily loss limit (A07: max(0, -PnL) over the session
+        # base — a profitable session can never trip the loss breaker).
+        daily_loss_passed, daily_loss_msg = await self.check_daily_loss(self.daily_pnl)
         if not daily_loss_passed:
             violations.append(daily_loss_msg)
             risk_level = RiskLevel.CRITICAL
@@ -257,6 +336,54 @@ class RiskGates:
 
         passed = len(violations) == 0
         return RiskCheckResult(passed, risk_level, violations, warnings)
+
+    @staticmethod
+    def _numeric_violation(quantity: Decimal, price: Decimal) -> str | None:
+        """A18: finite, positive quantity and price — or an explanation."""
+        for name, value in (("quantity", quantity), ("price", price)):
+            if not value.is_finite():
+                return f"Invalid {name}: {value} is not finite"
+            if value <= 0:
+                return f"Invalid {name}: must be > 0, got {value}"
+        return None
+
+    # -- Reservations (A06) -------------------------------------------------
+
+    def reserve(self, symbol: str, side: OrderSide, quantity: Decimal, price: Decimal) -> str:
+        """Reserve risk capacity for an in-flight order; returns its id."""
+        reservation_id = f"res_{uuid4().hex}"
+        self.reservations[reservation_id] = OrderReservation(
+            reservation_id=reservation_id,
+            symbol=symbol,
+            side=side,
+            quantity=quantity,
+            price=price,
+        )
+        return reservation_id
+
+    def release(self, reservation_id: str) -> None:
+        """Release a reservation on a terminal order state."""
+        self.reservations.pop(reservation_id, None)
+
+    def _reserved_value(self, symbol: str | None = None, side: OrderSide | None = None) -> Decimal:
+        return sum(
+            (
+                r.value
+                for r in self.reservations.values()
+                if (symbol is None or r.symbol == symbol) and (side is None or r.side == side)
+            ),
+            Decimal("0"),
+        )
+
+    def _reserved_quantity(self, symbol: str, side: OrderSide) -> Decimal:
+        return sum(
+            (
+                r.quantity
+                for r in self.reservations.values()
+                if r.symbol == symbol and r.side == side
+            ),
+            Decimal("0"),
+        )
 
     def _activate_circuit_breaker(self, reason: str) -> None:
         """Activate circuit breaker to halt all trading."""
@@ -325,21 +452,33 @@ class RiskGates:
         self.max_intraday_value = capital
         logger.info(f"Start of day capital set to ${capital:,.2f}")
 
-    async def check_daily_loss(self, daily_loss: Decimal) -> tuple[bool, str]:
+    async def check_daily_loss(self, daily_pnl: Decimal) -> tuple[bool, str]:
         """
-        Check if daily loss limit exceeded.
+        THE daily-loss limit implementation (A07: single definition).
+
+        Loss is ``max(0, -daily_pnl)`` — a profitable session can never trip
+        the breaker — measured against the session base
+        (``start_of_day_capital``), falling back to current equity only when
+        no session base was ever set.
 
         Args:
-            daily_loss: Daily loss amount
+            daily_pnl: Signed cumulative session P&L
 
         Returns:
             (passed, message)
         """
-        account = await self.broker.get_account_info()
-        if not account or account.equity <= 0:
-            return False, "Cannot calculate daily loss"
+        base = self.start_of_day_capital
+        if base is None or base <= 0:
+            account = await self.broker.get_account_info()
+            if not account or account.equity is None or account.equity <= 0:
+                return False, "Cannot calculate daily loss: no session base and no account equity"
+            base = account.equity
 
-        loss_pct = daily_loss / account.equity
+        loss = max(Decimal("0"), -daily_pnl)
+        if loss <= 0:
+            return True, "Daily loss within limits (session profitable)"
+
+        loss_pct = loss / base
         if loss_pct > self.max_daily_loss:
             return False, f"Daily loss {loss_pct:.1%} exceeds limit {self.max_daily_loss:.1%}"
 
