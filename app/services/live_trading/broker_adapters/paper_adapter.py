@@ -11,14 +11,17 @@ Used for:
 from __future__ import annotations
 
 import logging
+import os
 from datetime import datetime
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
+from pathlib import Path
 from uuid import uuid4
 
 from app.services.live_trading.broker_connector import (
     BrokerAccount,
     BrokerOrder,
     BrokerPosition,
+    BrokerQuote,
     BrokerType,
     OrderSide,
     OrderStatus,
@@ -26,6 +29,29 @@ from app.services.live_trading.broker_connector import (
 )
 
 logger = logging.getLogger(__name__)
+
+#: Repo's own EOD history — the default paper price source (last close).
+_DATA_DIR = Path(__file__).resolve().parents[4] / "data" / "historical"
+
+
+def csv_last_close_source(symbol: str):
+    """Default price source: last close of data/historical/<SYMBOL>.csv.
+
+    Returns (Decimal price, datetime date) or None when the file is
+    missing or malformed. A05: paper validates and fills at the last KNOWN
+    real price, never an invented constant.
+    """
+    path = _DATA_DIR / f"{symbol.upper()}.csv"
+    try:
+        with path.open("rb") as fh:
+            fh.seek(0, os.SEEK_END)
+            size = fh.tell()
+            fh.seek(max(0, size - 512))
+            tail = fh.read().decode("utf-8", errors="ignore").strip().splitlines()
+        row = tail[-1].split(",")
+        return Decimal(row[4]), datetime.strptime(row[0], "%Y-%m-%d")
+    except (OSError, IndexError, ValueError, InvalidOperation):
+        return None
 
 
 class PaperAdapter:
@@ -36,6 +62,8 @@ class PaperAdapter:
         initial_cash: Decimal | None = None,
         auto_fill_orders: bool = False,
         allow_shorting: bool = False,
+        max_quote_age_days: int = 90,
+        quote_stale_warn_days: int = 7,
     ):
         """Initialize paper trading adapter.
 
@@ -44,6 +72,12 @@ class PaperAdapter:
             auto_fill_orders: Whether to automatically fill market orders (default False for testing)
             allow_shorting: Whether SELL orders without a held position are
                 allowed (default False: reject instead of printing cash)
+            max_quote_age_days: quotes older than this are REJECTED
+                (abandoned data — never validate or fill on them).
+            quote_stale_warn_days: quotes older than this (but within the
+                hard limit) are still returned, loudly marked STALE: the
+                last known real price is the best paper estimate, and the
+                staleness is surfaced, never silent.
         """
         if initial_cash is None:
             initial_cash = Decimal("100000")
@@ -54,6 +88,52 @@ class PaperAdapter:
         self.initial_cash = initial_cash
         self.auto_fill_orders = auto_fill_orders
         self.allow_shorting = allow_shorting
+        self.max_quote_age_days = max_quote_age_days
+        self.quote_stale_warn_days = quote_stale_warn_days
+        # A05: injectable price source symbol -> (price, timestamp) | None.
+        # Default: last close of the repo's own EOD CSV (see
+        # csv_last_close_source); None-source symbols fail closed.
+        self._price_source = csv_last_close_source
+
+    def set_price_source(self, source) -> None:
+        """Inject a price source: callable(symbol) -> (price, ts) | None."""
+        self._price_source = source
+
+    async def get_quote(self, symbol: str) -> BrokerQuote | None:
+        """Real, timestamped quote for validation/execution (A05).
+
+        Tiers: fresh (<= quote_stale_warn_days) normal; stale-but-usable
+        (<= max_quote_age_days) returned marked STALE with a warning — the
+        last known real price, surfaced honestly; older than the hard limit
+        or missing/unparseable -> None (fail closed).
+        """
+        if self._price_source is None:
+            return None
+        reading = self._price_source(symbol)
+        if not reading:
+            return None
+        price, timestamp = reading
+        if not price or not price.is_finite() or price <= 0:
+            return None
+        age_days = (datetime.utcnow() - timestamp).days
+        if age_days > self.max_quote_age_days:
+            logger.warning(
+                "Quote rejected for %s: %s days old exceeds hard limit %s "
+                "(data abandoned — refresh it)",
+                symbol,
+                age_days,
+                self.max_quote_age_days,
+            )
+            return None
+        source = "paper-source"
+        if age_days > self.quote_stale_warn_days:
+            logger.warning(
+                "STALE quote for %s: %s days old (usable, but refresh the data)",
+                symbol,
+                age_days,
+            )
+            source = "paper-source-STALE"
+        return BrokerQuote(symbol=symbol, price=price, timestamp=timestamp, source=source)
 
     async def connect(
         self,
@@ -181,13 +261,28 @@ class PaperAdapter:
 
             # Simulate immediate execution for market orders if auto_fill is enabled
             if self.auto_fill_orders and order_type == OrderType.MARKET:
+                # A05: fill at the order price or a REAL quote — the old
+                # `price or Decimal("100")` invented money-moving prices.
+                execution_price = price
+                if execution_price is None:
+                    quote = await self.get_quote(symbol)
+                    execution_price = quote.price if quote else None
+                if execution_price is None:
+                    order.status = OrderStatus.REJECTED
+                    order.error_message = "No valid quote available for paper fill"
+                    order.updated_at = datetime.utcnow()
+                    logger.error("Paper MARKET fill rejected: no valid quote for %s", symbol)
+                    raise ValueError(
+                        f"No valid quote to fill {symbol} MARKET order (stale or missing)"
+                    )
+                order.price = execution_price
                 order.status = OrderStatus.FILLED
                 order.filled_quantity = quantity
                 order.updated_at = datetime.utcnow()
                 order.executed_at = datetime.utcnow()
 
                 # Update positions
-                self._update_position(symbol, side, quantity, price or Decimal("100"))
+                self._update_position(symbol, side, quantity, execution_price)
 
             logger.info(f"✅ Paper order placed: {symbol} {side.value} {quantity}")
 

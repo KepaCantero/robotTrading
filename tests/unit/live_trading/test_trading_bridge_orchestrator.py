@@ -19,6 +19,7 @@ from app.services.live_trading.alert_to_trade_mapper import AlertToTradeRule, Tr
 from app.services.live_trading.broker_connector import (
     BrokerAccount,
     BrokerConnector,
+    BrokerQuote,
     BrokerType,
     OrderSide,
     OrderStatus,
@@ -27,6 +28,15 @@ from app.services.live_trading.trading_bridge_orchestrator import (
     BridgeStatus,
     TradingBridgeOrchestrator,
 )
+
+
+def _fresh_quote(symbol: str, price: str) -> BrokerQuote:
+    """Fresh quote double for MARKET validation (Fase 2, A05)."""
+    from datetime import datetime
+
+    return BrokerQuote(
+        symbol=symbol, price=Decimal(price), timestamp=datetime.utcnow(), source="test"
+    )
 
 
 @pytest.mark.asyncio
@@ -121,6 +131,9 @@ class TestAlertProcessing:
             return_value=self._create_mock_account("50000", "100000")
         )
         mock_broker.calculate_portfolio_value = AsyncMock(return_value=Decimal("100000"))
+        mock_broker.get_positions = AsyncMock(return_value={})
+        # Fase 2 (A05): MARKET validation needs a real quote on the double.
+        mock_broker.get_quote = AsyncMock(return_value=_fresh_quote("AAPL", "150"))
         mock_broker.place_order = AsyncMock(
             return_value=MagicMock(
                 order_id="order_001",
@@ -160,6 +173,8 @@ class TestAlertProcessing:
         mock_broker = MagicMock(spec=BrokerConnector)
         mock_broker.get_account_info = AsyncMock(return_value=self._create_mock_account())
         mock_broker.calculate_portfolio_value = AsyncMock(return_value=Decimal("100000"))
+        mock_broker.get_positions = AsyncMock(return_value={})
+        mock_broker.get_quote = AsyncMock(return_value=_fresh_quote("AAPL", "150"))
         mock_broker.place_order = AsyncMock(
             return_value=MagicMock(
                 order_id="order_001",

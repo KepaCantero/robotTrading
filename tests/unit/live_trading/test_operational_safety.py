@@ -22,6 +22,7 @@ from app.services.live_trading.broker_connector import (
     BrokerAccount,
     BrokerConnector,
     BrokerOrder,
+    BrokerQuote,
     BrokerType,
     OrderSide,
     OrderStatus,
@@ -66,6 +67,16 @@ class FakeEquityBroker:
 
     async def get_positions(self):
         return {}
+
+    async def get_quote(self, symbol):
+        # Fase 2 (A05): order managers validate MARKET orders against a real
+        # quote; the double provides one so serialization/idempotency tests
+        # exercise the full path.
+        from datetime import datetime
+
+        return BrokerQuote(
+            symbol=symbol, price=Decimal("100"), timestamp=datetime.utcnow(), source="fake"
+        )
 
     async def place_order(
         self,
@@ -196,11 +207,21 @@ class TestDeterministicClientOrderId:
         await connector.adapter.connect()
         manager = make_manager(connector)
 
+        # Explicit price: this test is about idempotency, not quote
+        # resolution (MARKET validation would fail closed on a stale CSV).
         first = await manager.place_order(
-            "AAPL", OrderSide.BUY, Decimal("10"), order_ref="signal-123"
+            "AAPL",
+            OrderSide.BUY,
+            Decimal("10"),
+            price=Decimal("150"),
+            order_ref="signal-123",
         )
         second = await manager.place_order(
-            "AAPL", OrderSide.BUY, Decimal("10"), order_ref="signal-123"
+            "AAPL",
+            OrderSide.BUY,
+            Decimal("10"),
+            price=Decimal("150"),
+            order_ref="signal-123",
         )
 
         assert first is not None and second is not None

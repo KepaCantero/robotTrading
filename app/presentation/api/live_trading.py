@@ -171,7 +171,7 @@ async def place_order(
             Decimal(str(stop_price)) if stop_price is not None else None
         )
 
-        order_id = await order_manager.place_order(
+        order = await order_manager.place_order(
             symbol=symbol,
             side=order_side,
             quantity=quantity_decimal,
@@ -180,13 +180,27 @@ async def place_order(
             stop_price=stop_price_decimal,
         )
 
+        # A16: report the REAL outcome — never SUBMITTED for an order that
+        # was rejected or never sent.
+        if order is None:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "status": "REJECTED",
+                    "reason": order_manager.last_rejection or "Order rejected",
+                    "symbol": symbol,
+                    "side": side,
+                    "quantity": quantity,
+                },
+            )
+
         return {
-            "order_id": order_id.order_id if order_id else None,
+            "order_id": order.order_id,
             "symbol": symbol,
             "side": side,
             "quantity": quantity,
             "order_type": order_type,
-            "status": "SUBMITTED",
+            "status": order.status.value if hasattr(order.status, "value") else str(order.status),
             "timestamp": datetime.utcnow().isoformat(),
         }
     except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:

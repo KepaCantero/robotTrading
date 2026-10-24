@@ -97,6 +97,11 @@ class OrderManager:
         # Daily-loss breaker feeding: baseline day + last reported equity
         self.pnl_baseline_date: date | None = None
         self._last_reported_equity = Decimal("0")
+        # A16: human-readable reason of the last rejection, surfaced by the
+        # API instead of a fake SUBMITTED.
+        self.last_rejection: str | None = None
+        # A06: order_id -> reservation_id while an order is in flight.
+        self._order_reservations: dict[str, str] = {}
         logger.info("✅ OrderManager initialized with risk validation")
 
     async def place_order(
@@ -148,64 +153,96 @@ class OrderManager:
             # Feed the daily-loss circuit breaker with real account equity
             self._feed_daily_loss_breaker(account)
 
-            # Determine order price for risk validation
-            order_price = price
-            if order_price is None and order_type == OrderType.MARKET and account:
-                # Use conservative estimate if no current price available
-                order_price = Decimal("100")  # Conservative default
-
-            # TRD-002: Risk validation BEFORE order execution
-            if order_price is not None:
-                try:
-                    risk_result: RiskCheckResult = await self.risk_gates.validate_order(
-                        symbol=symbol,
-                        side=side,
-                        quantity=quantity,
-                        price=order_price,
+            # A04/A05: resolve a REAL validation price for every order type.
+            # LIMIT/STOP_LIMIT use their price, STOP its trigger, MARKET a
+            # live quote. No order skips the risk gates, no placeholder
+            # price exists anymore.
+            validation_price = price
+            if validation_price is None and order_type == OrderType.STOP:
+                validation_price = stop_price
+            quote = None
+            if validation_price is None:
+                quote = await self.broker.get_quote(symbol)
+                if quote is None or quote.price is None or quote.price <= 0:
+                    self.last_rejection = (
+                        f"No valid quote for {symbol}: risk validation requires "
+                        "a real price (missing or stale)"
                     )
+                    logger.warning(
+                        "Order rejected: no valid quote",
+                        extra={
+                            "correlation_id": correlation_id,
+                            "symbol": symbol,
+                            "order_type": order_type.value,
+                        },
+                    )
+                    return None
+                validation_price = quote.price
 
-                    if not risk_result.passed:
-                        # Log rejection with structured logging and correlation ID
-                        logger.warning(
-                            "Order rejected by risk gates",
-                            extra={
-                                "correlation_id": correlation_id,
-                                "symbol": symbol,
-                                "side": side.value,
-                                "quantity": str(quantity),
-                                "price": str(order_price),
-                                "order_type": order_type.value,
-                                "risk_level": risk_result.risk_level.value,
-                                "violations": risk_result.violations,
-                                "warnings": risk_result.warnings,
-                            },
-                        )
-                        return None
+            # TRD-002: Risk validation BEFORE order execution — ALWAYS (A04)
+            try:
+                risk_result: RiskCheckResult = await self.risk_gates.validate_order(
+                    symbol=symbol,
+                    side=side,
+                    quantity=quantity,
+                    price=validation_price,
+                )
 
-                    # Log risk approval with structured logging (SEC-005)
-                    logger.info(
-                        "Order approved by risk gates",
+                if not risk_result.passed:
+                    self.last_rejection = (
+                        "; ".join(risk_result.violations) or "rejected by risk gates"
+                    )
+                    # Log rejection with structured logging and correlation ID
+                    logger.warning(
+                        "Order rejected by risk gates",
                         extra={
                             "correlation_id": correlation_id,
                             "symbol": symbol,
                             "side": side.value,
                             "quantity": str(quantity),
-                            "price": str(order_price),
+                            "price": str(validation_price),
                             "order_type": order_type.value,
                             "risk_level": risk_result.risk_level.value,
-                        },
-                    )
-                except Exception as e:
-                    logger.error(
-                        "Risk validation failed - order rejected",
-                        extra={
-                            "correlation_id": correlation_id,
-                            "symbol": symbol,
-                            "side": side.value,
-                            "error": str(e),
+                            "violations": risk_result.violations,
+                            "warnings": risk_result.warnings,
                         },
                     )
                     return None
+
+                # Log risk approval with structured logging (SEC-005)
+                logger.info(
+                    "Order approved by risk gates",
+                    extra={
+                        "correlation_id": correlation_id,
+                        "symbol": symbol,
+                        "side": side.value,
+                        "quantity": str(quantity),
+                        "price": str(validation_price),
+                        "order_type": order_type.value,
+                        "risk_level": risk_result.risk_level.value,
+                    },
+                )
+            except Exception as e:
+                self.last_rejection = f"risk validation error: {e}"
+                logger.error(
+                    "Risk validation failed - order rejected",
+                    extra={
+                        "correlation_id": correlation_id,
+                        "symbol": symbol,
+                        "side": side.value,
+                        "error": str(e),
+                    },
+                )
+                return None
+
+            # A06: reserve risk capacity while the order is in flight.
+            reservation_id = self.risk_gates.reserve(symbol, side, quantity, validation_price)
+
+            # A05: MARKET orders execute at the resolved real quote so the
+            # paper fill cannot invent a price.
+            execution_price = price
+            if execution_price is None and quote is not None:
+                execution_price = quote.price
 
             try:
                 order = await self.broker.place_order(
@@ -213,7 +250,7 @@ class OrderManager:
                     side=side,
                     quantity=quantity,
                     order_type=order_type,
-                    price=price,
+                    price=execution_price,
                     stop_price=stop_price,
                     client_order_id=client_order_id,
                 )
@@ -221,6 +258,8 @@ class OrderManager:
                 if order:
                     self.pending_orders[order.order_id] = order
                     self.order_history.append(order)
+                    self._order_reservations[order.order_id] = reservation_id
+                    self._release_reservation_if_terminal(order)
                     # SEC-005: Structured logging with correlation ID
                     logger.info(
                         "Order placed successfully",
@@ -232,11 +271,13 @@ class OrderManager:
                             "side": side.value,
                             "quantity": str(quantity),
                             "order_type": order_type.value,
-                            "price": str(price) if price else None,
+                            "price": str(execution_price) if execution_price else None,
                         },
                     )
                     return order
                 else:
+                    self.risk_gates.release(reservation_id)
+                    self.last_rejection = "broker rejected the order"
                     logger.error(
                         "Order placement failed",
                         extra={
@@ -249,6 +290,8 @@ class OrderManager:
                     return None
 
             except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
+                self.risk_gates.release(reservation_id)
+                self.last_rejection = f"order placement error: {e}"
                 logger.error(
                     "Error placing order",
                     extra={
@@ -260,6 +303,15 @@ class OrderManager:
                     },
                 )
                 return None
+
+    def _release_reservation_if_terminal(self, order: BrokerOrder) -> None:
+        """A06: free reserved risk capacity on terminal order states."""
+        reservation_id = self._order_reservations.get(order.order_id)
+        if reservation_id is None:
+            return
+        if order.status in (OrderStatus.FILLED, OrderStatus.CANCELED, OrderStatus.REJECTED):
+            self.risk_gates.release(reservation_id)
+            del self._order_reservations[order.order_id]
 
     def _feed_daily_loss_breaker(self, account: BrokerAccount | None) -> None:
         """Feed the risk gates daily-loss circuit breaker from account equity.
@@ -306,6 +358,7 @@ class OrderManager:
                 order.status = OrderStatus.CANCELED
                 order.updated_at = datetime.now()
                 self.order_history.append(order)
+                self._release_reservation_if_terminal(order)
                 logger.info(f"✅ Order canceled: {order_id}")
             return success
         except (OSError, ValueError) as e:

@@ -119,6 +119,20 @@ class BrokerOrder:
     client_order_id: str | None = None  # SEC-005: Idempotency key
 
 
+@dataclass
+class BrokerQuote:
+    """A real, timestamped price for risk validation (Fase 2, A05).
+
+    Adapters return None when no trustworthy quote exists — a placeholder
+    price is never acceptable for validating or executing an order.
+    """
+
+    symbol: str
+    price: Decimal
+    timestamp: datetime
+    source: str = ""
+
+
 @runtime_checkable
 class BrokerAdapter(Protocol):
     """Protocol defining the interface that all broker adapters must implement."""
@@ -158,6 +172,8 @@ class BrokerAdapter(Protocol):
     async def cancel_order(self, order_id: str) -> bool: ...
 
     async def get_order_status(self, order_id: str) -> OrderStatus: ...
+
+    async def get_quote(self, symbol: str) -> BrokerQuote | None: ...
 
     async def update_positions(self) -> dict[str, BrokerPosition]: ...
 
@@ -379,6 +395,22 @@ class BrokerConnector:
             BrokerPosition or None
         """
         return await self.adapter.get_position(symbol)
+
+    async def get_quote(self, symbol: str) -> BrokerQuote | None:
+        """Get a real, timestamped quote for risk validation (A05).
+
+        Fails closed: adapters without a trustworthy price source return
+        None — the caller must reject the order, never invent a price.
+        """
+        try:
+            return await self.adapter.get_quote(symbol)
+        except AttributeError:
+            logger.warning(
+                "Adapter %s provides no get_quote: no trustworthy price for %s",
+                type(self.adapter).__name__,
+                symbol,
+            )
+            return None
 
     async def place_order(
         self,
