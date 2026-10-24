@@ -7,7 +7,7 @@
 > este documento sobre la rama `zcode/produccion-paper` (el nombre `codex/` del
 > texto original se sustituye por `zcode/` por decisión del usuario: «no crees
 > nada de codex, estamos en zcode»). Las auditorías fuente de los hallazgos
-> A01–A24 y D01–D12 están en `reports/audit_2026-10-24/`, y su estado verificado
+> A01–A24 y D01–D12 están en `docs/audits/2026-10-24/`, y su estado verificado
 > contra código, en `docs/plans/MATRIZ_HALLAZGOS_A_D.md`.
 
 Fecha: 24 de octubre de 2026.

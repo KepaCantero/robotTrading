@@ -1,6 +1,6 @@
 # Matriz de hallazgos A01–A24 · D01–D12
 
-Plan: `PLAN_PRODUCCION_PAPER_IBKR.md` · Auditorías fuente: `reports/audit_2026-10-24/`
+Plan: `PLAN_PRODUCCION_PAPER_IBKR.md` · Auditorías fuente: `docs/audits/2026-10-24/`
 (auditadas en `e4cb5eac`) · Verificación contra código: **24-10-2026**, árbol `c4e19661` + fixes Fase 0.
 
 Estados: **abierto** (defecto presente), **parcial** (parte tratado), **corregido** (cambio aplicado,
@@ -67,7 +67,7 @@ diario. La aceptación (invariancia al orden, todos los activos declarados) sigu
 ## Pruebas de aceptación
 
 Cada hallazgo cierra con su prueba de aceptación tal como está definida en
-`reports/audit_2026-10-24/auditoria_general_A01-A24.md` (§Verificación de cada hallazgo) y
-`reports/audit_2026-10-24/auditoria_dividendos_D01-D12.md` (§Aceptación de cada hallazgo).
+`docs/audits/2026-10-24/auditoria_general_A01-A24.md` (§Verificación de cada hallazgo) y
+`docs/audits/2026-10-24/auditoria_dividendos_D01-D12.md` (§Aceptación de cada hallazgo).
 El cierre del proyecto exige: todos los hallazgos **validados**, suite verde sin errores de
 colección y cero discrepancias de órdenes/contabilidad (§4 del plan).
