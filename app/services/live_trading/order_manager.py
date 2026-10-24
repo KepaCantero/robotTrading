@@ -647,11 +647,12 @@ def get_order_manager(
     if broker is None:
         broker = get_broker_connector()
     if _manager is None:
-        # Import RiskGates here to avoid circular dependency
-        from .risk_gates import RiskGates
+        # Import here to avoid circular dependency
+        from .risk_gates import get_risk_gates
 
-        # Create RiskGates directly for the OrderManager
-        _manager = OrderManager(broker=broker, risk_gates=RiskGates(broker=broker))
+        # A03: share THE singleton RiskGates — the API's PATCH
+        # /live-trading/risk/limits mutates the same object orders use.
+        _manager = OrderManager(broker=broker, risk_gates=get_risk_gates(broker))
 
     return _manager
 

@@ -25,8 +25,8 @@ from uuid import uuid4
 
 from .alert_to_trade_mapper import AlertToTradeMapper, TradeSignal
 from .broker_connector import BrokerConnector, OrderSide, OrderStatus, get_broker_connector
-from .order_manager import OrderManager
-from .risk_gates import RiskCheckResult, RiskGates, RiskLevel
+from .order_manager import OrderManager, get_order_manager
+from .risk_gates import RiskCheckResult, RiskGates, RiskLevel, get_risk_gates
 
 if TYPE_CHECKING:
     from app.services.alerting_system import AlertEvent, AlertManager
@@ -116,9 +116,23 @@ class TradingBridgeOrchestrator:
             risk_gates: Risk validation gates
         """
         self.alert_manager = alert_manager
-        self.broker = broker or get_broker_connector()
-        self.order_manager = order_manager or OrderManager(self.broker)
-        self.risk_gates = risk_gates or RiskGates(self.broker)
+        # A03: ONE authoritative RiskGates per account. On the default path
+        # (production) every consumer shares the global singletons, so the
+        # API's PATCH /live-trading/risk/limits and all order paths see the
+        # same object. Explicit wiring (tests) keeps manager and gates
+        # shared with each other without poisoning the process globals.
+        if order_manager is not None:
+            self.broker = broker or order_manager.broker
+            self.order_manager = order_manager
+            self.risk_gates = risk_gates or order_manager.risk_gates
+        elif broker is not None:
+            self.broker = broker
+            self.order_manager = OrderManager(broker)
+            self.risk_gates = risk_gates or self.order_manager.risk_gates
+        else:
+            self.broker = get_broker_connector()
+            self.order_manager = get_order_manager()
+            self.risk_gates = risk_gates or get_risk_gates()
         self.mapper = AlertToTradeMapper()
 
         # Tracking (deque with maxlen to prevent memory leaks)
@@ -135,7 +149,7 @@ class TradingBridgeOrchestrator:
 
         # CONCURRENCY: Lock for thread-safe order execution
         self._execution_lock = asyncio.Lock()
-        self._monitor_task: asyncio.Task[None] | None = None
+        self._monitor_tasks: dict[str, asyncio.Task[None]] = {}
 
         logger.info("✅ TradingBridgeOrchestrator initialized with concurrency protection")
 
@@ -164,6 +178,11 @@ class TradingBridgeOrchestrator:
         """
         self.is_active = False
         self.status = BridgeStatus.IDLE
+        # A17: cancel every open order's monitor on shutdown.
+        for task in self._monitor_tasks.values():
+            if not task.done():
+                task.cancel()
+        self._monitor_tasks.clear()
         logger.info("✅ Trading bridge stopped")
         return True
 
@@ -423,10 +442,19 @@ class TradingBridgeOrchestrator:
                 risk_approved=True,
             )
 
-            # Monitor order status (cancel any previous monitor before starting new one)
-            if self._monitor_task is not None and not self._monitor_task.done():
-                self._monitor_task.cancel()
-            self._monitor_task = asyncio.create_task(self._monitor_order(execution))
+            # A17: every open order keeps ITS OWN monitor — the old single
+            # task was cancelled by each new order, leaving earlier orders
+            # unwatched at the broker.
+            old_task = self._monitor_tasks.get(order.order_id)
+            if old_task is not None and not old_task.done():
+                old_task.cancel()
+            task = asyncio.create_task(self._monitor_order(execution))
+            self._monitor_tasks[order.order_id] = task
+            task.add_done_callback(
+                lambda t, oid=order.order_id: self._monitor_tasks.pop(oid, None)
+                if t is self._monitor_tasks.get(oid)
+                else None
+            )
 
             return execution
 
