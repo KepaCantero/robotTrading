@@ -16,6 +16,8 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 
+from app.domain.strategies.catalog import STRATEGY_CATALOG
+
 from .models import (
     BacktestMetrics,
     BacktestOrchestrationRequest,
@@ -178,25 +180,10 @@ class BacktestOrchestrator:
                 error_message=f"Real backtest failed: {e}",
             )
 
-    #: real strategy classes the orchestrator can run
-    _STRATEGIES = {
-        "mean_reversion": "app.domain.strategies.mean_reversion:MeanReversionStrategy",
-        "momentum_modular": "app.domain.strategies.strategy:ModularMomentumStrategy",
-        # objetivo maximo dividendo: core-satellite evidenciado (core
-        # buy&hold crecimiento/aristócratas + filtro momentum anti-crash +
-        # satélite high-yield + refugio BND). Precios ajustados → el momentum
-        # incluye las distribuciones (dividend momentum, RFS 2026).
-        "dividend_tracking": "app.domain.strategies.dividend_core_satellite:DividendCoreSatelliteStrategy",
-        "dividend_etf_rotation": "app.domain.strategies.dividend_etf_rotation:DividendETFRotationStrategy",
-        # objetivo preservar capital: anomalía de baja volatilidad (tramo de
-        # menor vol realizada del universo sectorial, equiponderado, poca
-        # rotación) — Blitz & van Vliet 2007, Baker/Bradley/Wurgler 2011.
-        "low_volatility": "app.domain.strategies.low_volatility:LowVolatilityStrategy",
-        # conclusión ejecutable del protocolo cuantitativo (criterio 6):
-        # cuando el equiponderado pasivo batió a toda gestión medida, la
-        # cartera desplegable ES el pasivo — esta estrategia lo backtestea
-        "static_ew": "app.domain.strategies.static_ew:StaticEqualWeightStrategy",
-    }
+    #: real strategy classes the orchestrator can run — catálogo ÚNICO
+    #: (también consumido por StrategyFactory): una estrategia nueva se
+    #: registra en app/domain/strategies/catalog.py y solo ahí
+    _STRATEGIES = STRATEGY_CATALOG
     #: warm-up bars fed to the strategy before the execution window
     _WARMUP_DAYS = 180
     #: Signal model caps volume at 10M shares (validator fallback)
@@ -234,6 +221,10 @@ class BacktestOrchestrator:
             strategy = strategy_cls({"name": name, "enabled": True, "universe": symbols})
         elif name == "static_ew" and symbols:
             strategy = strategy_cls({"name": name, "enabled": True, "symbols": symbols})
+        elif name == "pairs_trading" and symbols and len(symbols) >= 2:
+            strategy = strategy_cls(
+                {"name": name, "enabled": True, "pair_symbols": list(symbols[:2])}
+            )
         else:
             strategy = strategy_cls({"name": name, "enabled": True})
         # Optimizer overrides: the strategy's __init__ prioritises its YAML

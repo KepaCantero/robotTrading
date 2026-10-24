@@ -49,7 +49,9 @@ strategies:
       risk_per_trade: 0.015
 
   pairs_trading:
-    class: "PairsTradingStrategy"
+    # clase real: app/engines/strategy_engines/pairs_engine.py (el nombre
+    # anterior "PairsTradingStrategy" no existía en el código)
+    class: "PairsTradingStrategyEngine"
     config:
       name: "pairs_trading"
       description: "Estrategia de trading de pares basada en cointegración"
@@ -62,6 +64,13 @@ strategies:
       hedge_ratio: 1.0
       lookback_period: 30
       pair_symbols: ["AAPL", "MSFT"]
+      # Parámetros que lee el engine (sin ellos Decimal(None) crashea en __init__)
+      hedge_ratio_threshold: 0.5
+      max_pair_exposure: 0.10
+      max_total_exposure: 0.60
+      min_spread_z_score: 2.0
+      max_pair_half_life_days: 30
+      slippage_per_trade_pct: 0.001
       # Parámetros de riesgo específicos para Pairs Trading
       stop_loss: 0.04
       take_profit: 0.08
