@@ -332,6 +332,11 @@ class PaperAdapter:
                 pos.quantity = max(Decimal("0"), pos.quantity - quantity)
                 if pos.quantity == 0:
                     del self.positions[symbol]
+                    # A10: a full close STILL credits the sale proceeds —
+                    # returning before the cash update destroyed the money
+                    # (buy@100 + sell@100 left the account 100 poorer).
+                    if self.account:
+                        self.account.cash_available += quantity * price
                     return
 
             # Update market values
