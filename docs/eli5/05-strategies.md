@@ -32,7 +32,7 @@ The satellite is a small side bet. It ranks the high-yield ETFs VYM and DVY by m
 
 One detail matters a lot here: momentum is computed on adjusted prices. Adjusted prices fold dividends back into the price, so the score counts the cash the ETF paid out, not just its price moves.
 
-The strategy is cross-sectional: one instance watches all symbols on one shared timeline. The backtest runner knows this. It also reads the strategy's own hints for how much warm-up history it needs and how big each position may be. It is registered in the backtest registry under the name `dividend_tracking`. Before this registry entry existed, that name silently fell back to mean reversion — the real strategy was never reachable. A rotation-style variant, `DividendETFRotationStrategy`, is registered too, under `dividend_etf_rotation`.
+The strategy is cross-sectional: one instance watches all symbols on one shared timeline. The backtest runner knows this. It also reads the strategy's own hints for how much warm-up history it needs and how big each position may be. It is registered in the strategy catalog under the name `dividend_tracking`. Before this catalog entry existed, that name silently fell back to mean reversion — the real strategy was never reachable. (An older rotation-style sibling, `dividend_etf_rotation`, was removed after the evidence showed rotation subtracts value in dividend ETFs.)
 
 ## When strategies team up
 
@@ -45,8 +45,9 @@ An ensemble is a team of strategies with a referee, and it lives with the engine
 - `app/domain/strategies/momentum.py` — `MomentumStrategy`: RSI, EMA, volume ratio, ROC, OBV.
 - `app/domain/strategies/mean_reversion.py` — `MeanReversionStrategy`: z-score with a lookback window.
 - `app/domain/strategies/pairs_trading.py` — `PairsTrading`: cointegration, hedge ratio, spread z-score.
-- `app/domain/strategies/dividend_core_satellite.py` — `DividendCoreSatelliteStrategy`: dividend core, 12-1 momentum crash filter, high-yield satellite. `dividend_etf_rotation.py` next door holds the rotation variant.
-- `app/services/backtest_orchestration/backtest_orchestrator.py` — the `_STRATEGIES` registry: maps names like `dividend_tracking` to real strategy classes.
+- `app/domain/strategies/dividend_core_satellite.py` — `DividendCoreSatelliteStrategy`: dividend core, deep-bear guard, high-yield satellite ranked by yield × momentum.
+- `app/domain/strategies/static_ew.py` — `StaticEqualWeightStrategy`: the passive equal-weight portfolio, the protocol's executable conclusion.
+- `app/domain/strategies/catalog.py` — the single strategy catalog: maps names like `dividend_tracking` to real strategy classes; consumed by the orchestrator and the factory.
 - `app/domain/models/signal.py` — the `Signal` model: type, confidence, strength, metadata.
 - `app/engines/strategy_engines/ensemble.py` — `WeightedEnsemble`, `VotingEnsemble`, `RegimeBasedSelector`.
 - `app/shared/config/params/trading_thresholds.py` — the default numbers, like RSI 70/30 and the 40-60 zone.

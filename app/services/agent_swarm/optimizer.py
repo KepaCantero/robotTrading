@@ -46,6 +46,11 @@ PARAM_GRIDS: dict[str, dict[str, list[Any]]] = {
     "static_ew": {
         "rebalance_days": [126, 252, 365],
     },
+    # pares: la ventana del spread y cuán extremo debe ser el z-score
+    "pairs_trading": {
+        "lookback_period": [30, 60, 120],
+        "min_spread_z_score": [1.5, 2.0, 2.5],
+    },
 }
 
 # Parameters the strategies accept directly in their config dict (fallback

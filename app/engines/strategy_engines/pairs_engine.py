@@ -46,6 +46,15 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
     - Soporte para múltiples pares
     """
 
+    #: CROSS-SECTIONAL de facto: el spread necesita el timeline intercalado
+    #: de AMBOS símbolos del par — con instancias por símbolo el runner
+    #: nunca juntaría las dos series en una sola estrategia
+    is_cross_sectional = True
+
+    #: barras entre re-tests de cointegración (trimestral aprox): el régimen
+    #: del par cambia con el tiempo y un test congelado no lo ve
+    _COINTEGRATION_REFRESH_BARS = 63
+
     def __init__(self, config: dict[str, Any]):
         """
         Inicializar pairs trading strategy engine.
@@ -143,6 +152,7 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
         self.last_cointegration_recalc_date = None
         self.cointegration_recalc_interval_days = 30
         self.cached_cointegration_score: float | None = None
+        self._bars_since_cointegration: int = 0
         self.cached_hedge_ratio = Decimal("1.0")
 
         # Trade frequency limiting
@@ -308,14 +318,24 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
             return None
 
         try:
-            # Calcular spread y hacer ADF test
-            spread = np.array(prices1) - np.array(prices2)
+            # ADF sobre el spread CUBIERTO (residuo de la regresión p1~p2),
+            # igual que el z-score de la señal: el spread en bruto de dos
+            # series con tendencia nunca es estacionario
+            p1 = np.array(prices1, dtype=float)
+            p2 = np.array(prices2, dtype=float)
+            var2 = float(np.var(p2))
+            beta = float(np.cov(p1, p2)[0, 1]) / var2 if var2 > 0 else 1.0
+            spread = p1 - beta * p2
 
             # Simple ADF test usando statsmodels con fallback
             from app.shared.performance.statsmodels_fallback import adfuller
 
             result = adfuller(spread)
-            return float(result[0])  # Return test statistic
+            # P-VALUE (índice 1), no el estadístico: el estadístico ADF es
+            # NEGATIVO (más negativo = más cointegrado) y el gate
+            # `score < threshold` con un umbral tipo 0.05 jamás abría con
+            # el estadístico — 10 años sin una sola señal
+            return float(result[1])
         except (ValueError, ImportError, AttributeError):
             return None
 
@@ -352,27 +372,34 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
             prices1 = list(self.price_history[symbol1])
             prices2 = list(self.price_history[symbol2])
 
-            # Calcular spread actual
-            current_spread = prices1[-1] - prices2[-1]
-
-            # Calcular spread histórico
-            spreads = [
-                p1 - p2
-                for p1, p2 in zip(
-                    prices1[-self.lookback_period :], prices2[-self.lookback_period :]
-                )
-            ]
+            # Spread CUBIERTO (Engle-Granger): spread = p1 − β·p2 con β de
+            # regresión sobre la ventana. El spread en bruto (p1 − p2) de
+            # dos precios con tendencia no es estacionario y el ADF jamás
+            # pasaba el umbral — 10 años sin una señal.
+            window1 = np.array(prices1[-self.lookback_period :])
+            window2 = np.array(prices2[-self.lookback_period :])
+            var2 = float(np.var(window2))
+            beta = float(np.cov(window1, window2)[0, 1]) / var2 if var2 > 0 else 1.0
+            spreads = window1 - beta * window2
+            current_spread = float(spreads[-1])
             spread_mean = float(np.mean(spreads))
             spread_std = float(np.std(spreads)) if np.std(spreads) > 0 else 1.0
 
             # Z-score del spread
             spread_z_score = (current_spread - spread_mean) / spread_std if spread_std > 0 else 0.0
 
-            # Verificar cointegración (caché)
-            cointegration_score: float | None = self.cached_cointegration_score
-            if cointegration_score is None:
-                cointegration_score = self._calculate_cointegration(prices1, prices2)
-                self.cached_cointegration_score = cointegration_score
+            # Verificar cointegración: p-value refrescado periódicamente
+            # (congelarlo a la primera ventana congelaba el régimen del par
+            # para el resto del backtest)
+            if (
+                self.cached_cointegration_score is None
+                or self._bars_since_cointegration >= self._COINTEGRATION_REFRESH_BARS
+            ):
+                self.cached_cointegration_score = self._calculate_cointegration(prices1, prices2)
+                self._bars_since_cointegration = 0
+            else:
+                self._bars_since_cointegration += 1
+            cointegration_score = self.cached_cointegration_score
 
             # Verificar correlación
             if len(prices1) >= 20 and len(prices2) >= 20:
@@ -381,8 +408,8 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
             else:
                 correlation = 0.0
 
-            # Condiciones para señal
-            is_cointegrated = cointegration_score is not None and cointegration_score > float(
+            # Condiciones para señal: p-value BAJO el umbral = cointegrado
+            is_cointegrated = cointegration_score is not None and cointegration_score < float(
                 self.cointegration_threshold
             )
             is_correlated = abs(correlation) >= float(self.min_correlation)

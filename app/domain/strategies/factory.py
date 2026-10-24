@@ -138,16 +138,27 @@ class StrategyFactory:
 
     def _register_default_strategies(self) -> None:
         """Registrar estrategias por defecto."""
+        # CATÁLOGO ÚNICO primero: las estrategias del producto (swarm/home)
+        # viven en app/domain/strategies/catalog.py — aquí y en el
+        # BacktestOrchestrator se consume la misma fuente. Si un nombre del
+        # catálogo ya está registrado abajo con otro perfil (legacy/engines),
+        # gana el catálogo (es el camino productivo).
         try:
-            # Importar estrategias por defecto (legacy)
-            from .mean_reversion import MeanReversionStrategy
+            from .catalog import STRATEGY_CATALOG, resolve_strategy
+
+            for name, path in STRATEGY_CATALOG.items():
+                self.register_strategy(name, resolve_strategy(path))
+            logger.info("Registered catalog strategies: %s", ", ".join(STRATEGY_CATALOG))
+        except ImportError as e:
+            logger.warning(f"Could not import strategy catalog: {e}")
+
+        try:
+            # Importar estrategias legacy no presentes en el catálogo
             from .momentum import MomentumStrategy
 
-            # Registrar estrategias legacy
-            self.register_strategy("mean_reversion", MeanReversionStrategy)
             self.register_strategy("momentum", MomentumStrategy)
 
-            logger.info("Registered default strategies: mean_reversion, momentum")
+            logger.info("Registered legacy strategies: momentum")
 
         except ImportError as e:
             logger.warning(f"Could not import default strategies: {e}")

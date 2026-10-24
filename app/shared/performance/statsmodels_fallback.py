@@ -139,8 +139,12 @@ def adfuller(
         sigma2 = np.sum(residuals**2) / (len(y) - X.shape[1])
         var_beta = sigma2 * np.linalg.inv(X.T @ X).diagonal()
 
-        # Test statistic for unit root: (beta[0] - 1) / se(beta[0])
-        adf_stat = (beta[0] - 1) / np.sqrt(var_beta[0])
+        # Test statistic for unit root: t-stat of beta[0] in the
+        # Δx ~ beta·x_{t-1} regression. H0 (unit root) is beta = 0 HERE —
+        # the previous (beta[0] - 1)/se mixed conventions (that formula is
+        # for x ~ x_{t-1}) and every series, including random walks, came
+        # out at ~-1/se: "stationary" with p≈0.001 always.
+        adf_stat = beta[0] / np.sqrt(var_beta[0])
 
         # Estimate p-value using approximate distribution
         # Critical values from MacKinnon (1994, 2010)
@@ -150,14 +154,20 @@ def adfuller(
             "10%": -2.57,
         }
 
-        # Approximate p-value based on test statistic
-        # This is a rough approximation
+        # Approximate p-value based on the test statistic — CONTINUOUS by
+        # piecewise interpolation. The previous quantized mapping
+        # ({0.01, 0.05, 0.10} with exact cutoffs) made any strict threshold
+        # like p < 0.01 mathematically impossible: even a perfectly
+        # stationary series returned exactly 0.01.
         if adf_stat < critical_values["1%"]:
-            pvalue = 0.01
+            # below the 1% critical value: 0.01 at -3.43 → 0.001 at ≈-4.8
+            pvalue = max(0.001, 0.01 + (adf_stat - critical_values["1%"]) * 0.0075)
         elif adf_stat < critical_values["5%"]:
-            pvalue = 0.05
+            span = critical_values["5%"] - critical_values["1%"]
+            pvalue = 0.01 + (adf_stat - critical_values["1%"]) * (0.04 / span)
         elif adf_stat < critical_values["10%"]:
-            pvalue = 0.10
+            span = critical_values["10%"] - critical_values["5%"]
+            pvalue = 0.05 + (adf_stat - critical_values["5%"]) * (0.05 / span)
         else:
             # For less negative values, use linear interpolation
             pvalue = 0.10 + (adf_stat - critical_values["10%"]) * 0.05
