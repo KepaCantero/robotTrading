@@ -40,7 +40,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Callable
 
-from ib_insync import IB, LimitOrder, MarketOrder, Order, StopOrder, util
+from ib_insync import IB, LimitOrder, MarketOrder, Order, StopOrder
 from ib_insync.contract import Contract as IBContract
 
 from app.domain.services.trading_validators import TradingValidator
@@ -48,6 +48,7 @@ from app.infrastructure.resilience.reconnection_manager import (
     ReconnectionConfig,
     ReconnectionManager,
 )
+from app.services.live_trading.broker_adapters._loop_patch import patch_ib_eventloop
 
 if TYPE_CHECKING:
     from ib_insync.ticker import Ticker
@@ -66,9 +67,6 @@ class ConfigurationError(Exception):
 
 
 logger = logging.getLogger(__name__)
-
-# Patch asyncio for ib_insync compatibility
-util.patchAsyncio()
 
 
 class IBConnection:
@@ -256,6 +254,7 @@ class IBConnection:
         Returns:
             True if connection successful, False otherwise
         """
+        patch_ib_eventloop()
         if self.connected and self.ib.isConnected():
             logger.debug("Already connected to IB")
             return True

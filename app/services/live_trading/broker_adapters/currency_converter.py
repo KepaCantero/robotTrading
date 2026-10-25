@@ -13,9 +13,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import ClassVar
 
-from ib_insync import IB, util
-
-util.patchAsyncio()
+from ib_insync import IB
 
 logger = logging.getLogger(__name__)
 

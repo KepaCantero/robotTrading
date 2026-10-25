@@ -20,20 +20,20 @@ import logging
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from ib_insync import IB, LimitOrder, MarketOrder, Order, StopOrder, util
+from ib_insync import IB, LimitOrder, MarketOrder, Order, StopOrder
 
 from app.infrastructure.resilience.reconnection_manager import (
     ReconnectionConfig,
     ReconnectionManager,
 )
 
+from ._loop_patch import patch_ib_eventloop
 from .currency_converter import get_currency_converter
 from .ibex35_contracts import create_stock_contract
 
 if TYPE_CHECKING:
     from ib_insync.contract import Contract as IBContract
 
-util.patchAsyncio()
 
 logger = logging.getLogger(__name__)
 
@@ -157,6 +157,7 @@ class IBKRSpainAdapter:
         Returns:
             True if connection successful, False otherwise
         """
+        patch_ib_eventloop()
         if self._connected and self.ib.isConnected():
             logger.debug("Already connected to IB")
             return True
