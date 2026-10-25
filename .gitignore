@@ -132,3 +132,6 @@ app/services/.ralph/
 *.db-shm
 *.db-wal
 .pgdata/
+
+# Portfolio-management runtime state (paper account snapshot)
+data/paper_account.json

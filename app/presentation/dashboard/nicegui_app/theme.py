@@ -72,6 +72,7 @@ ECHARTS_LIGHT_THEME = {
 
 PAGES = [
     {"name": "Agent Swarm", "icon": "smart_toy", "route": "/"},
+    {"name": "Portfolio", "icon": "account_balance", "route": "/portfolio"},
     {"name": "Optimize", "icon": "tune", "route": "/optimize"},
     {"name": "Results", "icon": "analytics", "route": "/results"},
     {"name": "History & Compare", "icon": "history", "route": "/history"},

@@ -105,6 +105,13 @@ class AppShell:
         def page_agent_swarm_alias():
             _render_swarm()
 
+        @ui.page("/portfolio")
+        def page_portfolio():
+            cls._build_shell()
+            from app.presentation.dashboard.nicegui_app.pages.portfolio import render
+
+            render(cls._swarm_executor, cls._swarm_store)
+
         @ui.page("/optimize")
         def page_optimize():
             cls._build_shell()
