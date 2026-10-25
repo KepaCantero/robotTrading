@@ -163,6 +163,9 @@ class DividendCoreSatelliteStrategy(BaseStrategy):
         # década castigó el filtro.
         self.sma_guard_days: int = int(config.get("sma_guard_days", 0))
         self.sma_guard_buffer: float = float(config.get("sma_guard_buffer", 0.02))
+        # D03: tope de peso por posición guiado por el perfil (T3.1
+        # max_position_size en %) — por defecto el techo del validador.
+        self.weight_cap: float = min(0.25, max(0.05, float(config.get("weight_cap", 0.25))))
         # Exposición objetivo de la estrategia: el risk envelope la respeta
         # hasta este tope (estrategias sin declaración siguen al 80%)
         self.target_exposure: float = float(config.get("target_exposure", 0.95))
@@ -272,7 +275,7 @@ class DividendCoreSatelliteStrategy(BaseStrategy):
     @property
     def suggested_max_position_size(self) -> float:
         max_unit = max(self._position_weight(s) for s in self.core_symbols + self.satellite_symbols)
-        return math.ceil(min(0.25, max_unit) * 100) / 100
+        return math.ceil(min(self.weight_cap, max_unit) * 100) / 100
 
     def get_position_size(self, signal: Signal, portfolio: Any) -> Decimal:
         """Fracción de cartera por manga (el motor la usa para el sizing)."""
@@ -448,25 +451,26 @@ class DividendCoreSatelliteStrategy(BaseStrategy):
         # clamps 5–25% con redistribución en cascada (máx 4 pasadas)
         weights = dict(raw)
         for _ in range(4):
-            clamped_high = {s: w for s, w in weights.items() if w > 0.25}
+            cap = self.weight_cap
+            clamped_high = {s: w for s, w in weights.items() if w > cap}
             clamped_low = {s: w for s, w in weights.items() if w < 0.05}
             if not clamped_high and not clamped_low:
                 break
             free = {}
             for s, w in clamped_high.items():
-                weights[s] = 0.25
-                free[s] = w - 0.25
+                weights[s] = cap
+                free[s] = w - cap
             for s, w in clamped_low.items():
                 weights[s] = 0.05
                 free[s] = 0.05 - w
             movable = [s for s in weights if s not in clamped_high and s not in clamped_low]
-            movable_space = sum(max(0.0, 0.25 - weights[s]) for s in movable)
+            movable_space = sum(max(0.0, cap - weights[s]) for s in movable)
             total_free = sum(free.values())
             if total_free <= 0 or not movable or movable_space <= 0:
                 break
             grant = min(total_free, movable_space)
             for s in movable:
-                weights[s] += grant * (max(0.0, 0.25 - weights[s]) / movable_space)
+                weights[s] += grant * (max(0.0, cap - weights[s]) / movable_space)
 
         self._weight_residual = round(max(0.0, self.target_exposure - sum(weights.values())), 4)
         return {s: round(w, 4) for s, w in weights.items()}

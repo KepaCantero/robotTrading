@@ -10,8 +10,9 @@
 from __future__ import annotations
 
 import itertools
+from types import SimpleNamespace
 
-from app.services.agent_swarm.executor import Capa2PipelineExecutor
+from app.services.agent_swarm.executor import Capa2PipelineExecutor, _strategy_overrides_from
 from app.services.agent_swarm.optimizer import _stratified_combos
 
 
@@ -56,6 +57,41 @@ class TestResolveStrategy:
     def test_unknown_goal_falls_back_to_momentum(self):
         executor = Capa2PipelineExecutor.__new__(Capa2PipelineExecutor)
         assert executor._resolve_strategy(_ctx("OTRA_COSA")) == "momentum_modular"
+
+
+class TestStrategyOverrides:
+    """D03: T3.1 module parameters reach the engine as strategy overrides."""
+
+    def test_module_specific_passthrough_and_position_cap_mapped(self):
+        cfg = SimpleNamespace(
+            max_position_size=10,  # 10% per position
+            module_specific={"rebalance_days": 60, "satellite_top_k": 3},
+        )
+        overrides = _strategy_overrides_from({"dividend_tracking": cfg}, "dividend_tracking")
+        assert overrides["rebalance_days"] == 60
+        assert overrides["satellite_top_k"] == 3
+        assert overrides["weight_cap"] == 0.10  # el límite del perfil CAPA los pesos
+
+    def test_falls_back_to_first_module_when_strategy_absent(self):
+        cfg = SimpleNamespace(max_position_size=5, module_specific={"lookback_days": 126})
+        overrides = _strategy_overrides_from({"other_module": cfg}, "dividend_tracking")
+        assert overrides["lookback_days"] == 126
+
+    def test_empty_when_no_modules(self):
+        assert _strategy_overrides_from({}, "dividend_tracking") == {}
+        assert _strategy_overrides_from(None, "dividend_tracking") == {}
+
+    def test_weight_cap_honored_by_strategy(self):
+        from datetime import datetime
+
+        from app.domain.strategies.dividend_core_satellite import DividendCoreSatelliteStrategy
+
+        s = DividendCoreSatelliteStrategy(
+            {"name": "d", "enabled": True, "symbols": ["SCHD", "VIG"], "weight_cap": 0.10}
+        )
+        weights = s._compute_weights({"SCHD", "VIG"}, datetime.utcnow())
+        assert max(weights.values()) <= 0.1001  # el tope del perfil manda
+        assert sum(weights.values()) > 0.15  # la redistribución no evapora manga
 
 
 class TestStratifiedCombos:

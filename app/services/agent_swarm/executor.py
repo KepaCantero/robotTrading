@@ -167,6 +167,29 @@ AGENT_SPECS: list[AgentSpec] = [
 SPEC_BY_AGENT: dict[str, AgentSpec] = {spec.agent_id: spec for spec in AGENT_SPECS}
 
 
+def _strategy_overrides_from(modules: dict, strategy: str) -> dict:
+    """D03: translate a T3.1 ModuleParameterSet into strategy overrides.
+
+    ``module_specific`` keys (rebalance_days, satellite_top_k, ...) pass
+    through verbatim; ``max_position_size`` (percent) maps to the strategy's
+    ``weight_cap`` so a profile position limit actually caps the weights.
+    Returns {} when T3.1 produced nothing usable — never invents params.
+    """
+    config = modules.get(strategy) if modules else None
+    if config is None and modules:
+        config = next(iter(modules.values()))
+    if config is None:
+        return {}
+    overrides: dict = dict(getattr(config, "module_specific", None) or {})
+    max_position_size = getattr(config, "max_position_size", None)
+    if max_position_size is not None:
+        try:
+            overrides.setdefault("weight_cap", float(max_position_size) / 100.0)
+        except (TypeError, ValueError):
+            pass
+    return overrides
+
+
 @dataclass
 class SwarmRunRequest:
     """Launch parameters for a swarm mission (matches /capa2 complete-workflow)."""
@@ -660,7 +683,23 @@ class Capa2PipelineExecutor:
     async def _t41_run(self, ctx: _Ctx, request):
         from app.services.backtest_orchestration.backtest_orchestrator import BacktestOrchestrator
 
-        ctx.backtest = await BacktestOrchestrator().orchestrate(request)
+        orchestrator = BacktestOrchestrator()
+        # D03: T3.1 module parameters GOVERN the backtest — same injection
+        # path the optimizer uses (_build_strategy merges them into the
+        # strategy config). Without this the profile's limits only ever
+        # lived in the intermediate JSON.
+        strategy = self._resolve_strategy(ctx)
+        param_set = getattr(ctx, "param_result", None)
+        modules = (
+            param_set.parameter_set.module_parameters
+            if param_set and param_set.parameter_set
+            else {}
+        )
+        overrides = _strategy_overrides_from(modules, strategy)
+        if overrides:
+            orchestrator._strategy_param_overrides = overrides  # noqa: SLF001
+
+        ctx.backtest = await orchestrator.orchestrate(request)
         return ctx.backtest
 
     # ── T5.1 Validation Engine ───────────────────────────────────────────────
