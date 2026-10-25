@@ -146,6 +146,22 @@ def _run_one_backtest(
     }
 
 
+def _stratified_combos(combos: list[tuple], max_trials: int) -> list[tuple]:
+    """D11: evenly spaced combos across the product so EVERY axis value
+    gets explored. The old ``combos[:max_trials]`` only ever saw the first
+    value of the leading axis (12 trials never left rebalance_days=63)."""
+    if len(combos) <= max_trials or max_trials <= 0:
+        return combos
+    span = len(combos) - 1
+    step = span / (max_trials - 1) if max_trials > 1 else 0
+    picked: list[tuple] = []
+    for i in range(max_trials):
+        combo = combos[round(i * step)]
+        if combo not in picked:
+            picked.append(combo)
+    return picked
+
+
 def asyncio_run(coro):
     import asyncio
 
@@ -173,7 +189,7 @@ def optimize(
     baseline_metrics = _run_one_backtest(strategy, {}, symbols, start_date, end_date, capital)
 
     combos = list(itertools.product(*grid.values()))
-    combos = combos[:max_trials]
+    combos = _stratified_combos(combos, max_trials)
     keys = list(grid.keys())
 
     trials: list[dict] = []

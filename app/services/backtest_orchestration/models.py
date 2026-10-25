@@ -13,6 +13,8 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
 
+from app.backtesting.dividends import DividendMetrics
+
 logger = logging.getLogger(__name__)
 
 
@@ -184,6 +186,10 @@ class BacktestResult:
     ending_capital: Decimal = field(default=Decimal("0.0"))
     peak_capital: Decimal = field(default=Decimal("0.0"))
 
+    # Income metrics from real distribution events against the executed
+    # book (Fase 4, D01) — separate from total return.
+    dividend_metrics: "DividendMetrics | None" = None
+
     # Validation results
     validation_passed: bool = True
     validation_warnings: list[str] = field(default_factory=list)
@@ -333,6 +339,10 @@ class BacktestOrchestrationResult:
     backtest_result: BacktestResult | None = None
     error_message: str = ""
     warnings: list[str] = field(default_factory=list)
-    feasibility_ratio: Decimal = field(default=Decimal("0.0"))
+    feasibility_ratio: Decimal = field(default_factory=Decimal("0.0"))
     feasibility_status: str = "unknown"  # APPROVED, CONDITIONAL, REJECTED
     orchestration_time_ms: float = 0.0
+    #: Income metrics from real distribution events against the executed
+    #: book (Fase 4, D01): SEPARATE from total return. None when the run
+    #: never reached the engine (failure) — never a fabricated income.
+    dividend_metrics: DividendMetrics | None = None

@@ -118,6 +118,7 @@ class BacktestOrchestrator:
                 feasibility_status=feasibility_status,
                 warnings=warnings,
                 orchestration_time_ms=elapsed_ms,
+                dividend_metrics=backtest_result.dividend_metrics,
             )
 
             # Store in history
@@ -361,7 +362,21 @@ class BacktestOrchestrator:
                 else None
             )
 
-        return self._map_engine_result(config, engine_result, start_dt, end_dt, gate, benchmark)
+        # Fase 4 (D01): renta distribuida REAL contra el libro ejecutado —
+        # métrica separada del retorno total, con gaps de cobertura
+        # explícitos cuando falta el historial de distribuciones.
+        from app.backtesting.dividends import DividendLedger
+
+        result = self._map_engine_result(config, engine_result, start_dt, end_dt, gate, benchmark)
+        _entries, div_metrics = DividendLedger().record(
+            engine_result.trades, symbols, start_dt, end_dt
+        )
+        result.dividend_metrics = div_metrics
+        if not div_metrics.computable:
+            logger.warning(
+                "Dividend income PARTIALLY non-computable: %s", div_metrics.coverage_gaps
+            )
+        return result
 
     #: same-index substitutes tried when the requested benchmark does not
     #: cover the window (local SPY history starts in 2016; IVV in 2000)
@@ -384,7 +399,9 @@ class BacktestOrchestrator:
             return None
 
         curves = []
-        for sym in symbols[:6]:  # máximo 6 para rendimiento
+        # D12: TODO el universo declarado — el recorte a 6 excluía por orden
+        # de entrada (BND caía séptimo) y cambiaba el benchmark al reordenar.
+        for sym in symbols:
             try:
                 raw = loader.load_market_data(sym, start_dt, end_dt, "1d", "csv")
                 closes = sorted((q.timestamp, float(q.close if q.close else q.last)) for q in raw)

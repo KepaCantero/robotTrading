@@ -261,7 +261,10 @@ class DividendCoreSatelliteStrategy(BaseStrategy):
     def _rebalance_due(self, now: datetime) -> bool:
         if self._last_rebalance is None:
             ready = sum(1 for s in self._closes.values() if len(s) >= self.min_history)
-            return ready >= max(2, len(self.core_symbols) // 2)
+            # Mayoría del core DECLARADO con historia, suelo 1: el mínimo 2
+            # absoluto dejaba mudas para siempre a las carteras mono-core
+            # (un universo auto de un solo símbolo nunca cruzaba el gate).
+            return ready >= max(1, len(self.core_symbols) // 2)
         return (now - self._last_rebalance).days >= self.rebalance_days
 
     def _sma(self, symbol: str) -> float | None:

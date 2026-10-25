@@ -184,7 +184,10 @@ class SwarmRunRequest:
     symbols: list[str] | None = None  # universe to test over
     investor_age: int | None = None  # years, for suitability context
     tax_province: str | None = None  # Spanish province → ES tax rules
-    strategy: str = "mean_reversion"  # real engine strategy to run
+    #: Real engine strategy to run. Default None: the strategy is DERIVED
+    #: from objetivo_inversion (D02 — the old mean_reversion default ran a
+    #: mean-reversion backtest for dividend requests that omitted strategy).
+    strategy: str | None = None
     commission_per_trade: Decimal | None = None  # engine cost model (€/trade)
     slippage_pct: Decimal | None = None  # engine cost model (%)
     stop_loss_pct: Decimal | None = None  # per-trade stop (%)
@@ -602,12 +605,36 @@ class Capa2PipelineExecutor:
 
     # ── T4.1 Backtest Orchestrator ───────────────────────────────────────────
 
+    #: objetivo → estrategia real (espejo del preset de swarm.py, D02)
+    _GOAL_STRATEGY: dict[str, str] = {
+        "MAXIMIZAR_DIVIDENDOS": "dividend_tracking",
+        "CAPITAL_PRESERVATION": "low_volatility",
+    }
+
+    def _resolve_strategy(self, ctx: _Ctx) -> str:
+        """Effective strategy: explicit request override wins; otherwise the
+        T3.1 module; otherwise the objective's preset (D02: a dividend
+        request without strategy must never silently run mean_reversion)."""
+        if ctx.request.strategy:
+            return ctx.request.strategy
+        param_set = getattr(ctx, "param_result", None)
+        modules = (
+            list(param_set.parameter_set.module_parameters.keys())
+            if param_set and param_set.parameter_set
+            else []
+        )
+        if modules:
+            return modules[0]
+        goal = str(getattr(ctx.request, "objetivo_inversion", "") or "").upper()
+        if goal in self._GOAL_STRATEGY:
+            return self._GOAL_STRATEGY[goal]
+        return "momentum_modular"
+
     def _t41_input(self, ctx: _Ctx):
         from app.services.backtest_orchestration.models import BacktestOrchestrationRequest
 
-        param_set = ctx.param_result.parameter_set
-        modules = list(param_set.module_parameters.keys()) if param_set else []
-        strategy = modules[0] if modules else "momentum_modular"
+        # Strategy resolution lives in _resolve_strategy (D02): explicit
+        # request override > T3.1 module > objective preset.
         end = _to_date(ctx.request.backtest_end) or date.today()
         start = _to_date(ctx.request.backtest_start) or end - timedelta(days=365)
         if start >= end:
@@ -622,7 +649,7 @@ class Capa2PipelineExecutor:
             risk_profile=ctx.profile.risk_profile.value,
             start_date=start,
             end_date=end,
-            strategy_name=ctx.request.strategy or strategy,
+            strategy_name=self._resolve_strategy(ctx),
             symbols=ctx.request.symbols or ctx.auto_symbols or list(DEFAULT_UNIVERSE),
             commission_per_trade=ctx.request.commission_per_trade,
             slippage_percentage=ctx.request.slippage_pct,
