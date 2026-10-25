@@ -41,8 +41,8 @@ b2 REJECTED con motivo; estado real del broker| **validado** (F2) | 2 |
 
 | ID | Sev | Título | Ubicación (24-10-2026) | Estado | Fase |
 |---|---|---|---|---|---|
-| D01 | P1 | El objetivo no mide dividendo cobrado | `backtest_orchestration/models.py:126` † | abierto | 4 |
-| D02 | P1 | Backend no deriva estrategia del objetivo | `executor.py:187` ✔ default `mean_reversion` | abierto | 4 |
+| D01 | P1 | El objetivo no mide dividendo cobrado | `DividendLedger`+`DividendMetrics` en todo backtest real| **validado** (F4·p1)abierto 4 |
+| D02 | P1 | Backend no deriva estrategia del objetivo | executor deriva estrategia del objetivo| **validado** (F4·p1)abierto 4 |
 | D03 | P1 | Parámetros del perfil no gobiernan el backtest | `executor.py:603` ✔ `_build_strategy` sin params | abierto | 4 |
 | D04 | P1 | Yields constantes sin fecha histórica | `dividend_core_satellite.py:60` ✔ `DIVIDEND_YIELDS` fijo | abierto | 4 |
 | D05 | P1 | Posiciones teóricas ≠ ejecutadas | `dividend_core_satellite.py:229` ✔ `_holdings = desired` sin fills | abierto | 4 |
@@ -51,8 +51,8 @@ b2 REJECTED con motivo; estado real del broker| **validado** (F2) | 2 |
 | D08 | P1 | Precio de una barra para todas las señales | `dividend_core_satellite.py:362-373` ✔ `_signal(quote,…)` reutiliza | abierto | 4 |
 | D09 | P2 | Rebalanceo en días naturales, no sesiones | `dividend_core_satellite.py:265` ✔ `.days >=` | abierto | 4 |
 | D10 | P2 | Venta SMA perdida al coincidir con rebalance | `dividend_core_satellite.py:224` ✔ `signals = []` reinicia | abierto | 4 |
-| D11 | P2 | Grid no explora la cadencia anunciada | `optimizer.py:172` ✔ `combos[:max_trials]` | abierto | 4 |
-| D12 | P2 | Benchmark ≠ universo completo ni buy&hold | `backtest_orchestrator.py:387` ✔ `symbols[:6]` persiste | **parcial** | 4 |
+| D11 | P2 | Grid no explora la cadencia anunciada | grid estratificado `_stratified_combos`| **validado** (F4·p1)abierto 4 |
+| D12 | P2 | Benchmark ≠ universo completo ni buy&hold | benchmark EW con TODOS los símbolos| **validado** (F4·p1)**parcial** 4 |
 
 **Nota D12:** `c4e19661` añadió `_load_dividend_benchmark` (exceso vs equal-weight del propio
 universo), pero sigue cortando a los 6 primeros símbolos y sin separar buy&hold de rebalance
@@ -66,6 +66,8 @@ diario. La aceptación (invariancia al orden, todos los activos declarados) sigu
 | 2026-10-24 | A01, A02, A13, A14, A15 | **Fase 1 auth**: `AuthMiddleware` eliminada de raíz (mataba la clave dev y respondía 500); principal único `Principal` con roles viewer/trader/admin (`API_ACCESS_KEYS` + `API_KEY_ROLES`; default viewer+trader, admin nunca automático); dependencias `get_current_principal`/`require_roles` en los 13 routers (solo `/health` público); roles por endpoint (resets/umbrales → admin; órdenes/señales → trader); `require_auth`/`rate_limit` reconocen `http_request`; el handler global preserva `WWW-Authenticate`; audit del reset con identidad y timestamp. Aceptación: `tests/api/test_auth_matrix.py` **41/41** (matriz rutas × credenciales contra la app real). Tests de integración actualizados honestamente (conftest con clave operadora admin). Regresión vs línea base en tests/api, tests/integration/api y tests/unit/core: **0 nuevos**. | **validado** |
 
 | 2026-10-25 | A03–A09, A16–A18, A20 (+A10) | **Fase 2 completa** (d584a9f6, ddb7db8c, 41f14e54, 96249c4a, 9bb9997b): semántica de riesgo (base de sesión, reduce-only, reservas proyectadas, gates numéricos) · camino de órdenes (validación SIEMPRE, cotización real `BrokerQuote` con niveles fresco/STALE>7d/rechazo>90d sobre CSV EOD propio, MARKET ejecuta a cotización, 422 REJECTED honesto) · unificación (un RiskGates autoritativo; monitores por orden) · intención persistida antes del envío (idempotente por client_order_id) · migración 0004 tablas live (+guard SQLite en 0003 que rompía la cadena). Aceptación: 4 baterías nuevas (~50 tests) en tests/unit/live_trading/test_*_f2.py; 0 fallos nuevos vs herencia 32. | **validado** |
+
+| 2026-10-25 | D01, D02, D11, D12 | **Fase 4 parte 1** (030898bf): libro de renta REAL (`app/backtesting/dividends.py` — eventos yfinance en data/dividends/, 16 símbolos; contado contra el libro EJECUTADO del motor; retención 15% configurable; gaps de cobertura EXPLÍCITOS, nunca yields inventados) enganchado a todo backtest — sonda SCHD 1y: retorno 8,41% + renta bruta 1.007,38 / neta 856,27 USD (4 eventos, por año). Executor deriva estrategia del objetivo (D02); grid estratificado cubre todos los ejes (D11); benchmark EW sin recorte a 6 (D12); gate de arranque dividendos = mayoría-del-core suelo 1 (universos mono-core antes mudos para siempre). 22 tests nuevos; 0 fallos nuevos vs baseline en agent_swarm/orchestration/strategies. **Pendiente F4·p2**: D03 (params perfil→motor), D04 (yields point-in-time), D05–D10 (bucle motor-estrategia), reinversión en rebalanceo, scoring T6.1 consciente de renta. | ver fila |
 
 ## Pruebas de aceptación
 
