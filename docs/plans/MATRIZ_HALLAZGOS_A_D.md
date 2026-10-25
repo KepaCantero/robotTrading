@@ -41,22 +41,23 @@ b2 REJECTED con motivo; estado real del broker| **validado** (F2) | 2 |
 
 | ID | Sev | Título | Ubicación (24-10-2026) | Estado | Fase |
 |---|---|---|---|---|---|
-| D01 | P1 | El objetivo no mide dividendo cobrado | `DividendLedger`+`DividendMetrics` en todo backtest real| **validado** (F4·p1)abierto 4 |
-| D02 | P1 | Backend no deriva estrategia del objetivo | executor deriva estrategia del objetivo| **validado** (F4·p1)abierto 4 |
+| D01 | P1 | El objetivo no mide dividendo cobrado | `DividendLedger`+`DividendMetrics` en todo backtest real| **validado** (F4·p1) | 4 |
+| D02 | P1 | Backend no deriva estrategia del objetivo | executor deriva estrategia del objetivo| **validado** (F4·p1) | 4 |
 | D03 | P1 | Parámetros del perfil no gobiernan el backtest | T3.1 params → `_strategy_param_overrides` + weight_cap| **validado** (F4·p2) | 4 |
 | D04 | P1 | Yields constantes sin fecha histórica | yields trailing-12m point-in-time del corpus real| **validado** (F4·p2) | 4 |
-| D05 | P1 | Posiciones teóricas ≠ ejecutadas | `dividend_core_satellite.py:229` ✔ `_holdings = desired` sin fills | abierto | 4 |
+| D05 | P1 | Posiciones teóricas ≠ ejecutadas | bucle motor↔estrategia: señal por barra DENTRO del run + `on_fill` (rechazo/fill parcial/stop) antes de la siguiente decisión | **validado** (F4·p3) | 4 |
 | D06 | P2 | Exposición declarada ≠ pesos (0.95×(0.50+0.45)) | mangas fracciones de la exposición + redistribución| **validado** (F4·p2) | 4 |
 | D07 | P2 | Refugio defensivo nunca en cartera objetivo | caja refugio por defecto; defensivo opt-in| **validado** (F4·p2) | 4 |
 | D08 | P1 | Precio de una barra para todas las señales | señal con precio/volumen/ts PROPIOS del símbolo| **validado** (F4·p2) | 4 |
 | D09 | P2 | Rebalanceo en días naturales, no sesiones | cadencia en SESIONES de mercado| **validado** (F4·p2) | 4 |
 | D10 | P2 | Venta SMA perdida al coincidir con rebalance | SMA sobrevive al rebalance; sma_exits manda sobre catch-all| **validado** (F4·p2) | 4 |
-| D11 | P2 | Grid no explora la cadencia anunciada | grid estratificado `_stratified_combos`| **validado** (F4·p1)abierto 4 |
-| D12 | P2 | Benchmark ≠ universo completo ni buy&hold | benchmark EW con TODOS los símbolos| **validado** (F4·p1)**parcial** 4 |
+| D11 | P2 | Grid no explora la cadencia anunciada | grid estratificado `_stratified_combos`| **validado** (F4·p1) | 4 |
+| D12 | P2 | Benchmark ≠ universo completo ni buy&hold | EW del universo: TODOS los símbolos (`symbols_used`), rebalance diario y buy&hold SEPARADOS, invariante al orden | **validado** (F4·p3) | 4 |
 
-**Nota D12:** `c4e19661` añadió `_load_dividend_benchmark` (exceso vs equal-weight del propio
-universo), pero sigue cortando a los 6 primeros símbolos y sin separar buy&hold de rebalance
-diario. La aceptación (invariancia al orden, todos los activos declarados) sigue sin cumplirse.
+**Nota D12 (histórica):** `c4e19661` añadió `_load_dividend_benchmark` pero recortaba a los
+6 primeros símbolos y mezclaba las políticas. F4·p3 cerró la aceptación completa: todos los
+activos declarados (`symbols_used` explícito), invariancia al orden de entrada (test) y
+rebalance diario vs buy&hold puro como curvas separadas con matemática cerrada verificada.
 
 ## Registro de cambios de estado
 
@@ -72,6 +73,8 @@ diario. La aceptación (invariancia al orden, todos los activos declarados) sigu
 | 2026-10-25 | D03–D10, A11, A12 | **F4 parte 2** (05d3327a, 2c525e69): estrategia de dividendos con yields reales point-in-time (D04), pesos normalizados con redistribución y residuo explicado (D06), caja como refugio por defecto (D07), señales con datos propios (D08), cadencia en sesiones (D09), venta SMA conservada + sma_exits prioritario sobre el catch-all momentum-None que re-compraba lo recién vendido (D10 — bug real destapado por el test), T3.1 params gobiernan el backtest vía weight_cap (D03). **F5** (3bee2f06): ML sin información futura (A11) y sin escape a split aleatorio (A12). Suites: 0 fallos nuevos vs baseline. **Pendiente F4**: D05 (bucle motor↔estrategia con feedback de fills) y scoring T6.1 income-aware; reinversión documentada como territorio paper/ROBO. | ver fila |
 
 | 2026-10-25 | A19, A21–A24 | **Fase 6 v1** (39281032): stack paper REAL verificado en Docker — docker-compose.paper.yml (PostgreSQL+API con `alembic upgrade head` al arrancar, puertos SOLO loopback, sin workers falsos ni stack de logs), imagen arm64 construida, migraciones aplicadas (order_records incl.), **/health 200 y rutas protegidas 401 sin clave** (F1 aguanta en contenedor), PAPER_SECRET_KEY exigido al operador. Dockerfile copia config/ (A24), targets falsos fuera (A21). pyproject extra paper: asyncpg+greenlet+psycopg (A19, demostrado por 3 arranques fallidos). CI: gates reales (A22). Pendiente F6·p2: lockfile completo, backups 14d+restore, panel/alertas, unificación de los 3 pipelines. | ver fila |
+
+| 2026-10-25 | D05, D12 | **Fase 4 parte 3 — CIERRE de F4**: (D05) bucle motor↔estrategia — la estrategia cross-sectional genera las señales de cada barra DENTRO del bucle del motor (warm-up solo construye estado) y recibe `on_fill` por cada rechazo/fill parcial/cierre-por-stop ANTES de su siguiente decisión; `_holdings` deja de ser teórico (test de semántica por caso + smoke E2E real). Corregido de paso un bug de indentación del draft D05 que dejaba el análisis post-trade compliance dentro de la rama trade=None (crash `'NoneType' trade_id` al primer rechazo — lo cazó la suite swarm E2E, 13 tests). (D12) aceptación completa: TODOS los activos declarados con `symbols_used` explícito e invariante al orden (test), y rebalance diario vs buy&hold puro como curvas separadas — verificación con matemática cerrada (+12.5% vs 0% sintético) y datos reales (7 símbolos, BND incluido). Arreglados 3 tests rancios de test_benchmark.py (SPY local empieza 2006-10 tras el empalme; el fake del mapper no tenía `max_drawdown_percentage`). **T6.1 income-aware**: objetivos de renta (`maximizar_dividendos`/`income_generation`) puntúan la renta neta REAL anualizada sobre capital inicial (bandas 4/3/2/1% → 25/20/15/8 pts) comprimiendo los componentes de mercado al 75%; renta no computable = 0 pts y techo 75. Suites: agent_swarm 104/104 (97 base + 7 nuevos), backtest_orchestration 39/39 (4 nuevos D12 + E2E), dividend 32/32. E2E real: 12 trades, +21.14%, WF pass, EW reb 23.90 vs B&H 23.99, renta neta 5.410,04 USD (64 eventos). | **validado** |
 
 ## Pruebas de aceptación
 

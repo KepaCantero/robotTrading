@@ -304,17 +304,25 @@ class BacktestOrchestrator:
             # le daría look-ahead: un símbolo vería su futuro antes de que
             # los demás tengan pasado)
             quotes.sort(key=lambda q: (q.timestamp, q.symbol))
-            signals.extend(
-                signal for quote in quotes for signal in shared_strategy.generate_signals(quote)
-            )
+            # D05 (bucle motor↔estrategia): las barras de WARM-UP solo
+            # construyen estado (signals_valid_from suprime emisiones); las
+            # de la ventana las genera la estrategia DENTRO del bucle del
+            # motor, que le devuelve cada rechazo/fill/cierre-por-stop
+            # ANTES de su siguiente decisión — el libro de `_holdings` deja
+            # de ser teórico.
+            for quote in quotes:
+                if quote.timestamp < start_dt:
+                    shared_strategy.generate_signals(quote)
 
         if not quotes:
             raise ValueError(f"No historical data found for {symbols} — check data/historical")
 
-        # Only signals inside the execution window can fill (the engine keeps
-        # market data inside the window; warm-up bars only build strategy state)
         window_signals = [s for s in signals if start_dt <= s.timestamp <= end_dt]
-        if not window_signals:
+        live_strategy = shared_strategy
+        if live_strategy is None and not window_signals:
+            # per-symbol strategies still run on the precomputed list; the
+            # no-signals guard only applies to that path (live mode discovers
+            # its signals during the engine loop)
             raise ValueError(
                 "The strategy generated no signals in the selected period — "
                 "try a longer window or another strategy"
@@ -343,7 +351,13 @@ class BacktestOrchestrator:
             # provide and silently rejects every signal otherwise.
             strategy_name=config.strategy_name,
         )
-        engine_result = engine.run_backtest(quotes, window_signals, start_dt, end_dt)
+        engine_result = engine.run_backtest(
+            quotes,
+            window_signals,
+            start_dt,
+            end_dt,
+            live_strategy=live_strategy,
+        )
 
         # Gate R5/R6/DATA-001: estabilidad walk-forward OBLIGATORIA sobre el
         # MISMO motor (antes vivía en un orquestador gemelo que el producto
@@ -356,6 +370,8 @@ class BacktestOrchestrator:
             # vs equal-weight del propio universo es el benchmark honesto
             benchmark["universe_ew_return_pct"] = dividend_bench["return_pct"]
             benchmark["universe_ew_sharpe"] = dividend_bench.get("sharpe")
+            benchmark["universe_ew_symbols_used"] = dividend_bench.get("symbols_used")
+            benchmark["universe_ew_buy_hold_return_pct"] = dividend_bench.get("buy_hold_return_pct")
             benchmark["excess_vs_universe_ew"] = (
                 round(float(engine_result.total_return) - dividend_bench["return_pct"], 2)
                 if engine_result.total_return is not None
@@ -386,19 +402,28 @@ class BacktestOrchestrator:
     _BENCHMARK_COVERAGE_TOLERANCE = 0.05
 
     def _load_dividend_benchmark(self, config, loader, start_dt, end_dt) -> dict | None:
-        """Benchmark honesto para dividendos: equal-weight buy&hold del universo.
+        """Benchmark honesto para dividendos: equal-weight del propio universo.
 
         SPY es un índice de mega-caps tech; para una cartera de dividendos
         el punto de comparación correcto es "simplemente mantener este mismo
         universo equal-weight" — si la rotación activa no bate al hold
         pasivo del propio universo, no aporta valor.
+
+        D12: DOS curvas separadas — (a) `return_pct`/`sharpe` es el
+        rebalanceo DIARIO (media de retornos diarios capitalizada) y (b)
+        `buy_hold_*` es el buy&hold puro (un sleeve por símbolo comprado en
+        su primer cierre de la ventana y mantenido sin rebalancear; los
+        símbolos que aún no cotizan esperan en caja). Difieren siempre que
+        un ganador temprano siga creciendo (el rebalanceo le recorta) o un
+        perdedor temprano se recupere (el rebalanceo le añade). Composición
+        explícita en `symbols_used`, invariante al orden de entrada.
         """
 
         symbols = list(config.symbols or [])
         if len(symbols) < 2:
             return None
 
-        curves = []
+        series: dict[str, list[tuple[object, float]]] = {}
         # D12: TODO el universo declarado — el recorte a 6 excluía por orden
         # de entrada (BND caía séptimo) y cambiaba el benchmark al reordenar.
         for sym in symbols:
@@ -407,14 +432,14 @@ class BacktestOrchestrator:
                 closes = sorted((q.timestamp, float(q.close if q.close else q.last)) for q in raw)
                 if len(closes) < 10:
                     continue
-                curves.append(closes)
+                series[sym] = closes
             except Exception:
                 continue
 
-        if len(curves) < 2:
+        if len(series) < 2:
             return None
 
-        # equal-weight de RETORNOS DIARIOS (rebalanceo diario): la media de
+        # (a) equal-weight de RETORNOS DIARIOS (rebalanceo diario): la media de
         # los retornos de los símbolos que cotizaron cada día, capitalizada.
         # Construir la curva por precios promedia saltos de composición (un
         # símbolo que entra al índice mueve la media sin retorno real) y
@@ -422,7 +447,7 @@ class BacktestOrchestrator:
         import collections
 
         day_returns: dict[object, list[float]] = collections.defaultdict(list)
-        for closes in curves:
+        for closes in series.values():
             for i in range(1, len(closes)):
                 prev_ts, prev_px = closes[i - 1]
                 ts, px = closes[i]
@@ -442,19 +467,60 @@ class BacktestOrchestrator:
             return None
 
         ret_pct = (curve[-1][1] / 100.0 - 1) * 100
-        # Sharpe de la serie EW (rf=0: es referencia RELATIVA — el score
-        # compara el Sharpe de la estrategia contra el de SU universo)
-        mean = sum(rets) / len(rets)
-        var = sum((r - mean) ** 2 for r in rets) / max(1, len(rets) - 1)
-        sd = var**0.5
-        ew_sharpe = mean * (252**0.5) / sd if sd > 0 else 0.0
+        ew_sharpe = self._annualized_sharpe(rets)
+
+        # (b) buy&hold EW: cada sleeve normalizado a su primer cierre de la
+        # ventana; la cartera es la media de sleeves. Carry-forward del
+        # último valor entre sesiones de su propio mercado (un hueco no es
+        # un retorno).
+        sleeves: dict[str, dict[object, float]] = {}
+        for sym, closes in series.items():
+            base = closes[0][1]
+            if base > 0:
+                sleeves[sym] = {ts: px / base for ts, px in closes}
+        if len(sleeves) < 2:
+            return None
+        bh_days = sorted({ts for sleeve in sleeves.values() for ts in sleeve})
+        last = {sym: 1.0 for sym in sleeves}
+        bh_curve: list[tuple[object, float]] = []
+        bh_rets: list[float] = []
+        prev_value: float | None = None
+        for d in bh_days:
+            for sym, sleeve in sleeves.items():
+                if d in sleeve:
+                    last[sym] = sleeve[d]
+            value = sum(last.values()) / len(sleeves)
+            if prev_value is not None and prev_value > 0:
+                bh_rets.append(value / prev_value - 1)
+            bh_curve.append((d, value))
+            prev_value = value
+        bh_ret_pct = (bh_curve[-1][1] - 1.0) * 100 if bh_curve else 0.0
+        bh_sharpe = self._annualized_sharpe(bh_rets)
+
         sampled = curve[:: max(1, len(curve) // 250)]
+        bh_sampled = bh_curve[:: max(1, len(bh_curve) // 250)]
         return {
             "symbol": "UNIVERSE-EW",
+            "symbols_used": sorted(series),
             "return_pct": round(ret_pct, 2),
             "sharpe": round(ew_sharpe, 4),
             "curve": [(ts.isoformat(), round(v, 2)) for ts, v in sampled],
+            "buy_hold_return_pct": round(bh_ret_pct, 2),
+            "buy_hold_sharpe": round(bh_sharpe, 4),
+            "buy_hold_curve": [(ts.isoformat(), round(v, 2)) for ts, v in bh_sampled],
         }
+
+    @staticmethod
+    def _annualized_sharpe(rets: list[float]) -> float:
+        """Sharpe anualizado de una serie de retornos diarios (rf=0: es una
+        referencia RELATIVA — el score compara el Sharpe de la estrategia
+        contra el de SU universo)."""
+        if len(rets) < 2:
+            return 0.0
+        mean = sum(rets) / len(rets)
+        var = sum((r - mean) ** 2 for r in rets) / (len(rets) - 1)
+        sd = var**0.5
+        return mean * (252**0.5) / sd if sd > 0 else 0.0
 
     def _load_benchmark(self, config, loader, start_dt, end_dt) -> dict | None:
         """Buy&hold reference over the same window (default SPY).
@@ -802,6 +868,14 @@ class BacktestOrchestrator:
                 if (benchmark or {}).get("universe_ew_sharpe") is not None
                 else None
             ),
+            universe_ew_buy_hold_return_pct=(
+                Decimal(str((benchmark or {}).get("universe_ew_buy_hold_return_pct"))).quantize(
+                    Decimal("0.01")
+                )
+                if (benchmark or {}).get("universe_ew_buy_hold_return_pct") is not None
+                else None
+            ),
+            universe_ew_symbols_used=list((benchmark or {}).get("universe_ew_symbols_used") or []),
             excess_vs_universe_ew_pct=(
                 Decimal(str((benchmark or {}).get("excess_vs_universe_ew"))).quantize(
                     Decimal("0.01")

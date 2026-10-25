@@ -11,7 +11,7 @@ import contextlib
 import logging
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from app.backtesting.base_engine import SlippageParams
@@ -210,7 +210,33 @@ class BacktestEngine:
         self._sizing_capital: Decimal | None = None
         self._sizing_day = None
 
+        #: D05: live strategy receiving fill feedback during the run
+        self._live_strategy: Any = None
+
         logger.info(f"BacktestEngine initialized for {strategy_name} with COMPLIANCE ENGINE")
+
+    def _notify_live(
+        self,
+        symbol: str,
+        side: str,
+        status: str,
+        requested: Decimal,
+        filled: Decimal,
+    ) -> None:
+        """D05: execution feedback to the live strategy (never throws)."""
+        hook = getattr(self._live_strategy, "on_fill", None)
+        if hook is None:
+            return
+        try:
+            hook(
+                symbol=symbol,
+                side=side,
+                status=status,
+                requested_qty=requested,
+                filled_qty=filled,
+            )
+        except Exception:  # noqa: BLE001 - feedback must never break the run
+            logger.exception("on_fill feedback failed for %s (%s)", symbol, status)
 
     # ==========================================================================
     # CONVENIENCE WRAPPERS (for testing / backward compatibility)
@@ -349,6 +375,7 @@ class BacktestEngine:
         signals: list[Signal],
         start_date: datetime | None = None,
         end_date: datetime | None = None,
+        live_strategy: Any = None,
     ) -> BacktestResult:
         """
         Run a complete backtest simulation.
@@ -374,6 +401,16 @@ class BacktestEngine:
         # Sort data by timestamp
         market_data.sort(key=lambda x: x.timestamp)
         signals.sort(key=lambda x: x.timestamp)
+
+        # D05: live mode — the strategy generates per bar DURING the run
+        # (instead of a precomputed list) and receives fill feedback
+        # (rejections, partial fills, stop closes) BEFORE its next decision.
+        self._live_strategy = live_strategy
+        if live_strategy is not None:
+            logger.info(
+                "Live strategy mode: %s generates per bar with on_fill feedback",
+                type(live_strategy).__name__,
+            )
 
         logger.info(
             f"Backtest starting: {len(market_data)} market_data points, {len(signals)} signals"
@@ -439,22 +476,48 @@ class BacktestEngine:
             # Execute learning engine retraining if needed
             self._execute_learning_retraining(md, market_data)
 
-            # Process signals for this timestamp
-            (
-                signal_index,
-                signals_processed,
-                signals_matched,
-                signals_skipped,
-                strategy_stats,
-            ) = self._process_signals_at_timestamp(
-                md,
-                signals,
-                signal_index,
-                signals_processed,
-                signals_matched,
-                signals_skipped,
-                strategy_stats,
-            )
+            # Process signals for this timestamp — in live mode (D05) the
+            # strategy generates THIS bar's signals right here, after the
+            # t+1 fills above notified their outcomes: decisions always
+            # follow the freshest execution state.
+            if self._live_strategy is not None:
+                bar_signals = self._live_strategy.generate_signals(md)
+                # A cross-sectional rebalance emits orders for the WHOLE
+                # target book on the triggering bar. The static-list path
+                # relies on each symbol's signal being matched at its own
+                # bar later; a live batch must be queued IN FULL here —
+                # the pending queue fills each at its own symbol's next
+                # bar open (t+1), so pricing stays per-symbol.
+                for live_signal in bar_signals:
+                    signals_processed += 1
+                    signals_matched += 1
+                    strategy_name = (
+                        live_signal.metadata.get("strategy", "live")
+                        if live_signal.metadata
+                        else "live"
+                    )
+                    strategy_stats.setdefault(
+                        strategy_name,
+                        {"matched": 0, "skipped": 0, "symbol_mismatch": 0, "time_mismatch": 0},
+                    )
+                    strategy_stats[strategy_name]["matched"] += 1
+                    self._pending_signals.setdefault(live_signal.symbol, []).append(live_signal)
+            else:
+                (
+                    signal_index,
+                    signals_processed,
+                    signals_matched,
+                    signals_skipped,
+                    strategy_stats,
+                ) = self._process_signals_at_timestamp(
+                    md,
+                    signals,
+                    signal_index,
+                    signals_processed,
+                    signals_matched,
+                    signals_skipped,
+                    strategy_stats,
+                )
 
             # Check for stop loss / take profit
             self.exit_monitor.check_exit_conditions(
@@ -828,6 +891,13 @@ class BacktestEngine:
                     "Kill switch triggered - trading halted",
                     signal.metadata if hasattr(signal, "metadata") else {},
                 )
+            self._notify_live(
+                signal.symbol,
+                str(signal.signal_type).lower().replace("signaltype.", ""),
+                "rejected",
+                signal.quantity,
+                Decimal("0"),
+            )
             return  # Do NOT process this signal
 
         # Use SignalProcessor to validate and determine action
@@ -914,6 +984,9 @@ class BacktestEngine:
                         f"Pre-trade analysis rejected: {pre_trade_analysis.reasons}",
                         signal.metadata if hasattr(signal, "metadata") else {},
                     )
+                self._notify_live(
+                    signal.symbol, "buy", "rejected", estimated_quantity, Decimal("0")
+                )
                 return  # Do NOT execute this trade
 
             # Execute buy trade - pass position_size from ComplianceEngine to avoid duplication
@@ -931,6 +1004,9 @@ class BacktestEngine:
             if trade:
                 self.trades.append(trade)
                 self.capital = new_capital
+                self._notify_live(
+                    signal.symbol, "buy", "filled", estimated_quantity, trade.quantity
+                )
 
                 # COMPLIANCE: Post-trade analysis - validate execution quality
                 post_trade_analysis = self.compliance_engine.analyze_post_trade(
@@ -955,6 +1031,12 @@ class BacktestEngine:
 
                 # Register trade for learning engine
                 self._register_buy_trade_for_learning(trade, signal, market_data)
+            else:
+                # executor refused (e.g. profitability validation): the live
+                # strategy must learn the buy never happened (D05)
+                self._notify_live(
+                    signal.symbol, "buy", "rejected", estimated_quantity, Decimal("0")
+                )
 
         elif action == "SELL":
             # COMPLIANCE: Pre-trade analysis - validate sell trade before execution
@@ -996,6 +1078,13 @@ class BacktestEngine:
                         f"Pre-trade analysis rejected: {pre_trade_analysis.reasons}",
                         signal.metadata if hasattr(signal, "metadata") else {},
                     )
+                self._notify_live(
+                    signal.symbol,
+                    "sell",
+                    "rejected",
+                    Decimal(str(current_position_qty)),
+                    Decimal("0"),
+                )
                 return  # Do NOT execute this trade
 
             # Execute sell trade
@@ -1008,6 +1097,13 @@ class BacktestEngine:
             if trade:
                 self.trades.append(trade)
                 self.capital = new_capital
+                self._notify_live(
+                    signal.symbol,
+                    "sell",
+                    "filled",
+                    Decimal(str(current_position_qty)),
+                    trade.quantity,
+                )
 
                 # COMPLIANCE: Post-trade analysis - validate execution quality
                 post_trade_analysis = self.compliance_engine.analyze_post_trade(
@@ -1375,6 +1471,9 @@ class BacktestEngine:
         # Update capital and position
         self.capital += current_position * exit_price_with_slippage - pnl_info["total_commission"]
         self.position_manager.close_position(symbol)
+        # D05: stop/TP close (or forced end-of-run close) — the live
+        # strategy must learn the position is GONE before its next decision.
+        self._notify_live(symbol, "sell", "closed", current_position, current_position)
 
     def _close_all_positions(
         self, final_market_data: Quote, price_map: dict[str, Decimal] | None = None

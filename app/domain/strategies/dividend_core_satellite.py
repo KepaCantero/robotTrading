@@ -281,6 +281,44 @@ class DividendCoreSatelliteStrategy(BaseStrategy):
         """Fracción de cartera por manga (el motor la usa para el sizing)."""
         return Decimal(str(self._position_weight(signal.symbol)))
 
+    def on_fill(
+        self,
+        symbol: str,
+        side: str,
+        status: str,
+        requested_qty: Any,
+        filled_qty: Any,
+    ) -> None:
+        """D05: reconcile `_holdings` with the EXECUTED book.
+
+        Called by the engine (live mode) after every rejection, fill or
+        stop-close, always BEFORE the next bar's decision. The emitted-
+        signal book was fantasy whenever the engine disagreed — now the
+        next rebalance decides against reality.
+        """
+        symbol = str(symbol).upper()
+        if side == "buy":
+            if status == "rejected":
+                self._holdings.discard(symbol)  # retry at the next rebalance
+            elif status == "filled" and filled_qty is not None and filled_qty <= 0:
+                self._holdings.discard(symbol)
+        elif side == "sell":
+            if status == "rejected":
+                self._holdings.add(symbol)  # still really held — retry the exit
+            elif status == "closed":
+                self._holdings.discard(symbol)  # stop/TP or forced close: gone
+            elif status == "filled":
+                # partial sell: the remainder is still held
+                try:
+                    if (
+                        filled_qty is not None
+                        and requested_qty is not None
+                        and filled_qty < requested_qty
+                    ):
+                        self._holdings.add(symbol)
+                except (TypeError, ValueError):
+                    pass
+
     def get_required_parameters(self) -> list[str]:
         return ["lookback_days", "skip_recent_days", "satellite_top_k", "rebalance_days"]
 

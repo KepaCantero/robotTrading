@@ -206,10 +206,16 @@ class BacktestResult:
     benchmark_symbol: str = ""
     benchmark_return_pct: Decimal | None = None
     excess_return_pct: Decimal | None = None
-    #: equal-weight buy&hold of the run's own universe — the honest
-    #: benchmark for a dividend strategy (SPY is mega-cap tech)
+    #: equal-weight of the run's own universe — the honest benchmark for a
+    #: dividend strategy (SPY is mega-cap tech). D12 separates the two
+    #: policies: `universe_ew_return_pct` rebalances DAILY, `*_buy_hold_*`
+    #: buys each sleeve once at its first in-window close and holds.
     universe_ew_return_pct: Decimal | None = None
     universe_ew_sharpe: Decimal | None = None
+    universe_ew_buy_hold_return_pct: Decimal | None = None
+    #: sorted symbols actually in the EW benchmark (composition explicit,
+    #: invariant to input order — D12)
+    universe_ew_symbols_used: list[str] = field(default_factory=list)
     excess_vs_universe_ew_pct: Decimal | None = None
     benchmark_curve: list[tuple[str, str]] = field(default_factory=list)
     dividend_tax_drag_pct: Decimal | None = None
@@ -278,6 +284,12 @@ class BacktestResult:
             "universe_ew_sharpe": (
                 str(self.universe_ew_sharpe) if self.universe_ew_sharpe is not None else None
             ),
+            "universe_ew_buy_hold_return_pct": (
+                str(self.universe_ew_buy_hold_return_pct)
+                if self.universe_ew_buy_hold_return_pct is not None
+                else None
+            ),
+            "universe_ew_symbols_used": list(self.universe_ew_symbols_used),
             "excess_vs_universe_ew_pct": (
                 str(self.excess_vs_universe_ew_pct)
                 if self.excess_vs_universe_ew_pct is not None

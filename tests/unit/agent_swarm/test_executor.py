@@ -314,3 +314,105 @@ class TestPersistenceIntegration:
 
         state = await Capa2PipelineExecutor(store=store).run(make_request())
         assert state.status == "completed"
+
+
+class TestT61IncomeAwareScoring:
+    """F4·T6.1: para objetivos de renta, el score premia la renta neta REAL
+    cobrada (D01) — 25 puntos propios, comprimiendo los componentes de
+    mercado al 75%. Sin evidencia medible de renta: 0 puntos y techo 75."""
+
+    def _ctx(self, objective, dividend_metrics, initial=Decimal("100000")):
+        from types import SimpleNamespace
+
+        metrics = SimpleNamespace(sharpe_ratio=Decimal("1.0"), max_drawdown_pct=Decimal("-10"))
+        payload = SimpleNamespace(
+            metrics=metrics,
+            excess_vs_universe_ew_pct=None,
+            excess_return_pct=Decimal("5"),
+            walk_forward_passed=True,
+            universe_ew_sharpe=Decimal("0"),
+            dividend_metrics=dividend_metrics,
+        )
+        module = SimpleNamespace(priority=1, preset="balanced", max_exposure=Decimal("0.5"))
+        return SimpleNamespace(
+            param_result=SimpleNamespace(
+                parameter_set=SimpleNamespace(module_parameters={"mod": module})
+            ),
+            backtest=SimpleNamespace(backtest_result=payload, feasibility_ratio=Decimal("2.0")),
+            profile=SimpleNamespace(objective=objective, initial_capital=initial),
+        )
+
+    def _score(self, ctx):
+        ranked = Capa2PipelineExecutor()._t61_input(ctx)  # noqa: SLF001
+        return ranked[0].overall_score
+
+    def test_growth_objective_ignores_income(self):
+        from types import SimpleNamespace
+
+        div = SimpleNamespace(
+            computable=True,
+            net_total=Decimal("9000"),
+            net_by_year={2024: Decimal("9000")},
+        )
+        # componentes perfectos (100) — el objetivo capital no re pondera
+        assert self._score(self._ctx("maximizar_capital", div)) == Decimal("100")
+
+    def test_dividend_objective_rewards_measured_income(self):
+        from types import SimpleNamespace
+
+        # 9.000 USD netos en 1 año sobre 100.000 → 9%/año: banda ≥4% → 25 pts
+        div = SimpleNamespace(
+            computable=True,
+            net_total=Decimal("9000"),
+            net_by_year={2024: Decimal("9000")},
+        )
+        assert self._score(self._ctx("maximizar_dividendos", div)) == Decimal("100")
+
+    def test_dividend_objective_mid_yield_band(self):
+        from types import SimpleNamespace
+
+        # 3.500 en 1 año sobre 100.000 → 3,5%/año: banda ≥3% → 20 pts
+        div = SimpleNamespace(
+            computable=True,
+            net_total=Decimal("3500"),
+            net_by_year={2024: Decimal("3500")},
+        )
+        assert self._score(self._ctx("maximizar_dividendos", div)) == Decimal("95")
+
+    def test_income_objective_uses_real_enum(self):
+        from types import SimpleNamespace
+
+        from app.services.profile_generator.models import InvestmentObjective
+
+        div = SimpleNamespace(
+            computable=True,
+            net_total=Decimal("1500"),
+            net_by_year={2024: Decimal("1500")},
+        )
+        # 1,5%/año: banda ≥1% → 8 pts → 75+8
+        assert self._score(self._ctx(InvestmentObjective.INCOME_GENERATION, div)) == Decimal("83")
+
+    def test_non_computable_income_scores_zero_and_caps_at_75(self):
+        from types import SimpleNamespace
+
+        gap = SimpleNamespace(
+            computable=False,
+            net_total=Decimal("0"),
+            net_by_year={},
+            coverage_gaps=["SCHD"],
+        )
+        assert self._score(self._ctx("maximizar_dividendos", gap)) == Decimal("75")
+
+    def test_missing_dividend_metrics_scores_zero_income(self):
+        assert self._score(self._ctx("maximizar_dividendos", None)) == Decimal("75")
+
+    def test_multi_year_income_is_annualized(self):
+        from types import SimpleNamespace
+
+        # 6.000 en 2 años sobre 100.000 → 3%/año de media: banda ≥3% → 20 pts
+        div = SimpleNamespace(
+            computable=True,
+            net_total=Decimal("6000"),
+            net_by_year={2023: Decimal("3000"), 2024: Decimal("3000")},
+        )
+        assert self._score(self._ctx("maximizar_dividendos", div)) == Decimal("95")

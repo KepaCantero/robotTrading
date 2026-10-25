@@ -819,7 +819,45 @@ class Capa2PipelineExecutor:
         )
         excess_pts = 10 if excess > 0 else 5 if excess > -50 else 0
         wf_pts = 10 if wf_passed else 0
-        base = Decimal(str(min(100, sharpe_pts + dd_pts + feas_pts + excess_pts + wf_pts)))
+        base_components = sharpe_pts + dd_pts + feas_pts + excess_pts + wf_pts
+
+        # INCOME (F4·T6.1): para objetivos de RENTA el score debe premiar la
+        # renta neta REAL cobrada (D01) contra el capital inicial, no solo
+        # el retorno total — una cartera puede empatar en Sharpe y aun así
+        # retirar menos efectivo. Los cinco componentes de mercado se
+        # comprimen al 75% para dejarle 25 puntos; sin evidencia de renta
+        # (sin datos, o cobertura con gaps → computable=False) son 0
+        # puntos y el máximo alcanzable baja a 75: no se puntúa lo que no
+        # se puede medir.
+        objective = getattr(ctx.profile, "objective", "")
+        objective = getattr(objective, "value", objective)
+        income_objective = str(objective).lower() in ("maximizar_dividendos", "income_generation")
+        income_pts = 0.0
+        if income_objective:
+            div = getattr(payload, "dividend_metrics", None) if payload is not None else None
+            initial = float(getattr(ctx.profile, "initial_capital", 0) or 0)
+            if div is not None and getattr(div, "computable", False) and initial > 0:
+                years = div.net_by_year or {}
+                net_total = float(div.net_total or 0)
+                per_year = net_total / len(years) if years else net_total
+                annual_yield = per_year / initial * 100.0
+                income_pts = (
+                    25.0
+                    if annual_yield >= 4.0
+                    else 20.0
+                    if annual_yield >= 3.0
+                    else 15.0
+                    if annual_yield >= 2.0
+                    else 8.0
+                    if annual_yield >= 1.0
+                    else 4.0
+                    if annual_yield > 0
+                    else 0.0
+                )
+        if income_objective:
+            base = Decimal(str(min(100.0, base_components * 0.75 + income_pts)))
+        else:
+            base = Decimal(str(min(100, base_components)))
 
         for rank, (name, config) in enumerate(modules, start=1):
             preset = str(getattr(config, "preset", "balanced")).lower()
