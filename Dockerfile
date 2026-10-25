@@ -3,7 +3,7 @@
 # Supports multiple build targets: production, development, testing
 
 # Build stage
-FROM python:3.11-slim as builder
+FROM python:3.11-slim AS builder
 
 # Set build arguments
 ARG BUILD_DATE
@@ -27,18 +27,21 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copy project definition first for better caching
-COPY pyproject.toml ./
+COPY pyproject.toml requirements.lock.txt ./
 
-# Copy source code (needed for pip install -e)
+# Install the LOCKED dependency set (F6·p2 / A24): every pin and hash comes
+# from uv.lock via `uv export --all-extras --hashes` — reproducible builds,
+# no silent resolution drift between machines. The app itself is installed
+# --no-deps AFTER, so only the locked set can satisfy imports.
+RUN pip install --no-cache-dir --require-hashes -r requirements.lock.txt
+
+# Copy source code
 COPY app/ app/
 COPY scripts/ scripts/
-
-# Install all dependencies from pyproject.toml (dev needed by the testing
-# target; the paper extra adds asyncpg for the async PostgreSQL engine)
-RUN pip install --no-cache-dir -e ".[dev,paper]"
+RUN pip install --no-cache-dir --no-deps -e .
 
 # Production stage
-FROM python:3.11-slim as production
+FROM python:3.11-slim AS production
 
 # Set build arguments
 ARG BUILD_DATE
@@ -117,7 +120,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
 CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 
 # Development stage
-FROM production as development
+FROM production AS development
 
 # Switch back to root for development
 USER root
@@ -135,7 +138,7 @@ USER algotrading
 CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
 # Testing stage
-FROM builder as testing
+FROM builder AS testing
 
 # Set environment for testing
 ENV ENVIRONMENT=testing \
