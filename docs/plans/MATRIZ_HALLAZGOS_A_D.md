@@ -14,24 +14,24 @@ sin validación completa), **validado** (prueba de aceptación verde). Método d
 |---|---|---|---|---|---|
 | A01 | P1 | Operaciones sensibles sin autenticar | routers con `Depends(get_current_principal)` | **validado** (F1) | 1 |
 | A02 | P1 | Clave dev aceptada en producción | `AuthMiddleware` eliminada; solo `API_ACCESS_KEYS` | **validado** (F1) | 1 |
-| A03 | P1 | Límites por API desconectados de ejecución (3 RiskGates) | `order_manager.py` † | abierto | 2 |
-| A04 | P1 | STOP se salta RiskGates | `order_manager.py:158` ✔ `if order_price is not None` | abierto | 2 |
-| A05 | P1 | Precio fijo 100 en validación | `order_manager.py:155` ✔ `Decimal("100")` | abierto | 2 |
-| A06 | P1 | Sin exposición proyectada ni reservas | `risk_gates.py:188` † | abierto | 2 |
-| A07 | P1 | Ganancias activan límite de pérdidas | `risk_gates.py:236` ✔ `abs(self.daily_pnl)` | abierto | 2 |
-| A08 | P1 | Breaker bloquea reducir posiciones | `risk_gates.py:174` † | abierto | 2 |
-| A09 | P1 | Idempotencia/recuperación solo en memoria | `trading_bridge_orchestrator.py` † | abierto | 2 |
-| A10 | P1 | Venta completa pierde el efectivo | `paper_adapter.py:333-335` ✔ `return` antes del abono | abierto | 3 |
+| A03 | P1 | Límites por API desconectados de ejecución (3 RiskGates) | singleton `get_risk_gates` compartido por API/órdenes/bridge| **validado** (F2) | 2 |
+| A04 | P1 | STOP se salta RiskGates | validación incondicional; STOP valida al trigger| **validado** (F2) | 2 |
+| A05 | P1 | Precio fijo 100 en validación | `BrokerQuote` real con niveles de caducidad; sin precio 100| **validado** (F2) | 2 |
+| A06 | P1 | Sin exposición proyectada ni reservas | reservas `OrderReservation` + exposición proyectada| **validado** (F2) | 2 |
+| A07 | P1 | Ganancias activan límite de pérdidas | `max(0,-pnl)` sobre base de sesión; una implementación| **validado** (F2) | 2 |
+| A08 | P1 | Breaker bloquea reducir posiciones | reduce-only verificado pasa con breaker activo| **validado** (F2) | 2 |
+| A09 | P1 | Idempotencia/recuperación solo en memoria | intención persistida antes del envío, clave estable| **validado** (F2) | 2 |
+| A10 | P1 | Venta completa pierde el efectivo | venta completa acredita efectivo (papel)| **validado** (F2, adelantado de F3) | 3 |
 | A11 | P1 | Variables ML con resultados futuros | `training_data_preparator.py:771` † | abierto | 5 |
 | A12 | P1 | Fallo de CV temporal → split aleatorio | `supervised_learning_engine.py:251-256` ✔ fallback | abierto | 5 |
 | A13 | P2 | Auth válida inutilizable con roles | `Principal` con roles vía `API_KEY_ROLES` | **validado** (F1) | 1 |
 | A14 | P2 | Decoradores no ven `http_request` | wrapper escanea kwargs por valor | **validado** (F1) | 1 |
 | A15 | P2 | Fallo auth global responde 500 | AuthMiddleware eliminada; 401 + headers | **validado** (F1) | 1 |
-| A16 | P2 | SUBMITTED aunque rechazada | `live_trading.py:183-191` ✔ incondicional | abierto | 2 |
-| A17 | P2 | Nueva orden cancela monitor de la anterior | `trading_bridge_orchestrator.py:428` † | abierto | 2 |
-| A18 | P2 | Validación numérica incompleta | `risk_gates.py:188` † | abierto | 2 |
+b2 REJECTED con motivo; estado real del broker| **validado** (F2) | 2 |
+| A17 | P2 | Nueva orden cancela monitor de la anterior | monitores por order_id; stop() cancela todos| **validado** (F2) | 2 |
+| A18 | P2 | Validación numérica incompleta | cantidad/precio finitos y >0 siempre| **validado** (F2) | 2 |
 | A19 | P1 | Dependencias operativas fuera de manifiesto | `pyproject.toml` ✔ sin `alpaca-trade-api`/`asyncpg` | abierto | 6 |
-| A20 | P1 | Tablas live sin migración | `trade_persistence.py` † | abierto | 6 |
+| A20 | P1 | Tablas live sin migración | migración 0004 crea las 4 tablas live| **validado** (F2) | 6 |
 | A21 | P2 | Workers/scheduler despliegan otra API | `Dockerfile:151` † | abierto | 6 |
 | A22 | P2 | CI sin gate real (`|| true`) | `.github/workflows/ci-testing.yml` † | abierto | 6 |
 | A23 | P2 | Servicios expuestos en compose prod | `docker-compose.prod.yml` † | abierto | 6 |
@@ -64,6 +64,8 @@ diario. La aceptación (invariancia al orden, todos los activos declarados) sigu
 |---|---|---|---|
 | 2026-10-24 | (colección) | `get_order_manager_for_api` sin parámetros para `Depends`; 5 endpoints de `live_trading.py` actualizados; test de seguridad re-keyed; eliminado `tests/integration/metrics_database` (módulo purgado en `561071a4`). Colección: 7 errores → **0** (11.969 tests). | — |
 | 2026-10-24 | A01, A02, A13, A14, A15 | **Fase 1 auth**: `AuthMiddleware` eliminada de raíz (mataba la clave dev y respondía 500); principal único `Principal` con roles viewer/trader/admin (`API_ACCESS_KEYS` + `API_KEY_ROLES`; default viewer+trader, admin nunca automático); dependencias `get_current_principal`/`require_roles` en los 13 routers (solo `/health` público); roles por endpoint (resets/umbrales → admin; órdenes/señales → trader); `require_auth`/`rate_limit` reconocen `http_request`; el handler global preserva `WWW-Authenticate`; audit del reset con identidad y timestamp. Aceptación: `tests/api/test_auth_matrix.py` **41/41** (matriz rutas × credenciales contra la app real). Tests de integración actualizados honestamente (conftest con clave operadora admin). Regresión vs línea base en tests/api, tests/integration/api y tests/unit/core: **0 nuevos**. | **validado** |
+
+| 2026-10-25 | A03–A09, A16–A18, A20 (+A10) | **Fase 2 completa** (d584a9f6, ddb7db8c, 41f14e54, 96249c4a, 9bb9997b): semántica de riesgo (base de sesión, reduce-only, reservas proyectadas, gates numéricos) · camino de órdenes (validación SIEMPRE, cotización real `BrokerQuote` con niveles fresco/STALE>7d/rechazo>90d sobre CSV EOD propio, MARKET ejecuta a cotización, 422 REJECTED honesto) · unificación (un RiskGates autoritativo; monitores por orden) · intención persistida antes del envío (idempotente por client_order_id) · migración 0004 tablas live (+guard SQLite en 0003 que rompía la cadena). Aceptación: 4 baterías nuevas (~50 tests) en tests/unit/live_trading/test_*_f2.py; 0 fallos nuevos vs herencia 32. | **validado** |
 
 ## Pruebas de aceptación
 
