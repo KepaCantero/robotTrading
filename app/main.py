@@ -78,6 +78,7 @@ from app.presentation.api.middleware import (
     SecurityHeadersMiddleware,
 )
 from app.presentation.api.momentum import router as momentum_router
+from app.presentation.api.ops import router as ops_router
 from app.presentation.api.optimization import router as optimization_router
 from app.presentation.api.paper_trading import router as paper_trading_router
 from app.presentation.api.portfolio import router as portfolio_router
@@ -303,6 +304,7 @@ app.include_router(paper_trading_router, dependencies=AUTH)
 app.include_router(portfolio_analytics_router, dependencies=AUTH)
 app.include_router(cost_analysis_router, dependencies=AUTH)
 app.include_router(optimization_router, dependencies=AUTH)
+app.include_router(ops_router, dependencies=AUTH)
 app.include_router(live_trading_router, dependencies=AUTH)
 app.include_router(
     trading_error_handler_router,
