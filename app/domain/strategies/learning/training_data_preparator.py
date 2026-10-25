@@ -771,6 +771,11 @@ class TrainingDataPreparator:
                 and entry_time < timestamp
                 and (status == TradeStatus.CLOSED or status == "CLOSED")
                 and pnl is not None
+                # A11: solo operaciones CERRADAS ANTES del instante evaluado
+                # — sin esta cota, el PnL de una operación que cerraría el
+                # 10-ene alimentaba las features del 2-ene (futuro).
+                and exit_time is not None
+                and exit_time <= timestamp
             ):
                 recent_trades.append(
                     {"pnl": float(pnl), "entry_time": entry_time, "exit_time": exit_time}
@@ -805,6 +810,7 @@ class TrainingDataPreparator:
             entry_time = get_attr(t, "entry_time")
             status = get_attr(t, "status")
             pnl = get_attr(t, "pnl")
+            exit_time = get_attr(t, "exit_time")
 
             # Manejar TradeStatus enum o string
             if hasattr(status, "name"):
@@ -819,6 +825,10 @@ class TrainingDataPreparator:
                 and start_timestamp <= entry_time < timestamp
                 and status_str == "CLOSED"
                 and pnl is not None
+                # A11: mismo criterio point-in-time que el PnL reciente —
+                # el win rate solo cuenta cierres CONOCIDOS en t.
+                and exit_time is not None
+                and exit_time <= timestamp
             ):
                 relevant_trades.append(t)
 

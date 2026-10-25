@@ -33,7 +33,6 @@ import xgboost as xgb
 # REQUIRED: scikit-learn is REQUIRED - NO FALLBACKS
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_auc_score
-from sklearn.model_selection import train_test_split
 
 
 class SupervisedLearningEngine(BaseLearningEngine):
@@ -247,51 +246,14 @@ class SupervisedLearningEngine(BaseLearningEngine):
                     raise ValueError("Purged CV generated no valid splits")
 
             except Exception as e:
-                logger.warning(f"Purged CV failed, falling back to standard split: {e}")
-                # Fallback to standard train_test_split
-                unique_classes = len(np.unique(y_train))
-                stratify_param = y_train if unique_classes > 1 else None
-
-                if isinstance(training_data["features"], pd.DataFrame):
-                    X_train_df, X_val_df, y_train_series, y_val_series = train_test_split(
-                        training_data["features"],
-                        training_data["labels"],
-                        test_size=0.2,
-                        random_state=42,
-                        stratify=stratify_param,
-                    )
-                    train_idx = X_train_df.index
-                    X_train = X_train_df.values
-                    X_val = X_val_df.values
-                    y_train = y_train_series.values
-                    y_val = y_val_series.values
-                else:
-                    X_train, X_val, y_train, y_val = train_test_split(
-                        X_train, y_train, test_size=0.2, random_state=42, stratify=stratify_param
-                    )
-                    train_idx = np.arange(len(X_train))
-
-                # Apply sample weights to training set only (after split)
-                if self.sample_weights_ is not None and train_idx is not None:
-                    if hasattr(train_idx, "__iter__") and not isinstance(train_idx, slice):
-                        if isinstance(self.sample_weights_, pd.Series):
-                            train_weights = (
-                                self.sample_weights_.loc[train_idx].values
-                                if all(idx in self.sample_weights_.index for idx in train_idx)
-                                else self.sample_weights_.iloc[: len(train_idx)].values
-                            )
-                        else:
-                            train_weights = self.sample_weights_[  # pylint: disable=unsubscriptable-object
-                                : len(train_idx)
-                            ]
-                    else:
-                        train_weights = self.sample_weights_[  # pylint: disable=unsubscriptable-object
-                            : len(X_train)
-                        ]
-
-                    logger.info(
-                        f"Applied sample weights to training set: {len(train_weights)} samples"
-                    )
+                # A12: si la validación temporal (purged CV) falla, el
+                # entrenamiento FALLA — el fallback a train_test_split con
+                # shuffle convertía el incumplimiento metodológico en un
+                # resultado aparentemente válido (fuga temporal).
+                raise ValueError(
+                    f"Temporal validation (purged CV) failed — training is NOT "
+                    f"validated and will not proceed: {e}"
+                ) from e
         else:
             X_val = validation_data["features"]
             y_val = validation_data["labels"]
