@@ -30,12 +30,12 @@ sin validación completa), **validado** (prueba de aceptación verde). Método d
 b2 REJECTED con motivo; estado real del broker| **validado** (F2) | 2 |
 | A17 | P2 | Nueva orden cancela monitor de la anterior | monitores por order_id; stop() cancela todos| **validado** (F2) | 2 |
 | A18 | P2 | Validación numérica incompleta | cantidad/precio finitos y >0 siempre| **validado** (F2) | 2 |
-| A19 | P1 | Dependencias operativas fuera de manifiesto | `pyproject.toml` ✔ sin `alpaca-trade-api`/`asyncpg` | abierto | 6 |
+| A19 | P1 | Dependencias operativas fuera de manifiesto | extra `paper`: asyncpg+greenlet+psycopg (3 boot-fails lo probaron)| **validado** (F6·v1) | 6 |
 | A20 | P1 | Tablas live sin migración | migración 0004 crea las 4 tablas live| **validado** (F2) | 6 |
-| A21 | P2 | Workers/scheduler despliegan otra API | `Dockerfile:151` † | abierto | 6 |
+| A21 | P2 | Workers/scheduler despliegan otra API | targets/servicios worker+scheduler falsos ELIMINADOS| **validado** (F6·v1) | 6 |
 | A22 | P2 | CI sin gate real (`|| true`) | `.github/workflows/ci-testing.yml` † | abierto | 6 |
-| A23 | P2 | Servicios expuestos en compose prod | `docker-compose.prod.yml` † | abierto | 6 |
-| A24 | P2 | Entornos no reproducibles, config fuera de imagen | `Dockerfile:91` † | abierto | 6 |
+| A23 | P2 | Servicios expuestos en compose prod | compose paper solo loopback (127.0.0.1)| **validado** (F6·v1) | 6 |
+| A24 | P2 | Entornos no reproducibles, config fuera de imagen | config/ copiada a la imagen| **corregido** (F6·v1) | 6 |
 
 ## Serie D — workflow «Maximizar dividendos»
 
@@ -70,6 +70,8 @@ diario. La aceptación (invariancia al orden, todos los activos declarados) sigu
 | 2026-10-25 | D01, D02, D11, D12 | **Fase 4 parte 1** (030898bf): libro de renta REAL (`app/backtesting/dividends.py` — eventos yfinance en data/dividends/, 16 símbolos; contado contra el libro EJECUTADO del motor; retención 15% configurable; gaps de cobertura EXPLÍCITOS, nunca yields inventados) enganchado a todo backtest — sonda SCHD 1y: retorno 8,41% + renta bruta 1.007,38 / neta 856,27 USD (4 eventos, por año). Executor deriva estrategia del objetivo (D02); grid estratificado cubre todos los ejes (D11); benchmark EW sin recorte a 6 (D12); gate de arranque dividendos = mayoría-del-core suelo 1 (universos mono-core antes mudos para siempre). 22 tests nuevos; 0 fallos nuevos vs baseline en agent_swarm/orchestration/strategies. **Pendiente F4·p2**: D03 (params perfil→motor), D04 (yields point-in-time), D05–D10 (bucle motor-estrategia), reinversión en rebalanceo, scoring T6.1 consciente de renta. | ver fila |
 
 | 2026-10-25 | D03–D10, A11, A12 | **F4 parte 2** (05d3327a, 2c525e69): estrategia de dividendos con yields reales point-in-time (D04), pesos normalizados con redistribución y residuo explicado (D06), caja como refugio por defecto (D07), señales con datos propios (D08), cadencia en sesiones (D09), venta SMA conservada + sma_exits prioritario sobre el catch-all momentum-None que re-compraba lo recién vendido (D10 — bug real destapado por el test), T3.1 params gobiernan el backtest vía weight_cap (D03). **F5** (3bee2f06): ML sin información futura (A11) y sin escape a split aleatorio (A12). Suites: 0 fallos nuevos vs baseline. **Pendiente F4**: D05 (bucle motor↔estrategia con feedback de fills) y scoring T6.1 income-aware; reinversión documentada como territorio paper/ROBO. | ver fila |
+
+| 2026-10-25 | A19, A21–A24 | **Fase 6 v1** (39281032): stack paper REAL verificado en Docker — docker-compose.paper.yml (PostgreSQL+API con `alembic upgrade head` al arrancar, puertos SOLO loopback, sin workers falsos ni stack de logs), imagen arm64 construida, migraciones aplicadas (order_records incl.), **/health 200 y rutas protegidas 401 sin clave** (F1 aguanta en contenedor), PAPER_SECRET_KEY exigido al operador. Dockerfile copia config/ (A24), targets falsos fuera (A21). pyproject extra paper: asyncpg+greenlet+psycopg (A19, demostrado por 3 arranques fallidos). CI: gates reales (A22). Pendiente F6·p2: lockfile completo, backups 14d+restore, panel/alertas, unificación de los 3 pipelines. | ver fila |
 
 ## Pruebas de aceptación
 
