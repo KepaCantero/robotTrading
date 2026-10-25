@@ -18,7 +18,7 @@ Comprobaciones de solo lectura sobre el Mac que alojará la producción paper (p
 
 | Requisito | Estado | Fase que lo necesita | Acción |
 |---|---|---|---|
-| Docker | **NO instalado** (sin `docker` en PATH, sin Docker.app, sin colima/podman/orb) | 6 | Instalar Docker Desktop para Apple Silicon (o colima+docker CLI). Requiere decisión/acción del usuario: instalación a nivel de sistema. |
+| Docker | **Instalado y verificado (25-10-2026)**: Docker Desktop 29.9.2, daemon aarch64 nativo, Compose v5.6.1, contenedor alpine arm64 OK. CLI al PATH vía `~/.zshrc` (el symlink de `/usr/local/bin` requiere sudo; binario en `/Applications/Docker.app/Contents/Resources/bin`). | 6 | **DESBLOQUEADO.** |
 | TWS de Interactive Brokers | **NO instalado** (sin `~/Applications/Trader Work Station`, sin `/Applications`, sin `~/Jts`) | 3 | Instalar TWS desde IBKR y abrir sesión con la cuenta paper. **Solo el usuario** puede aportar credenciales/cuenta. |
 | Cuenta paper IBKR | Sin verificar (requiere TWS) | 3, 5 | Crear/verificar cuenta paper y permisos de datos de mercado. |
 
