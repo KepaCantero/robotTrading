@@ -3,17 +3,9 @@ Portfolio Construction & Optimization - T7.1 (PortfolioConstructor) + T18.1 Exte
 
 Provides:
 - T7.1: PortfolioConstructor - Mean-variance and risk parity optimization
-- T18.1.1: AllocationManager - Portfolio allocation tracking and management
-- T18.1.2: RebalancingEngine - Dynamic rebalancing based on thresholds
 - T18.1.3: AllocationRecommender - Smart allocation recommendations
 """
 
-from app.services.portfolio_construction.allocation_manager import (
-    AllocationManager,
-    AllocationMetrics,
-    AllocationSnapshot,
-    get_allocation_manager,
-)
 from app.services.portfolio_construction.allocation_recommender import (
     AllocationRecommendation,
     AllocationRecommender,
@@ -24,28 +16,14 @@ from app.services.portfolio_construction.portfolio_constructor import (
     PortfolioAllocation,
     PortfolioConstructor,
 )
-from app.services.portfolio_construction.rebalancing_engine import (
-    RebalancingEngine,
-    RebalancingEvent,
-    RebalancingFrequency,
-    RebalancingTrade,
-    get_rebalancing_engine,
-)
 
 __all__ = [
-    "AllocationManager",
     "AllocationMetrics",
     "AllocationRecommendation",
     "AllocationRecommender",
-    "AllocationSnapshot",
     "OptimizationMethod",
     "PortfolioAllocation",
     "PortfolioConstructor",
-    "RebalancingEngine",
-    "RebalancingEvent",
     "RebalancingFrequency",
-    "RebalancingTrade",
-    "get_allocation_manager",
     "get_allocation_recommender",
-    "get_rebalancing_engine",
 ]

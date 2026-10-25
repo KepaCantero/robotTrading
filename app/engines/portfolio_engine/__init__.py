@@ -24,7 +24,6 @@ from app.services.portfolio_service import PortfolioService
 if TYPE_CHECKING:
     from app.engines.portfolio_engine.meta_learners.meta_learners import BaseMetaLearner
     from app.engines.portfolio_engine.optimizers.base import BaseOptimizer
-    from app.engines.portfolio_engine.rebalancers.rebalancers import BaseRebalancer
 
 logger = logging.getLogger(__name__)
 
@@ -95,7 +94,7 @@ class PortfolioEngine(BasePortfolioEngine):
 
         # Componentes del engine
         self.optimizer = None
-        self.rebalancer = None
+        self.rebalancer: object | None = None
         self.meta_learner = None
 
         # Estado del engine
@@ -197,16 +196,6 @@ class PortfolioEngine(BasePortfolioEngine):
         """
         self.optimizer = optimizer
         self.logger.info(f"Optimizer configurado: {type(optimizer).__name__}")
-
-    def set_rebalancer(self, rebalancer: BaseRebalancer) -> None:
-        """
-        Establecer rebalancer para rebalanceo dinámico.
-
-        Args:
-            rebalancer: Rebalancer instance
-        """
-        self.rebalancer = rebalancer
-        self.logger.info(f"Rebalancer configurado: {type(rebalancer).__name__}")
 
     def set_meta_learner(self, meta_learner: BaseMetaLearner) -> None:
         """
