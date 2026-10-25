@@ -42,6 +42,14 @@ ASSET_TYPE_ENUM = sa.Enum(
 
 
 def upgrade() -> None:
+    # La tabla accounts pertenece al clúster PostgreSQL de 0002 (fifo_tax_
+    # tracking), que se salta en SQLite: sin este guard, la cadena muere en
+    # SQLite con "no such table: accounts" (A20 lo expuso al probar
+    # upgrade head sobre una base vacía).
+    if op.get_bind().dialect.name != "postgresql":
+        logger.debug("Skipping accounts.asset_type migration on non-PostgreSQL database.")
+        return
+
     # crear el tipo ENUM explícitamente (create_type implícito falla en PG real
     # cuando la tabla referenciara el tipo antes de su creación)
     sa.Enum("crypto", "stock_us", "stock_eu", "forex", "etf", name="assettype").create(
@@ -87,4 +95,6 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    if op.get_bind().dialect.name != "postgresql":
+        return
     op.drop_column("accounts", "asset_type")

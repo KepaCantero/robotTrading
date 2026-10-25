@@ -244,6 +244,20 @@ class OrderManager:
             if execution_price is None and quote is not None:
                 execution_price = quote.price
 
+            # A09: persist the INTENT before the broker send — a crash
+            # between here and the ack leaves a recoverable record keyed by
+            # the stable client_order_id (the unique broker_order_id
+            # constraint makes retries of the same intent idempotent at the
+            # persistence layer).
+            intent_row_id = await self._persist_order_intent(
+                symbol=symbol,
+                side=side,
+                quantity=quantity,
+                order_type=order_type,
+                price=execution_price,
+                client_order_id=client_order_id,
+            )
+
             try:
                 order = await self.broker.place_order(
                     symbol=symbol,
@@ -260,6 +274,10 @@ class OrderManager:
                     self.order_history.append(order)
                     self._order_reservations[order.order_id] = reservation_id
                     self._release_reservation_if_terminal(order)
+                    if intent_row_id:
+                        await self._update_intent_status(
+                            intent_row_id, order.status, order_id=order.order_id
+                        )
                     # SEC-005: Structured logging with correlation ID
                     logger.info(
                         "Order placed successfully",
@@ -278,6 +296,12 @@ class OrderManager:
                 else:
                     self.risk_gates.release(reservation_id)
                     self.last_rejection = "broker rejected the order"
+                    if intent_row_id:
+                        await self._update_intent_status(
+                            intent_row_id,
+                            OrderStatus.REJECTED,
+                            error=self.last_rejection,
+                        )
                     logger.error(
                         "Order placement failed",
                         extra={
@@ -292,6 +316,10 @@ class OrderManager:
             except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 self.risk_gates.release(reservation_id)
                 self.last_rejection = f"order placement error: {e}"
+                if intent_row_id:
+                    await self._update_intent_status(
+                        intent_row_id, OrderStatus.REJECTED, error=self.last_rejection
+                    )
                 logger.error(
                     "Error placing order",
                     extra={
@@ -303,6 +331,64 @@ class OrderManager:
                     },
                 )
                 return None
+
+    async def _persist_order_intent(
+        self,
+        *,
+        symbol: str,
+        side: OrderSide,
+        quantity: Decimal,
+        order_type: OrderType,
+        price: Decimal | None,
+        client_order_id: str,
+    ) -> str | None:
+        """A09: persist the order intent BEFORE the send.
+
+        Returns the persistence row id, or None when persistence is
+        unavailable (paper keeps trading — loudly, never silently). The
+        unique broker_order_id column holds the stable client_order_id, so
+        a retried intent cannot create a second row.
+        """
+        try:
+            from .trade_persistence import get_trade_persistence_manager
+
+            persistence = get_trade_persistence_manager()
+            broker_name = getattr(self.broker, "broker_type", None)
+            return await persistence.save_order(
+                {
+                    "symbol": symbol,
+                    "side": side.value,
+                    "quantity": str(quantity),
+                    "price": str(price) if price is not None else None,
+                    "order_type": order_type.value,
+                    "status": "PENDING",
+                    "broker_name": broker_name.value if broker_name else "unknown",
+                    "broker_order_id": client_order_id,
+                    "raw_response": {"phase": "INTENT", "client_order_id": client_order_id},
+                }
+            )
+        except Exception as exc:  # noqa: BLE001 - paper resilience, logged loudly
+            logger.critical("Order-intent persistence failed (order continues in-memory): %s", exc)
+            return None
+
+    async def _update_intent_status(
+        self,
+        intent_row_id: str,
+        order_status: OrderStatus,
+        order_id: str | None = None,
+        error: str | None = None,
+    ) -> None:
+        """A09: reflect the broker outcome on the persisted intent row."""
+        try:
+            from .trade_persistence import get_trade_persistence_manager
+
+            persistence = get_trade_persistence_manager()
+            status = order_status.value if hasattr(order_status, "value") else str(order_status)
+            if error:
+                status = f"{status}: {error[:400]}"
+            await persistence.update_order_status(intent_row_id, status)
+        except Exception as exc:  # noqa: BLE001 - never block trading on logs
+            logger.error("Failed to update intent %s status: %s", intent_row_id, exc)
 
     def _release_reservation_if_terminal(self, order: BrokerOrder) -> None:
         """A06: free reserved risk capacity on terminal order states."""
