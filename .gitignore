@@ -61,6 +61,8 @@ backup/
 fix_*.py
 repair_*.py
 test_*.sh
+# kept on purpose: F6p2 E2E restore proof, run by CI
+!scripts/db/test_backup_restore.sh
 check_all_output.log
 simple_check.log
 DASHBOARD_SUMMARY.md

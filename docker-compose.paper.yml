@@ -86,5 +86,33 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  # F6·p2: daily backups with 14-day retention. The loop runs the SAME
+  # script the restore proof uses (scripts/db/backup_paper.sh); dumps land
+  # in the `backups` volume — copy them off-machine if you want real
+  # durability, the volume only survives with the host.
+  backup:
+    image: postgres:15-alpine
+    environment:
+      PGUSER: algotrading
+      PGPASSWORD: paper-local-only  # pragma: allowlist secret  (loopback-only local password)
+      PGDATABASE: algo_trading
+      PGHOST: postgres
+      BACKUP_DIR: /backups
+      RETENTION_DAYS: "14"
+    volumes:
+      - ./scripts/db/backup_paper.sh:/backup_paper.sh:ro
+      - backups:/backups
+    entrypoint: >
+      sh -c "while true; do
+               sh /backup_paper.sh && echo \"[$$(date -u +%FT%TZ)] backup cycle ok\" ||
+                 echo \"[$$(date -u +%FT%TZ)] BACKUP FAILED\";
+               sleep 86400;
+             done"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
 volumes:
   postgres_data:
+  backups:
