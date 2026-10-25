@@ -1,0 +1,165 @@
+name: CI
+
+# Fase 6 parte 2 — ONE pipeline with real gates (A22). This file replaces
+# ci-cd.yml, ci-testing.yml, testing.yml, docker-check.yml and
+# security-audit.yml, which ran overlapping jobs on every push (three of
+# them ran the same test suite with three different cover-gates).
+#
+# Gates are REAL: no `|| true`, no decorative coverage floors, no job that
+# cannot fail. Types (mypy) are deliberately NOT gated yet: the app has a
+# known ~800-error backlog tracked in the zero-debt campaign — a full-app
+# gate would be permanently red (noise) and a suppressed one would be the
+# old A22 sin. It lands when that debt does.
+#
+#   lint      — ruff check + format check
+#   security  — bandit + hardcoded-secret scan (safety is out: its DB
+#               needs an authenticated key an OSS CI cannot provide)
+#   tests     — unit suite with the real 80% gate + integration suite
+#   docker    — image built FROM THE LOCK, real boot, auth fail-closed,
+#               migrations on compose, backup→drop→restore proof
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint & format
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install ruff only
+        run: pip install ruff
+      - name: Ruff lint
+        run: ruff check app/
+      - name: Ruff format check
+        run: ruff format --check app/
+
+  security:
+    name: Security scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install bandit
+        run: pip install bandit[toml]
+      - name: Bandit (medium+ findings fail the build)
+        run: bandit -r app/ -ll
+      - name: Hardcoded secret scan
+        run: |
+          # pre-commit's detect-secrets guards commits; this guards the tree
+          grep -rInE "(password|secret|api_key|token)\s*=\s*['\"][A-Za-z0-9/+_-]{16,}['\"]" app/ \
+            --include="*.py" | grep -v "pragma: allowlist secret" \
+            && { echo "hardcoded secret pattern found"; exit 1; } || true
+
+  tests:
+    name: Test suite (real gates)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.lock.txt') }}
+          restore-keys: ${{ runner.os }}-pip-
+      - name: Install locked dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install --require-hashes -r requirements.lock.txt
+          pip install --no-deps -e .
+      - name: Run unit tests
+        # A22: the 40% floor (vs the 80% declared) and the `|| true` on
+        # integrations made this job decorative — a green check
+        # demonstrated nothing. Gates are real again; the suite's
+        # known-debt baseline is tracked in docs/audits, not bypassed here.
+        run: |
+          pytest tests/unit/ -v --tb=short -q \
+            --cov=app --cov-branch \
+            --cov-report=term-missing \
+            --cov-fail-under=80
+        env:
+          PYTHONPATH: .
+      - name: Run integration tests
+        run: pytest tests/integration/ -v --tb=short -q
+        env:
+          PYTHONPATH: .
+
+  docker:
+    name: Image from lock + real boot + backup/restore proof
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build production image (from requirements.lock.txt)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          target: production
+          load: true
+          tags: algotrading:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Boot API and verify health + fail-closed auth (A24/F1)
+        # A22: `print('Build OK')` proved a python interpreter existed, not
+        # that the app boots. The container must answer /health AND refuse
+        # an anonymous caller on a protected route.
+        env:
+          # obvious dummy, 32+ chars to pass the fail-closed validator
+          CI_DUMMY_KEY: ci-only-dummy-secret-key-32chars-0000
+        run: |
+          docker run -d --name smoke -p 127.0.0.1:18080:8000 \
+            -e SECRET_KEY="$CI_DUMMY_KEY" \
+            -e API_ACCESS_KEYS= algotrading:ci
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:18080/health > /dev/null 2>&1; then
+              echo "health OK"; break
+            fi
+            sleep 2
+          done
+          curl -fsS http://127.0.0.1:18080/health > /dev/null || { docker logs smoke; exit 1; }
+          code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:18080/ops/status)
+          [ "$code" = "401" ] || { echo "protected route returned $code, expected 401"; docker logs smoke; exit 1; }
+          echo "auth fail-closed OK"
+          docker rm -f smoke
+      - name: Compose paper stack — migrations on boot, loopback only
+        env:
+          # obvious CI dummy — a real deployment exports a generated one
+          PAPER_SECRET_KEY: ci-only-dummy-secret-key-32chars-0000  # pragma: allowlist secret
+        run: |
+          docker compose -f docker-compose.paper.yml up -d --quiet-pull
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:8000/health > /dev/null 2>&1; then echo "stack healthy"; break; fi
+            sleep 3
+          done
+          curl -fsS http://127.0.0.1:8000/health > /dev/null || { docker compose -f docker-compose.paper.yml logs api; exit 1; }
+          docker compose -f docker-compose.paper.yml exec -T postgres \
+            psql -U algotrading -d algo_trading -tAc \
+            "SELECT count(*) FROM information_schema.tables WHERE table_name IN ('order_records','trade_records','position_history')" \
+            | grep -q 3 || { echo "live-trading tables missing — migrations did not run"; exit 1; }
+          echo "migrations OK"
+          docker compose -f docker-compose.paper.yml down -v
+      - name: Backup → drop → restore proof (F6 p2)
+        run: bash scripts/db/test_backup_restore.sh

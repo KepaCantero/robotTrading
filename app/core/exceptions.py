@@ -194,7 +194,8 @@ def _raise_error(
     _validate_message(message)
     logger.debug(
         f"Raising {exc_class.__name__}",
-        extra={"message": message, "error_code": error_code, "details": details},
+        # 'message' is reserved in LogRecord — use detail_message
+        extra={"detail_message": message, "error_code": error_code, "details": details},
     )
     raise exc_class(message, error_code=error_code, details=details)
 

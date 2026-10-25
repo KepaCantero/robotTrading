@@ -26,7 +26,8 @@ class AlgoTradingError(Exception):
         self.details = details or {}
         logger.debug(
             "AlgoTradingError created",
-            extra={"message": message, "error_code": error_code, "details": details},
+            # 'message' is reserved in LogRecord — use detail_message
+            extra={"detail_message": message, "error_code": error_code, "details": details},
         )
 
 
@@ -80,17 +81,22 @@ def _raise_error(
     error_code: str | None = None,
     details: dict[str, Any] | None = None,
 ) -> NoReturn:
-    """Raise a typed error after validating the message."""
+    """Raise a typed error after validating the message.
+
+    "message" is a RESERVED LogRecord attribute — putting it in `extra`
+    makes logging raise KeyError('message') and masks the real error with
+    a crash inside the error handler. The extra key is `detail_message`.
+    """
     logger.debug(
         f"Raising {exc_class.__name__}",
-        extra={"message": message, "error_code": error_code},
+        extra={"detail_message": message, "error_code": error_code},
     )
     if not message or not message.strip():
         logger.error(f"{exc_class.__name__} message validation failed: message is empty")
         raise ValueError("message must be a non-empty string")
     logger.error(
-        f"{exc_class.__name__} raised",
-        extra={"message": message, "error_code": error_code, "details": details},
+        f"{exc_class.__name__} raised: {message}",
+        extra={"detail_message": message, "error_code": error_code, "details": details},
     )
     raise exc_class(message, error_code, details)
 
