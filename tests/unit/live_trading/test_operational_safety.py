@@ -129,9 +129,14 @@ class TestFailClosedBrokerFactory:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("broker_type", [BrokerType.IBKR, BrokerType.INTERACTIVE_BROKERS])
-    async def test_ibkr_raises_instead_of_paper_fallback(self, broker_type):
-        with pytest.raises(ValueError, match="refusing to silently fall back to paper"):
-            BrokerConnector(broker_type)
+    async def test_ibkr_wires_real_adapter_never_paper_fallback(self, broker_type):
+        """Fase 3: the IBKR adapter exists and is wired. The rule that
+        stays: a requested broker NEVER silently degrades to paper."""
+        from app.services.live_trading.broker_adapters.ibkr_adapter import IbkrAdapter
+
+        connector = BrokerConnector(broker_type)
+        assert isinstance(connector.adapter, IbkrAdapter)
+        assert not isinstance(connector.adapter, PaperAdapter)
 
     @pytest.mark.asyncio
     async def test_unsupported_broker_type_raises(self):

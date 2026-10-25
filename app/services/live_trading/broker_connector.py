@@ -214,10 +214,9 @@ class BrokerConnector:
 
             adapter = AlpacaAdapter()
         elif broker_type in (BrokerType.INTERACTIVE_BROKERS, BrokerType.IBKR):
-            raise ValueError(
-                "IBKR adapter not wired to BrokerConnector yet — "
-                "refusing to silently fall back to paper"
-            )
+            from .broker_adapters.ibkr_adapter import IbkrAdapter
+
+            adapter = IbkrAdapter()
         else:
             raise ValueError(
                 f"Unsupported broker type {broker_type} — refusing to silently fall back to paper"

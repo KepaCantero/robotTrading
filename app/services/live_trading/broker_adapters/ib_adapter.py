@@ -498,17 +498,15 @@ class IBConnection:
             if not market_data:
                 return {"error": "Cannot get market data for order validation"}
 
-            # Validate stop/limit prices
-            if stop_price and (
-                (side == "BUY" and stop_price >= market_data.get("bid", 0))
-                or (side == "SELL" and stop_price <= market_data.get("ask", float("inf")))
-            ):
-                return {"error": "Invalid stop price for current market"}
-            if price and (
-                (side == "BUY" and price <= market_data.get("ask", float("inf")))
-                or (side == "SELL" and price >= market_data.get("bid", 0))
-            ):
-                return {"error": "Invalid limit price for current market"}
+            # Validate stop/limit prices. A limit order sitting on EITHER
+            # side of the market is legitimate (a BUY below the ask rests,
+            # a SELL above the bid rests) — the old market-relative check
+            # rejected exactly the normal case. Only non-positive prices
+            # are structurally invalid.
+            if price is not None and price <= 0:
+                return {"error": f"Invalid limit price: {price}"}
+            if stop_price is not None and stop_price <= 0:
+                return {"error": f"Invalid stop price: {stop_price}"}
 
             # Get contract
             contract = self._get_contract(symbol, **contract_kwargs)

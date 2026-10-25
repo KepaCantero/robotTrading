@@ -52,6 +52,13 @@ services:
       # Fase 1 auth: no keys configured -> API fails closed on protected
       # routes; set API_ACCESS_KEYS (comma list) to operate.
       API_ACCESS_KEYS: "${API_ACCESS_KEYS:-}"
+      # Fase 3 — TWS runs ON THE MAC (never in a container): the API
+      # reaches it through Docker Desktop's host gateway. Port 7497 is the
+      # TWS paper socket; the adapter still VERIFIES paper by account
+      # (DU prefix), the port alone proves nothing.
+      IBKR_HOST: "${IBKR_HOST:-host.docker.internal}"
+      IBKR_PORT: "${IBKR_PORT:-7497}"
+      IBKR_CLIENT_ID: "${IBKR_CLIENT_ID:-77001}"
     command: >
       sh -c "python -m alembic upgrade head &&
              python -m uvicorn app.main:app --host 0.0.0.0 --port 8000"
