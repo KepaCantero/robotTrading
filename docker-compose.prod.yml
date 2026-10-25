@@ -70,62 +70,12 @@ services:
           memory: 1G
           cpus: "0.5"
 
-  # Celery Worker
-  worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: worker
-    container_name: algotrading-worker-prod
-    environment:
-      DATABASE_URL: ${DATABASE_URL}
-      REDIS_URL: ${REDIS_URL}
-      ENVIRONMENT: production
-      DEBUG: "false"
-      LOG_LEVEL: INFO
-    volumes:
-      - app_logs:/app/logs
-      - app_data:/app/data
-    networks:
-      - algotrading-network
-    restart: unless-stopped
-    deploy:
-      replicas: 2
-      resources:
-        limits:
-          memory: 1G
-          cpus: "0.5"
-        reservations:
-          memory: 512M
-          cpus: "0.25"
-
-  # Celery Beat Scheduler
-  scheduler:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: scheduler
-    container_name: algotrading-scheduler-prod
-    environment:
-      DATABASE_URL: ${DATABASE_URL}
-      REDIS_URL: ${REDIS_URL}
-      ENVIRONMENT: production
-      DEBUG: "false"
-      LOG_LEVEL: INFO
-    volumes:
-      - app_logs:/app/logs
-      - app_data:/app/data
-    networks:
-      - algotrading-network
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-          cpus: "0.25"
-        reservations:
-          memory: 256M
-          cpus: "0.1"
+  # A21: the fake `worker` and `scheduler` services (they built the
+  # removed Dockerfile targets and just ran ANOTHER uvicorn API while
+  # being sold as Celery) were deleted. The paper stack — API + dashboard
+  # + PostgreSQL, loopback-only, migrations on boot — lives in
+  # docker-compose.paper.yml. The single paper executor arrives with the
+  # portfolio runner; nothing pretends to consume a queue until then.
 
   # Nginx Reverse Proxy
   nginx:

@@ -1,0 +1,90 @@
+# Paper deployment (Fase 6 v1 — plan PLAN_PRODUCCION_PAPER_IBKR.md §Fase 6)
+#
+# ONLY what the paper flow really needs: PostgreSQL + the API (which runs
+# migrations on boot) + the NiceGUI dashboard. No fake queue workers, no
+# logging stack (that lives behind the optional profile in the other
+# compose files), everything bound to LOOPBACK (A23): the paper app is not
+# exposed beyond this Mac.
+#
+#   docker compose -f docker-compose.paper.yml up -d --build
+#   curl http://127.0.0.1:8000/health
+#   docker compose -f docker-compose.paper.yml down
+
+name: robottrading-paper
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: algotrading
+      POSTGRES_PASSWORD: paper-local-only  # pragma: allowlist secret  (loopback-only local password, documented)
+      POSTGRES_DB: algo_trading
+    ports:
+      # Loopback only (A23)
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U algotrading -d algo_trading"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    environment:
+      ENVIRONMENT: production
+      # Fase 1 fail-closed: the app refuses to boot without a real secret.
+      # Generate once and export: python -c 'import secrets; print(secrets.token_urlsafe(32))'
+      SECRET_KEY: "${PAPER_SECRET_KEY:?export PAPER_SECRET_KEY first}"
+      # async engine (asyncpg, extra .[paper]) for the API init path
+      DATABASE_URL: "postgresql+asyncpg://algotrading:paper-local-only@postgres:5432/algo_trading"  # pragma: allowlist secret  (loopback-only local password)
+      ALEMBIC_DB_URL: "postgresql://algotrading:paper-local-only@postgres:5432/algo_trading"  # pragma: allowlist secret  (loopback-only local password)
+      # Strict production validator reads these discrete fields
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: algo_trading
+      DB_USER: algotrading
+      DB_PASSWORD: paper-local-only  # pragma: allowlist secret  (loopback-only local password)
+      # Fase 1 auth: no keys configured -> API fails closed on protected
+      # routes; set API_ACCESS_KEYS (comma list) to operate.
+      API_ACCESS_KEYS: "${API_ACCESS_KEYS:-}"
+    command: >
+      sh -c "python -m alembic upgrade head &&
+             python -m uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    ports:
+      # Loopback only (A23)
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    environment:
+      ENVIRONMENT: production
+      DATABASE_URL: "postgresql+asyncpg://algotrading:paper-local-only@postgres:5432/algo_trading"  # pragma: allowlist secret  (loopback-only local password)
+    command: python -m app.presentation.dashboard.nicegui_app
+    ports:
+      # Loopback only (A23)
+      - "127.0.0.1:8503:8503"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

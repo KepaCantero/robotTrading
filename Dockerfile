@@ -33,8 +33,9 @@ COPY pyproject.toml ./
 COPY app/ app/
 COPY scripts/ scripts/
 
-# Install all dependencies from pyproject.toml
-RUN pip install --no-cache-dir -e ".[dev]"
+# Install all dependencies from pyproject.toml (dev needed by the testing
+# target; the paper extra adds asyncpg for the async PostgreSQL engine)
+RUN pip install --no-cache-dir -e ".[dev,paper]"
 
 # Production stage
 FROM python:3.11-slim as production
@@ -93,8 +94,13 @@ COPY --from=builder /app /app
 # Copy alembic config (needed for in-container `python -m alembic upgrade head`)
 COPY alembic.ini ./
 
+# A24: the non-secret YAML config the flows load at runtime — the image used
+# to ship an EMPTY /app/config and every YAML-driven flow died in-container.
+# Verified clean: only env-var placeholders, no secrets.
+COPY config/ /app/config/
+
 # Create necessary directories
-RUN mkdir -p /app/logs /app/data /app/config && \
+RUN mkdir -p /app/logs /app/data && \
     chown -R algotrading:algotrading /app
 
 # Switch to non-root user
@@ -104,7 +110,7 @@ USER algotrading
 EXPOSE 8000
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
 # Default command
@@ -144,14 +150,7 @@ COPY tests/ /app/tests/
 # Default command for testing
 CMD ["python", "-m", "pytest", "tests/", "-v", "--cov=app", "--cov-report=xml"]
 
-# Celery worker stage
-# NOTE: no Celery app module exists in the codebase yet; keep production's
-# default CMD so the build target exists without crash-looping at runtime.
-# Replace CMD with the celery worker entrypoint once app.tasks is wired.
-FROM production as worker
-CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
-
-# Celery beat scheduler stage
-# NOTE: same as worker; swap for `celery -A ... beat` once the app exists.
-FROM production as scheduler
-CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# A21: the fake `worker` and `scheduler` targets (they just ran ANOTHER
+# uvicorn API while compose sold them as Celery) were REMOVED. The single
+# paper executor arrives with the portfolio runner (ROBO P5); nothing
+# pretending to be a queue consumer ships in the image.

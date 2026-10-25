@@ -35,6 +35,18 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Verify Image starts
+      - name: Verify Image starts (real app, real health endpoint)
+        # A22: `print('Build OK')` proved a python interpreter existed,
+        # not that the app imports. Now the container must actually boot
+        # the API and answer /health.
         run: |
-          docker run --rm algotrading:test python -c "print('Build OK')"
+          docker run -d --name smoke -p 127.0.0.1:18080:8000 algotrading:test
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:18080/health > /dev/null 2>&1; then
+              echo "health OK"; docker rm -f smoke; exit 0
+            fi
+            sleep 2
+          done
+          docker logs smoke
+          docker rm -f smoke
+          exit 1

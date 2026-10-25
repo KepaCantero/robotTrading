@@ -39,15 +39,19 @@ jobs:
         run: ruff format --check app/
 
       - name: Run unit tests
+        # A22: the 40% floor (vs the 80% declared in pyproject) and the
+        # `|| true` on integrations made this job decorative — a green
+        # check demonstrated nothing. Gates are real again; the suite's
+        # known-debt baseline is tracked in docs/audits, not bypassed here.
         run: |
           pytest tests/unit/ -v --tb=short -q \
             --cov=app --cov-branch \
             --cov-report=term-missing \
-            --cov-fail-under=40
+            --cov-fail-under=80
         env:
           PYTHONPATH: .
 
       - name: Run integration tests
-        run: pytest tests/integration/ -v --tb=short -q || true
+        run: pytest tests/integration/ -v --tb=short -q
         env:
           PYTHONPATH: .
