@@ -22,8 +22,8 @@ sin validación completa), **validado** (prueba de aceptación verde). Método d
 | A08 | P1 | Breaker bloquea reducir posiciones | reduce-only verificado pasa con breaker activo| **validado** (F2) | 2 |
 | A09 | P1 | Idempotencia/recuperación solo en memoria | intención persistida antes del envío, clave estable| **validado** (F2) | 2 |
 | A10 | P1 | Venta completa pierde el efectivo | venta completa acredita efectivo (papel)| **validado** (F2, adelantado de F3) | 3 |
-| A11 | P1 | Variables ML con resultados futuros | `training_data_preparator.py:771` † | abierto | 5 |
-| A12 | P1 | Fallo de CV temporal → split aleatorio | `supervised_learning_engine.py:251-256` ✔ fallback | abierto | 5 |
+| A11 | P1 | Variables ML con resultados futuros | features solo con cierres conocidos en t (exit_time<=t)| **validado** (F5) | 5 |
+| A12 | P1 | Fallo de CV temporal → split aleatorio | purged CV falla → entrenamiento FALLA, sin split aleatorio| **validado** (F5) | 5 |
 | A13 | P2 | Auth válida inutilizable con roles | `Principal` con roles vía `API_KEY_ROLES` | **validado** (F1) | 1 |
 | A14 | P2 | Decoradores no ven `http_request` | wrapper escanea kwargs por valor | **validado** (F1) | 1 |
 | A15 | P2 | Fallo auth global responde 500 | AuthMiddleware eliminada; 401 + headers | **validado** (F1) | 1 |
@@ -43,14 +43,14 @@ b2 REJECTED con motivo; estado real del broker| **validado** (F2) | 2 |
 |---|---|---|---|---|---|
 | D01 | P1 | El objetivo no mide dividendo cobrado | `DividendLedger`+`DividendMetrics` en todo backtest real| **validado** (F4·p1)abierto 4 |
 | D02 | P1 | Backend no deriva estrategia del objetivo | executor deriva estrategia del objetivo| **validado** (F4·p1)abierto 4 |
-| D03 | P1 | Parámetros del perfil no gobiernan el backtest | `executor.py:603` ✔ `_build_strategy` sin params | abierto | 4 |
-| D04 | P1 | Yields constantes sin fecha histórica | `dividend_core_satellite.py:60` ✔ `DIVIDEND_YIELDS` fijo | abierto | 4 |
+| D03 | P1 | Parámetros del perfil no gobiernan el backtest | T3.1 params → `_strategy_param_overrides` + weight_cap| **validado** (F4·p2) | 4 |
+| D04 | P1 | Yields constantes sin fecha histórica | yields trailing-12m point-in-time del corpus real| **validado** (F4·p2) | 4 |
 | D05 | P1 | Posiciones teóricas ≠ ejecutadas | `dividend_core_satellite.py:229` ✔ `_holdings = desired` sin fills | abierto | 4 |
-| D06 | P2 | Exposición declarada ≠ pesos (0.95×(0.50+0.45)) | `dividend_core_satellite.py:168-172,360` ✔ clamp sin redistribución | abierto | 4 |
-| D07 | P2 | Refugio defensivo nunca en cartera objetivo | `dividend_core_satellite.py:296-340` ✔ sin defensive (peso `:356` muerto) | abierto | 4 |
-| D08 | P1 | Precio de una barra para todas las señales | `dividend_core_satellite.py:362-373` ✔ `_signal(quote,…)` reutiliza | abierto | 4 |
-| D09 | P2 | Rebalanceo en días naturales, no sesiones | `dividend_core_satellite.py:265` ✔ `.days >=` | abierto | 4 |
-| D10 | P2 | Venta SMA perdida al coincidir con rebalance | `dividend_core_satellite.py:224` ✔ `signals = []` reinicia | abierto | 4 |
+| D06 | P2 | Exposición declarada ≠ pesos (0.95×(0.50+0.45)) | mangas fracciones de la exposición + redistribución| **validado** (F4·p2) | 4 |
+| D07 | P2 | Refugio defensivo nunca en cartera objetivo | caja refugio por defecto; defensivo opt-in| **validado** (F4·p2) | 4 |
+| D08 | P1 | Precio de una barra para todas las señales | señal con precio/volumen/ts PROPIOS del símbolo| **validado** (F4·p2) | 4 |
+| D09 | P2 | Rebalanceo en días naturales, no sesiones | cadencia en SESIONES de mercado| **validado** (F4·p2) | 4 |
+| D10 | P2 | Venta SMA perdida al coincidir con rebalance | SMA sobrevive al rebalance; sma_exits manda sobre catch-all| **validado** (F4·p2) | 4 |
 | D11 | P2 | Grid no explora la cadencia anunciada | grid estratificado `_stratified_combos`| **validado** (F4·p1)abierto 4 |
 | D12 | P2 | Benchmark ≠ universo completo ni buy&hold | benchmark EW con TODOS los símbolos| **validado** (F4·p1)**parcial** 4 |
 
@@ -68,6 +68,8 @@ diario. La aceptación (invariancia al orden, todos los activos declarados) sigu
 | 2026-10-25 | A03–A09, A16–A18, A20 (+A10) | **Fase 2 completa** (d584a9f6, ddb7db8c, 41f14e54, 96249c4a, 9bb9997b): semántica de riesgo (base de sesión, reduce-only, reservas proyectadas, gates numéricos) · camino de órdenes (validación SIEMPRE, cotización real `BrokerQuote` con niveles fresco/STALE>7d/rechazo>90d sobre CSV EOD propio, MARKET ejecuta a cotización, 422 REJECTED honesto) · unificación (un RiskGates autoritativo; monitores por orden) · intención persistida antes del envío (idempotente por client_order_id) · migración 0004 tablas live (+guard SQLite en 0003 que rompía la cadena). Aceptación: 4 baterías nuevas (~50 tests) en tests/unit/live_trading/test_*_f2.py; 0 fallos nuevos vs herencia 32. | **validado** |
 
 | 2026-10-25 | D01, D02, D11, D12 | **Fase 4 parte 1** (030898bf): libro de renta REAL (`app/backtesting/dividends.py` — eventos yfinance en data/dividends/, 16 símbolos; contado contra el libro EJECUTADO del motor; retención 15% configurable; gaps de cobertura EXPLÍCITOS, nunca yields inventados) enganchado a todo backtest — sonda SCHD 1y: retorno 8,41% + renta bruta 1.007,38 / neta 856,27 USD (4 eventos, por año). Executor deriva estrategia del objetivo (D02); grid estratificado cubre todos los ejes (D11); benchmark EW sin recorte a 6 (D12); gate de arranque dividendos = mayoría-del-core suelo 1 (universos mono-core antes mudos para siempre). 22 tests nuevos; 0 fallos nuevos vs baseline en agent_swarm/orchestration/strategies. **Pendiente F4·p2**: D03 (params perfil→motor), D04 (yields point-in-time), D05–D10 (bucle motor-estrategia), reinversión en rebalanceo, scoring T6.1 consciente de renta. | ver fila |
+
+| 2026-10-25 | D03–D10, A11, A12 | **F4 parte 2** (05d3327a, 2c525e69): estrategia de dividendos con yields reales point-in-time (D04), pesos normalizados con redistribución y residuo explicado (D06), caja como refugio por defecto (D07), señales con datos propios (D08), cadencia en sesiones (D09), venta SMA conservada + sma_exits prioritario sobre el catch-all momentum-None que re-compraba lo recién vendido (D10 — bug real destapado por el test), T3.1 params gobiernan el backtest vía weight_cap (D03). **F5** (3bee2f06): ML sin información futura (A11) y sin escape a split aleatorio (A12). Suites: 0 fallos nuevos vs baseline. **Pendiente F4**: D05 (bucle motor↔estrategia con feedback de fills) y scoring T6.1 income-aware; reinversión documentada como territorio paper/ROBO. | ver fila |
 
 ## Pruebas de aceptación
 
