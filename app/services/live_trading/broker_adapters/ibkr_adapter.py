@@ -116,6 +116,15 @@ class IbkrAdapter:
     # ------------------------------------------------------------------
 
     @staticmethod
+    def _managed_accounts(ib: Any) -> list[str]:
+        """ib_insync's managedAccounts() returns a repr like "['DU9811225']"
+        (or "['DU1', 'DU2']") — normalize to a clean account list."""
+        raw = str(ib.managedAccounts()).strip()
+        return [
+            a.strip().strip("'\"") for a in raw.strip("[]").split(",") if a.strip().strip("'\"")
+        ]
+
+    @staticmethod
     def _default_ib_factory() -> Any:
         from ib_insync import IB
 
@@ -151,8 +160,7 @@ class IbkrAdapter:
         self._ib = ib
 
         # PAPER VERIFICATION — the account itself decides, not the port.
-        managed = str(ib.managedAccounts()).strip()
-        accounts = [a for a in managed.split(",") if a]
+        accounts = self._managed_accounts(ib)
         if not accounts:
             await self.disconnect()
             raise AccountNotPaperError(
@@ -168,6 +176,12 @@ class IbkrAdapter:
 
         self.is_connected = True
         logger.info("IBKR connected (paper-verified: %s, clientId %s)", accounts, client_id)
+        # account/balance data arrives ASYNCHRONOUSLY after the handshake —
+        # reading immediately shows a funded account as all zeros. Let the
+        # event queue drain once before the first snapshot.
+        settle = getattr(ib, "sleep", None)
+        if callable(settle):
+            settle(3.0)
         await self._sync_account()
         await self.reconcile()
         return True
@@ -187,30 +201,48 @@ class IbkrAdapter:
     # ------------------------------------------------------------------
 
     async def _sync_account(self) -> None:
-        """Fill self.account from IBKR's accountSummary (broker-confirmed)."""
+        """Fill self.account from IBKR's accountSummary (broker-confirmed).
+
+        Balance rows arrive per currency and the BASE-currency row comes
+        FIRST per tag (a Spanish account reports EUR — there is no
+        "Currency" marker row; the dump showed TotalCashValue/BuyingPower
+        in EUR ahead of any per-currency residuals). First-seen wins and
+        its currency becomes the account's base.
+        """
         if self._ib is None:
             return
+        # NB: the liquidation tag is "NetLiquidationValue" on some accounts
+        # and plain "NetLiquidation" on others (live dump: the latter).
+        money_tags = (
+            "TotalCashValue",
+            "NetLiquidationValue",
+            "NetLiquidation",
+            "BuyingPower",
+        )
         values: dict[str, Decimal] = {}
+        base_currency = "USD"
         for item in self._ib.accountSummary():
             tag = getattr(item, "tag", "")
-            if getattr(item, "currency", "USD") != "USD" or tag not in (
-                "TotalCashValue",
-                "NetLiquidationValue",
-                "BuyingPower",
-            ):
-                continue
+            if tag not in money_tags or tag in values:
+                continue  # first row per tag is the base-currency one
             try:
                 values[tag] = Decimal(str(item.value))
             except Exception:  # noqa: BLE001 - malformed row → skip, not crash
                 continue
-        managed = str(self._ib.managedAccounts()).split(",")[0].strip()
+            if tag == "TotalCashValue":
+                base_currency = str(getattr(item, "currency", "USD")).strip() or "USD"
+        equity = values.get("NetLiquidationValue")
+        if equity is None:
+            equity = values.get("NetLiquidation", Decimal("0"))
+        managed = (self._managed_accounts(self._ib) or [""])[0]
         self.account = BrokerAccount(
             account_id=managed,
             broker_type=BrokerType.IBKR,
+            currency=base_currency,
             cash_available=values.get("TotalCashValue", Decimal("0")),
-            equity=values.get("NetLiquidationValue", Decimal("0")),
+            equity=equity,
             buying_power=values.get("BuyingPower", Decimal("0")),
-            portfolio_value=values.get("NetLiquidationValue", Decimal("0")),
+            portfolio_value=equity,
             connected=True,
             last_sync=datetime.now(timezone.utc),
         )

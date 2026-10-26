@@ -67,6 +67,9 @@ class FakeIB:
     def reqMktData(self, contract, what, snapshot=False, regulatorySnapshot=False):
         return SimpleNamespace(marketPrice=lambda: float("nan"))
 
+    def sleep(self, seconds):
+        pass  # the adapter settles the event queue after connect
+
     def positions(self):
         return self._positions
 
@@ -290,3 +293,62 @@ class TestConnectorWiring:
         # singleton hygiene: drop it so other tests get a fresh connector
         bc._connector = None
         del get_broker_connector
+
+
+class TestManagedAccountsReprFormat:
+    """The LIVE TWS handshake returned "['DU9811225']" (a repr) and the
+    naive split rejected a perfectly paper account. Both formats lock."""
+
+    async def test_repr_single_du_account_connects(self):
+        fake = FakeIB(accounts="['DU9811225']")
+        adapter = _adapter(fake)
+
+        assert await adapter.connect() is True
+        assert adapter.is_paper_trading() is True
+        assert adapter.account.account_id == "DU9811225"
+
+    async def test_repr_multiple_accounts_parsed(self):
+        fake = FakeIB(accounts="['DU9811225', 'DU9811226']")
+        adapter = _adapter(fake)
+
+        assert await adapter.connect() is True
+        assert adapter.is_paper_trading() is True
+
+    async def test_repr_live_account_still_refused(self):
+        fake = FakeIB(accounts="['U9876543']")
+        adapter = _adapter(fake)
+
+        with pytest.raises(AccountNotPaperError):
+            await adapter.connect()
+        assert fake.disconnected is True
+
+
+class TestAccountBaseCurrency:
+    """The live handshake: a Spanish account reports EUR rows + a
+    "Currency" tag row; the old USD-only filter showed it as all zeros."""
+
+    async def test_eur_base_account_reports_real_balances(self):
+        fake = FakeIB(accounts="['DU9811225']")
+        fake.accountSummary = lambda: [
+            # base-currency rows come FIRST per tag (live dump); residuals later
+            SimpleNamespace(tag="TotalCashValue", value="324345.20", currency="EUR"),
+            SimpleNamespace(tag="NetLiquidationValue", value="324350.00", currency="EUR"),
+            SimpleNamespace(tag="BuyingPower", value="2164814.73", currency="EUR"),
+            SimpleNamespace(tag="TotalCashValue", value="12.00", currency="USD"),  # residual USD
+        ]
+        adapter = _adapter(fake)
+
+        await adapter.connect()
+        acc = adapter.account
+        assert acc.currency == "EUR"
+        assert acc.cash_available == Decimal("324345.20")
+        assert acc.buying_power == Decimal("2164814.73")
+        assert acc.equity == Decimal("324350.00")
+
+    async def test_usd_account_without_currency_tag_still_works(self):
+        fake = FakeIB()  # plain USD rows, no Currency tag (old fake shape)
+        adapter = _adapter(fake)
+
+        await adapter.connect()
+        assert adapter.account.currency == "USD"
+        assert adapter.account.cash_available == Decimal("100000.00")
