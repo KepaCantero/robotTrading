@@ -47,8 +47,12 @@ Verificación: goldens 19/19, swarm+optimization 211/211, orquestación
 - B1 ✅ ATERRIZADO (26-10, 310f7f7e): SimFin PIT real (key del usuario en
   env), stubs de point_in_time_database muertos, 9 tests sobre corpus real.
   B3 ✅ ATERRIZADO (457dbb85): FX ECB/FRED real, constantes fuera del camino
-  de datos. **Siguiente: B2 Dividend Safety Score** (+ T2.6 MAPIE) sobre B1.
-  B4 ya cubierto por la Fase 3 validada en vivo.
+  de datos. B2 ✅ ATERRIZADO (26-10, 83bca846): score 0-100 PIT con fórmula pública
+  (5 factores, pesos publicados), validado en LUMN-2022 (estrés → 58.3
+  <60) con T/INTC fijados como límite documentado (resets estratégicos
+  invisibles para ratios); COVID-2020 imposible con tier gratis. **Pendiente
+  de B2: T2.3 endpoint API + T2.6 MAPIE (mapie dep + conformal sobre el
+  clasificador de recortes).** B4 ya cubierto por la Fase 3 validada en vivo.
 - B4 (`ib_async` paper) ejecuta la Fase 3 del plan 1 y arranca cuando el
   usuario tenga la cuenta TWS.
 - B5 (catálogo del paper "151 Trading Strategies",
