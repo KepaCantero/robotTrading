@@ -42,6 +42,11 @@ logs/
 # real-corpus tests read them (Bloque 3, PLAN_DATOS_REALES_Y_EJECUCION)
 !data/fx/*.csv
 !data/rates/*.csv
+# SimFin free tier: ANNUAL statements + companies are committed (~16M) —
+# the PIT tests run on them in CI. Quarterlies (32M) and shareprices
+# (~300M, market-cap source) stay local: download with --with-prices.
+!data/fundamentals/us-*-annual.csv
+!data/fundamentals/us-companies-general.csv
 
 # Build
 build/

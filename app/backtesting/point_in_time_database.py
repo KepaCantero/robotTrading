@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -350,28 +350,26 @@ class PointInTimeDatabase:
             return False
 
     def _load_universe_for_date(self, query_date: datetime) -> list[str]:
-        """Load the trading universe for a specific date."""
-        # In production, load from actual PIT database
-        # For now, simulate based on historical growth rates
-        base_universe = [
-            "AAPL",
-            "MSFT",
-            "GOOGL",
-            "AMZN",
-            "TSLA",
-            "META",
-            "NVDA",
-            "JPM",
-            "V",
-            "JNJ",
-        ]  # Simplified
+        """Universe as of `query_date`, from the SimFin PIT corpus.
 
-        # Adjust for historical date (smaller universe in the past)
-        years_ago = (datetime.now() - query_date).days / 365.25
-        growth_factor = 0.95**years_ago  # Universe grows ~5% annually
-        historical_size = max(10, int(len(base_universe) * growth_factor))
+        A ticker is IN the universe when it had statements PUBLISHED by
+        that date (Bloque 1): the old hardcoded 10-symbol list with a fake
+        5%-annual-growth shrink is gone. Free-tier history starts ~2021 —
+        earlier dates honestly return an empty/small universe instead of
+        today's list projected backwards.
+        """
+        from datetime import date as _date
 
-        return base_universe[:historical_size]
+        from app.backtesting.fundamentals_source import FundamentalsSource
+
+        src = FundamentalsSource("us-income-annual")
+        q = query_date.date() if isinstance(query_date, datetime) else query_date
+        universe = [
+            t
+            for t in src.tickers()
+            if src.coverage(t)["first"] and _date.fromisoformat(src.coverage(t)["first"]) <= q  # noqa: PLR2004
+        ]
+        return sorted(universe)
 
     def _apply_filters(
         self,
@@ -380,28 +378,161 @@ class PointInTimeDatabase:
         min_market_cap: Decimal | None,
         sectors: list[str] | None,
     ) -> list[str]:
-        """Apply filters to universe."""
-        filtered = universe.copy()
+        """Filter by real sector and market cap (Bloque 1).
 
-        # In production, apply actual filters based on historical data
-        # For now, return unfiltered
+        Sector: IndustryId → industries mapping (us-industries). Market
+        cap: Shares Outstanding × Close from the shareprices corpus when
+        available; without it, min_market_cap cannot be applied and is
+        SKIPPED loudly (a declared limitation, never a fake filter).
+        """
+        filtered = list(universe)
+        if sectors:
+            industries = self._load_industry_map()
+            wanted_ids = {
+                ind_id
+                for ind_id, name in industries.items()
+                if any(s.lower() in name.lower() for s in sectors)
+            }
+            filtered = [t for t in filtered if self._industry_of(t) in wanted_ids]
+        if min_market_cap is not None:
+            caps = {t: self._market_cap_at(t, query_date) for t in filtered}
+            applied = [t for t in filtered if caps[t] is not None and caps[t] >= min_market_cap]
+            if len(applied) < len(filtered):
+                # only filter what we CAN price — the unpriceable pass with a log
+                skipped = [t for t in filtered if caps[t] is None]
+                if skipped:
+                    logger.warning(
+                        "market-cap filter: %d/%d tickers without price data pass "
+                        "unfiltered (declared gap, not invented)",
+                        len(skipped),
+                        len(filtered),
+                    )
+                filtered = [t for t in applied] + skipped
         return filtered
 
     def _select_top_by_market_cap(
         self, universe: list[str], query_date: datetime, n: int
     ) -> list[str]:
-        """Select top N stocks by market cap."""
-        # In production, sort by actual market cap data
-        # For now, return first N
-        return universe[:n]
+        """Top-N by REAL market cap (Shares × Close at the date).
+
+        Without the shareprices corpus every ticker is unpriceable → the
+        selection degrades to input order WITH a loud log (never silently
+        'first N' pretending to be cap-ranked).
+        """
+        capped = [(self._market_cap_at(t, query_date), t) for t in universe]
+        priceable = [(c, t) for c, t in capped if c is not None]
+        if len(priceable) < len(universe):
+            logger.warning(
+                "top-by-cap: %d/%d tickers unpriceable at %s — ranking partial",
+                len(universe) - len(priceable),
+                len(universe),
+                query_date.date() if isinstance(query_date, datetime) else query_date,
+            )
+        ranked = [t for _, t in sorted(priceable, key=lambda ct: (-ct[0], ct[1]))]
+        return ranked[:n]
 
     def _load_historical_data(
         self, symbol: str, query_date: datetime, lookback_days: int
     ) -> pd.DataFrame | None:
-        """Load historical data for a symbol."""
-        # In production, load from PIT database
-        # For now, return empty DataFrame to avoid pylint None assignment warning
-        return pd.DataFrame()
+        """Price history for `symbol` ending at `query_date` (repo corpus)."""
+        try:
+            from app.backtesting.data_loader import DataLoader
+
+            repo_root = Path(__file__).resolve().parents[2]
+            loader = DataLoader(base_path=repo_root / "data" / "historical")
+            start = query_date - timedelta(days=lookback_days)
+            quotes = loader.load_market_data(symbol, start, query_date, "1d", "csv")
+            if not quotes:
+                return pd.DataFrame()
+            rows = [
+                {
+                    "date": q.timestamp,
+                    "open": q.open,
+                    "high": q.high,
+                    "low": q.low,
+                    "close": q.close,
+                    "volume": q.volume,
+                }
+                for q in quotes
+            ]
+            return pd.DataFrame(rows).set_index("date").sort_index()
+        except (FileNotFoundError, OSError, ValueError):
+            return pd.DataFrame()
+
+    # ------------------------------------------------------------------
+    # Bloque 1 helpers: shareprices-backed market cap + industry lookup
+
+    _shareprices_cache: pd.DataFrame | None = None
+
+    def _shareprices(self) -> pd.DataFrame | None:
+        """Daily Close/Shares Outstanding per ticker (local corpus, ~300MB —
+        downloaded with --with-prices, never committed)."""
+        if self._shareprices_cache is not None:
+            return self._shareprices_cache
+        path = (
+            Path(__file__).resolve().parents[2]
+            / "data"
+            / "fundamentals"
+            / "us-shareprices-daily.csv"
+        )
+        if not path.exists():
+            return None
+        df = pd.read_csv(path, usecols=["Ticker", "Date", "Close", "Shares Outstanding"])
+        df["Date"] = pd.to_datetime(df["Date"])
+        self._shareprices_cache = df.set_index(["Ticker", "Date"]).sort_index()
+        return self._shareprices_cache
+
+    def _market_cap_at(self, ticker: str, query_date: datetime) -> Decimal | None:
+        sp = self._shareprices()
+        if sp is None:
+            return None
+        key = ticker.upper()
+        try:
+            day = pd.Timestamp(query_date).normalize()
+            sub = sp.loc[key]
+            idx = sub.index.asof(day)
+            if pd.isna(idx):
+                return None
+            row = sub.loc[idx]
+            close, shares = row["Close"], row["Shares Outstanding"]
+            if pd.isna(close) or pd.isna(shares) or shares <= 0:
+                return None
+            return Decimal(str(close * shares))
+        except (KeyError, TypeError, ValueError):
+            return None
+
+    def _industry_of(self, ticker: str) -> str | None:
+        companies = (
+            Path(__file__).resolve().parents[2]
+            / "data"
+            / "fundamentals"
+            / "us-companies-general.csv"
+        )
+        if not companies.exists():
+            return None
+        try:
+            df = (
+                pd.read_csv(companies, usecols=["Ticker", "IndustryId"])
+                .dropna()
+                .set_index("Ticker")["IndustryId"]
+            )
+            return str(df.get(ticker.upper(), ""))
+        except (OSError, ValueError, KeyError):
+            return None
+
+    @staticmethod
+    def _load_industry_map() -> dict[str, str]:
+        industries = (
+            Path(__file__).resolve().parents[2] / "data" / "fundamentals" / "us-industries.csv"
+        )
+        if not industries.exists():
+            return {}
+        try:
+            df = pd.read_csv(industries)
+            id_col, name_col = df.columns[0], df.columns[1]
+            return dict(zip(df[id_col].astype(str), df[name_col].astype(str)))
+        except (OSError, ValueError):
+            return {}
 
     def _adjust_for_corporate_actions(
         self, symbol: str, data: pd.DataFrame, as_of_date: datetime
