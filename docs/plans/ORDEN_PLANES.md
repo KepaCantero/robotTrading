@@ -52,8 +52,10 @@ Verificación: goldens 19/19, swarm+optimization 211/211, orquestación
   58.3<60 cazado; T/INTC límite documentado), /dividends/safety sirve el
   MISMO informe (401 sin clave), clasificador conforme LAC al 90% con
   cobertura MEDIDA 0.8957 y 6.5% abstención en walk-forward real.
-  B4 ya cubierto por la Fase 3 validada en vivo. **Siguiente: B5**
-  (PLAN_B5_ESTRATEGIAS_CATALOGO.md).
+  B4 ya cubierto por la Fase 3 validada en vivo. B5 ✅ RONDA 1 CERRADA (26-10,
+  ce5d9749): 5 candidatas del paper implementadas y evaluadas con la
+  disciplina del motor — TODAS DESCARTADAS con evidencia (0 satélites; el
+  núcleo sigue invicto). **Bloque 3 del plan de datos COMPLETO.**
 - B4 (`ib_async` paper) ejecuta la Fase 3 del plan 1 y arranca cuando el
   usuario tenga la cuenta TWS.
 - B5 (catálogo del paper "151 Trading Strategies",
