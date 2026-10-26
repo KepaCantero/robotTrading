@@ -44,10 +44,11 @@ Verificación: goldens 19/19, swarm+optimization 211/211, orquestación
 **`PLAN_DATOS_REALES_Y_EJECUCION.md`** con **`PLAN_ADOPCION_LIBRERIAS.md`** de compañero
 *(orden del usuario 25-10-2026: antes que la UI)*
 
-- B1 fundamentales PIT reales (SimFin; rellena los stubs de
-  `point_in_time_database.py`) → B2 Dividend Safety Score propio (+ T2.6
-  MAPIE del plan de librerías) → B3 FX real (Dukascopy; mata las constantes
-  inventadas del carry). B3 es independiente: puede correr en paralelo.
+- B1 ✅ ATERRIZADO (26-10, 310f7f7e): SimFin PIT real (key del usuario en
+  env), stubs de point_in_time_database muertos, 9 tests sobre corpus real.
+  B3 ✅ ATERRIZADO (457dbb85): FX ECB/FRED real, constantes fuera del camino
+  de datos. **Siguiente: B2 Dividend Safety Score** (+ T2.6 MAPIE) sobre B1.
+  B4 ya cubierto por la Fase 3 validada en vivo.
 - B4 (`ib_async` paper) ejecuta la Fase 3 del plan 1 y arranca cuando el
   usuario tenga la cuenta TWS.
 - B5 (catálogo del paper "151 Trading Strategies",
