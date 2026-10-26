@@ -72,6 +72,8 @@ dependencies = [
 
     # Broker integration
     "ib-insync>=0.9.86",
+    # B2/T2.6: conformal prediction on the dividend-cut classifier
+    "mapie>=1.0.0",
 
     # Utilities
     "structlog>=23.2.0",
