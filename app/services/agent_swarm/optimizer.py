@@ -168,6 +168,18 @@ def asyncio_run(coro):
     return asyncio.run(coro)
 
 
+def _trial_worker(payload: tuple) -> tuple[int, dict]:
+    """Process-pool worker: one REAL backtest trial.
+
+    Module-level (picklable) with a flat payload — each worker builds its
+    OWN orchestrator, so the ComplianceEngine/live-gate singletons stay
+    isolated per process (the D05-era gate reset races disappear).
+    """
+    index, strategy, params, symbols, start_date, end_date, capital = payload
+    metrics = _run_one_backtest(strategy, params, symbols, start_date, end_date, capital)
+    return index, metrics
+
+
 def optimize(
     strategy: str,
     symbols: list[str],
@@ -175,8 +187,15 @@ def optimize(
     end: str,
     capital: Decimal = Decimal("100000"),
     max_trials: int = 12,
+    parallel: bool = True,
 ) -> OptimizationResult:
-    """Grid-search the strategy's tunable params with the real engine."""
+    """Grid-search the strategy's tunable params with the real engine.
+
+    Trials run in a ProcessPoolExecutor (stdlib; workers=min(4, cpu-1,
+    combos)) with a sequential fallback — one engine, same results, just
+    less wall time. The engine is deterministic, so the best trial's RAW
+    metrics are reused instead of re-running the best combo a 13th time.
+    """
     grid = PARAM_GRIDS.get(strategy)
     if not grid:
         raise ValueError(f"No tunable parameters defined for strategy '{strategy}'")
@@ -192,17 +211,43 @@ def optimize(
     combos = _stratified_combos(combos, max_trials)
     keys = list(grid.keys())
 
-    trials: list[dict] = []
-    for combo in combos:
-        params = dict(zip(keys, combo, strict=False))
-        logger.info("Optimizer trial %s: %s", strategy, params)
-        metrics = _run_one_backtest(strategy, params, symbols, start_date, end_date, capital)
-        trials.append(
-            {
-                "params": params,
-                **{k: (str(v) if isinstance(v, Decimal) else v) for k, v in metrics.items()},
-            }
-        )
+    params_by_combo = [dict(zip(keys, combo, strict=False)) for combo in combos]
+    raw_results: list[dict | None] = [None] * len(combos)
+
+    if parallel and len(combos) > 1:
+        try:
+            import os
+            from concurrent.futures import ProcessPoolExecutor
+
+            workers = max(1, min(4, (os.cpu_count() or 2) - 1, len(combos)))
+            payloads = [
+                (i, strategy, params_by_combo[i], symbols, start_date, end_date, capital)
+                for i in range(len(combos))
+            ]
+            with ProcessPoolExecutor(max_workers=workers) as pool:
+                for index, metrics in pool.map(_trial_worker, payloads):
+                    raw_results[index] = metrics
+        except Exception:  # noqa: BLE001 - pool unavailable → sequential, loudly
+            logger.warning(
+                "Parallel trials unavailable — falling back to sequential", exc_info=True
+            )
+            raw_results = [None] * len(combos)
+
+    # sequential path: fills whatever the pool left (fallback or leftovers)
+    for i in range(len(combos)):
+        if raw_results[i] is None:
+            logger.info("Optimizer trial %s: %s", strategy, params_by_combo[i])
+            raw_results[i] = _run_one_backtest(
+                strategy, params_by_combo[i], symbols, start_date, end_date, capital
+            )
+
+    trials: list[dict] = [
+        {
+            "params": params_by_combo[i],
+            **{k: (str(v) if isinstance(v, Decimal) else v) for k, v in raw_results[i].items()},
+        }
+        for i in range(len(combos))
+    ]
 
     def score(metrics: dict) -> float:
         try:
@@ -210,16 +255,11 @@ def optimize(
         except (TypeError, ValueError):
             return -999.0
 
-    best_trial = max(trials, key=score) if trials else None
-    best_metrics = None  # se recalcula abajo con los mejores parámetros
-    # rerun best params to get clean metrics dict (trials store strings)
-    if best_trial:
-        best_params = dict(best_trial["params"])
-        best_metrics = _run_one_backtest(
-            strategy, best_params, symbols, start_date, end_date, capital
-        )
-    else:
-        best_params, best_metrics = {}, baseline_metrics
+    # GATE Fase B: the engine is deterministic — the best trial's RAW
+    # metrics ARE the best metrics; the 13th re-run was pure waste.
+    best_index = max(range(len(combos)), key=lambda i: score(raw_results[i]))
+    best_params = params_by_combo[best_index]
+    best_metrics = raw_results[best_index]
 
     return OptimizationResult(
         strategy=strategy,
