@@ -283,29 +283,34 @@ class ForexDataFetcher:
         return None
 
     def _fetch_rate_from_api(self, pair: str) -> Decimal | None:
+        """Last REAL fix for `pair` from the local corpus (ECB-derived).
+
+        Bloque 3: the corpus (data/fx/, see scripts/download_fx.py) is the
+        product's FX source — no network, no invented numbers. Returns None
+        when the pair/date has no coverage; the caller decides how loud the
+        degradation is (paper/live may fall back WITH a warning; backtests
+        must fail — D04).
         """
-        Fetch current exchange rate from OANDA/FXCM API.
+        from datetime import date as _date
 
-        Note: API integration requires exchange API credentials and rate limiting.
-        Current implementation returns None to trigger fallback to default rates.
+        from app.backtesting.fx_history import FxHistory
 
-        Args:
-            pair: Forex pair (e.g., "EUR/USD")
-
-        Returns:
-            Current exchange rate or None if fetch fails
-        """
-        logger.debug(f"API rate fetching not configured for {pair}")
-        # API integration requires:
-        # 1. Exchange API credentials (OANDA, FXCM)
-        # 2. Real-time price endpoints
-        # 3. Rate limiting and error handling
-        # For now, implicitly return None to trigger fallback to default rates
-        return None
+        point = FxHistory().rate(pair, _date.today())
+        if point is None:
+            logger.warning(
+                "FX corpus has no coverage for %s — caller decides (never constants)", pair
+            )
+            return None
+        logger.debug("FX %s = %s (fix %s)", pair, point.rate, point.observed)
+        return point.rate
 
     def _get_fallback_rate(self, pair: str) -> Decimal:
         """
-        Get fallback exchange rate when API is unavailable.
+        Get fallback exchange rate when the corpus has no coverage.
+
+        PAPER/LIVE ONLY (plan Bloque 3): a degradation allowed with a loud
+        log; backtest paths must never reach here — they consume
+        FxHistory directly and fail on missing data (D04).
 
         Args:
             pair: Forex pair (e.g., "EUR/USD")
@@ -313,6 +318,9 @@ class ForexDataFetcher:
         Returns:
             Fallback exchange rate
         """
+        logger.warning(
+            "USING FALLBACK CONSTANT for %s — paper/live degradation, not real data", pair
+        )
         # Fallback rates for major pairs (approximate values)
         fallback_rates = {
             "EUR/USD": Decimal("1.08"),

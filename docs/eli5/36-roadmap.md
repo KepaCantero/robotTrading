@@ -52,9 +52,9 @@ This page is a snapshot from October 2026, and every commit it cites landed on o
 
 ## Where it lives
 
-- `docs/plans/PLAN_SUMMARY.md`, `ROLLOUT_PLAN.md`, `VISUAL_ROADMAP.md` — the production plan.
-- `docs/plans/FASE5_Backtesting_Engine.md`, `FASE_6_ADVANCED_MODULES.md` — the engine phases.
-- `docs/plans/fix_gap_violations.md`, `refactor-portfolio-di.md` — the cleanup plans.
+- `docs/plans/archivo/PLAN_SUMMARY.md`, `ROLLOUT_PLAN.md`, `VISUAL_ROADMAP.md` — the production plan (archived 2026-10; see `docs/plans/ORDEN_PLANES.md` for the live queue).
+- `docs/plans/archivo/FASE5_Backtesting_Engine.md`, `FASE_6_ADVANCED_MODULES.md` — the engine phases (archived).
+- `docs/plans/archivo/fix_gap_violations.md`, `refactor-portfolio-di.md` — the cleanup plans (archived).
 - `docs/REFACTORING_PLAN_GOD_CLASSES.md`, `docs/REFACTORING_SUMMARY.md` — the splits.
 - `docs/architecture/backtesting_workflow_complete_analysis.md` — how a backtest flows today.
 

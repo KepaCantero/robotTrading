@@ -38,6 +38,10 @@ logs/
 !data/historical/*.csv
 # News sentiment series are intentionally tracked (backtest input)
 !data/news_sentiment/*.csv
+# Real FX (ECB-derived) and policy-rate corpora — backtest input + the
+# real-corpus tests read them (Bloque 3, PLAN_DATOS_REALES_Y_EJECUCION)
+!data/fx/*.csv
+!data/rates/*.csv
 
 # Build
 build/

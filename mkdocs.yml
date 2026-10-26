@@ -116,14 +116,24 @@ nav:
   - "History":
     - "README (v1, español)": history/README_es_v1.md
   - "Plans":
-    - "FASE5 backtesting engine": plans/FASE5_Backtesting_Engine.md
-    - "FASE 6 advanced modules": plans/FASE_6_ADVANCED_MODULES.md
-    - "Multi-market expansion": plans/MULTI_MARKET_EXPANSION.md
-    - "Plan summary": plans/PLAN_SUMMARY.md
-    - "Rollout plan": plans/ROLLOUT_PLAN.md
-    - "Visual roadmap": plans/VISUAL_ROADMAP.md
-    - "Fix GAP violations": plans/fix_gap_violations.md
-    - "Portfolio DI refactor": plans/refactor-portfolio-di.md
+    - "Orden de planes (cola canónica)": plans/ORDEN_PLANES.md
+    - "Producción paper IBKR": plans/PLAN_PRODUCCION_PAPER_IBKR.md
+    - "Matriz de hallazgos A-D": plans/MATRIZ_HALLAZGOS_A_D.md
+    - "Gate calidad de datos y optimize": plans/GATE_CALIDAD_DATOS_Y_OPTIMIZE.md
+    - "Datos reales y ejecución": plans/PLAN_DATOS_REALES_Y_EJECUCION.md
+    - "Adopción de librerías": plans/PLAN_ADOPCION_LIBRERIAS.md
+    - "B5 catálogo de estrategias": plans/PLAN_B5_ESTRATEGIAS_CATALOGO.md
+    - "UI Beat Them All": plans/PLAN_UI_BEAT_THEM_ALL.md
+    - "Archivo (históricos, no ejecutar)":
+      - "FASE5 backtesting engine": plans/archivo/FASE5_Backtesting_Engine.md
+      - "FASE 6 advanced modules": plans/archivo/FASE_6_ADVANCED_MODULES.md
+      - "Multi-market expansion": plans/archivo/MULTI_MARKET_EXPANSION.md
+      - "Plan summary": plans/archivo/PLAN_SUMMARY.md
+      - "Robo advisor paper": plans/archivo/ROBO_ADVISOR_PAPER.md
+      - "Rollout plan": plans/archivo/ROLLOUT_PLAN.md
+      - "Visual roadmap": plans/archivo/VISUAL_ROADMAP.md
+      - "Fix GAP violations": plans/archivo/fix_gap_violations.md
+      - "Portfolio DI refactor": plans/archivo/refactor-portfolio-di.md
   - "Refactoring":
     - "Refactoring summary": refactoring/REFACTORING_SUMMARY.md
     - "Centralized config SOLID refactoring": refactoring/centralized_config_solid_refactoring.md
