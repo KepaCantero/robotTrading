@@ -10,6 +10,7 @@ Provides functionality to load historical market data from various sources:
 from __future__ import annotations
 
 import logging
+from collections import OrderedDict
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
@@ -86,6 +87,16 @@ except ImportError:
             return pd.DataFrame()
 
 
+#: GATE Fase A — bounded LRU of parsed CSV windows. The expensive part of a
+#: repeat backtest is the re-parse + per-row Decimal conversion, not the IO;
+#: the optimizer's 13 runs and any dashboard re-run hit the same windows.
+#: Key includes the file's mtime so a repaired CSV invalidates instantly.
+#: Callers get a COPY of the list — Quote objects themselves are pydantic
+#: models treated as immutable downstream (the orchestrator uses model_copy).
+_QUOTE_CACHE: "OrderedDict[tuple, list[Quote]]" = OrderedDict()
+_QUOTE_CACHE_MAX = 32
+
+
 class DataLoader:
     """Loader for historical market data from various sources."""
 
@@ -131,13 +142,41 @@ class DataLoader:
             raise ValueError(f"Unsupported data source: {source}")
 
     def _load_from_csv(self, symbol: str, start_date: datetime, end_date: datetime) -> list[Quote]:
-        """Load data from CSV file."""
+        """Load data from CSV file (with a bounded LRU keyed on file mtime)."""
         file_path = self.base_path / f"{symbol}.csv"
 
         if not file_path.exists():
             logger.error(f"CSV file not found: {file_path}", exc_info=True)
             raise FileNotFoundError(f"CSV file not found: {file_path}")
 
+        try:
+            cache_key = (
+                str(file_path),
+                file_path.stat().st_mtime_ns,
+                start_date,
+                end_date,
+            )
+        except OSError:
+            cache_key = None  # unreadable stat → skip cache, load directly
+
+        if cache_key is not None:
+            cached = _QUOTE_CACHE.get(cache_key)
+            if cached is not None:
+                _QUOTE_CACHE.move_to_end(cache_key)
+                return list(cached)
+
+        quotes = self._parse_csv_window(file_path, start_date, end_date, symbol)
+
+        if cache_key is not None:
+            _QUOTE_CACHE[cache_key] = quotes
+            while len(_QUOTE_CACHE) > _QUOTE_CACHE_MAX:
+                _QUOTE_CACHE.popitem(last=False)
+        return list(quotes)
+
+    def _parse_csv_window(
+        self, file_path: Path, start_date: datetime, end_date: datetime, symbol: str
+    ) -> list[Quote]:
+        """Read, filter to the window and convert to Quote models."""
         try:
             # Read CSV and handle both 'date' and 'timestamp' column names
             df = pd.read_csv(file_path)

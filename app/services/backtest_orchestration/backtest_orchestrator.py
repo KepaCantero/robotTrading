@@ -108,6 +108,13 @@ class BacktestOrchestrator:
 
             # Step 6: Validate results
             warnings = self._validate_backtest_result(backtest_result, feasibility_ratio)
+            # GATE Fase A: partial runs carry the flag loudly — the report
+            # travels with the result, never a silent clip
+            if request.allow_partial_data:
+                warnings = list(warnings) + [
+                    "allow_partial_data=True: la ventana se ejecutó con símbolos "
+                    "que NO cubren el inicio — ver data_quality en el resultado"
+                ]
 
             # Create orchestration result
             elapsed_ms = (datetime.utcnow() - start_time).total_seconds() * 1000
@@ -119,6 +126,7 @@ class BacktestOrchestrator:
                 warnings=warnings,
                 orchestration_time_ms=elapsed_ms,
                 dividend_metrics=backtest_result.dividend_metrics,
+                data_quality=getattr(backtest_result, "data_quality", None),
             )
 
             # Store in history
@@ -256,6 +264,7 @@ class BacktestOrchestrator:
         loader = DataLoader(base_path=repo_root / "data" / "historical")
 
         symbols = config.symbols or ["AAPL", "MSFT", "GOOGL"]
+
         # Estrategias cross-sectional (p.ej. rotación de ETFs): UNA instancia
         # viendo el timeline global de todos los símbolos. Las per-símbolo
         # (mean_reversion...) siguen con instancia propia como siempre.
@@ -270,6 +279,25 @@ class BacktestOrchestrator:
         load_start = datetime.combine(config.start_date - timedelta(days=warmup_days), dt_time.min)
         start_dt = datetime.combine(config.start_date, dt_time.min)
         end_dt = datetime.combine(config.end_date, dt_time.max)
+
+        # GATE Fase A — coverage scan BEFORE any heavy loading. STRICT by
+        # default: the silent `continue`/clip below is exactly how windows
+        # the data never covered produced dishonest numbers. Only the
+        # EXECUTION window gates; warm-up stays best-effort. The benchmark
+        # loaders stay soft (context, never a verdict).
+        from app.backtesting.data_quality import InsufficientDataError, scan_data_coverage
+
+        coverage = scan_data_coverage(symbols, loader.base_path, start_dt, end_dt, load_start)
+        if not getattr(config, "allow_partial_data", False):
+            blocking = coverage.missing_symbols + coverage.uncovered_symbols
+            if blocking:
+                reason = (
+                    f"{len(coverage.missing_symbols)} símbolo(s) sin CSV y "
+                    f"{len(coverage.uncovered_symbols)} que no cubren el inicio"
+                    if coverage.missing_symbols
+                    else "símbolo(s) que no cubren el inicio de la ventana"
+                )
+                raise InsufficientDataError(coverage, f"Cobertura de datos insuficiente: {reason}")
         quotes: list = []
         signals: list = []
         for symbol in symbols:
@@ -392,6 +420,8 @@ class BacktestOrchestrator:
             logger.warning(
                 "Dividend income PARTIALLY non-computable: %s", div_metrics.coverage_gaps
             )
+        # GATE Fase A: the coverage evidence travels WITH the result
+        result.data_quality = coverage.to_dict()
         return result
 
     #: same-index substitutes tried when the requested benchmark does not

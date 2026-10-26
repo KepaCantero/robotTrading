@@ -235,6 +235,10 @@ class BacktestResult:
     # request's manual selection — the UI shows it in the result panel)
     symbols: list[str] = field(default_factory=list)
 
+    #: GATE Fase A — per-symbol execution-window coverage (dict form of
+    #: DataQualityReport). Attached to every run that got past the gate.
+    data_quality: dict | None = None
+
     def to_dict(self) -> dict:
         """Convert result to dictionary."""
         logger.debug(
@@ -341,6 +345,11 @@ class BacktestOrchestrationRequest:
     #: reference series for market-conditions analysis (buy&hold of this
     #: symbol over the same window); "" disables
     benchmark_symbol: str = "SPY"
+    #: GATE Fase A — STRICT data-coverage gate by default: a symbol whose
+    #: CSV cannot cover the execution window's start FAILS the run with an
+    #: actionable InsufficientDataError. True = run anyway, attaching the
+    #: coverage report + warning (never silently).
+    allow_partial_data: bool = False
 
 
 @dataclass
@@ -358,3 +367,7 @@ class BacktestOrchestrationResult:
     #: book (Fase 4, D01): SEPARATE from total return. None when the run
     #: never reached the engine (failure) — never a fabricated income.
     dividend_metrics: DividendMetrics | None = None
+    #: GATE Fase A — per-symbol coverage of the execution window. Attached
+    #: on EVERY successful run (and on partial-data runs), so results carry
+    #: the evidence of what data actually backed them.
+    data_quality: dict | None = None
