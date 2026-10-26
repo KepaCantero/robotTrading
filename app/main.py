@@ -51,6 +51,7 @@ from app.api.cost_analysis import router as cost_analysis_router
 from app.infrastructure.persistence.database import close_database, init_database
 from app.presentation.api.assets import router as assets_router
 from app.presentation.api.capa2_endpoints import router as capa2_router
+from app.presentation.api.dividend_safety import router as dividend_safety_router
 from app.presentation.api.error_handler import (
     attribute_error_handler,
     generic_exception_handler,
@@ -305,6 +306,7 @@ app.include_router(portfolio_analytics_router, dependencies=AUTH)
 app.include_router(cost_analysis_router, dependencies=AUTH)
 app.include_router(optimization_router, dependencies=AUTH)
 app.include_router(ops_router, dependencies=AUTH)
+app.include_router(dividend_safety_router, dependencies=AUTH)
 app.include_router(live_trading_router, dependencies=AUTH)
 app.include_router(
     trading_error_handler_router,
