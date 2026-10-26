@@ -35,6 +35,13 @@ STRATEGY_CATALOG: dict[str, str] = {
     # app/engines pero ES un BaseStrategy completo y testeado — ve el
     # timeline intercalado de ambos símbolos (is_cross_sectional)
     "pairs_trading": "app.engines.strategy_engines.pairs_engine:PairsTradingStrategyEngine",
+    # B5 (paper "151 Estrategias"): candidatas satélite citadas por sección
+    # (docs/b5/T5.1_preseleccion.md) — el paper define, el motor valida
+    "b5_momentum": "app.domain.strategies.b5_candidates:B5PriceMomentum",
+    "b5_reversal": "app.domain.strategies.b5_candidates:B5MeanReversion",
+    "b5_ma_filter": "app.domain.strategies.b5_candidates:B5MovingAverageFilter",
+    "b5_sector_momentum": "app.domain.strategies.b5_candidates:B5SectorMomentum",
+    "b5_fx_carry_momentum": "app.domain.strategies.b5_candidates:B5MomentumCarry",
 }
 
 

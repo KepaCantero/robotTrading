@@ -895,8 +895,8 @@ class BacktestEngine:
                 signal.symbol,
                 str(signal.signal_type).lower().replace("signaltype.", ""),
                 "rejected",
-                signal.quantity,
-                Decimal("0"),
+                Decimal("0"),  # Signal carries no quantity (sizing is by
+                Decimal("0"),  # position_weight) — caught by the B5 run
             )
             return  # Do NOT process this signal
 
