@@ -74,6 +74,16 @@ async def test_lots_fifo_consume(store):
     assert remaining[0].quantity == D("5") and remaining[0].purchase_price == D("90")
 
 
+async def test_clear_lots_for_fresh_paper_start(store):
+    """The supervised reset must leave zero open lots (audit events stay)."""
+    await store.add_lot("SCHD", D("10"), D("80"), purchased_at=datetime(2024, 1, 1))
+    await store.add_lot("BND", D("5"), D("70"), purchased_at=datetime(2024, 2, 1))
+    cleared = await store.clear_lots()
+    assert cleared == 2
+    assert await store.get_lots() == []
+    assert await store.clear_lots() == 0  # idempotent
+
+
 async def test_event_history_and_cooldown_anchor(store):
     await store.append_event("drift", "skipped", "all inside band")
     plan = RebalancePlan(

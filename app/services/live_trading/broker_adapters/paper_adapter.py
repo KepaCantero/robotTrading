@@ -68,7 +68,7 @@ class PaperAdapter:
         """Initialize paper trading adapter.
 
         Args:
-            initial_cash: Starting cash balance (default $100,000)
+            initial_cash: Starting cash balance (default €100,000)
             auto_fill_orders: Whether to automatically fill market orders (default False for testing)
             allow_shorting: Whether SELL orders without a held position are
                 allowed (default False: reject instead of printing cash)
@@ -156,7 +156,9 @@ class PaperAdapter:
         self.account = BrokerAccount(
             account_id=account_id or f"paper_{uuid4().hex[:8]}",
             broker_type=BrokerType.PAPER,
-            currency="USD",
+            # EUR: the user's IBKR paper account (DU9811225) is EUR-based;
+            # every € the dashboard prints must be the account's own currency.
+            currency="EUR",
             cash_available=self.initial_cash,
             portfolio_value=self.initial_cash,
             buying_power=self.initial_cash,

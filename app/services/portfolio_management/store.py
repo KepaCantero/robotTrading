@@ -24,7 +24,7 @@ from decimal import Decimal
 from typing import Any
 from uuid import uuid4
 
-from sqlalchemy import JSON, Boolean, DateTime, Index, Numeric, String, Text, select, update
+from sqlalchemy import JSON, Boolean, DateTime, Index, Numeric, String, Text, delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -257,6 +257,16 @@ class PortfolioManagementStore:
                 )
                 for r in records
             ]
+
+    async def clear_lots(self) -> int:
+        """Zero every open lot. Used ONLY by the supervised 'fresh paper
+        start' — the audit trail (events) is kept, the tax lots are not."""
+        async with self._sessions() as session:
+            result = await session.execute(
+                delete(PortfolioLotRecord).where(PortfolioLotRecord.remaining > 0)
+            )
+            await session.commit()
+            return int(result.rowcount or 0)
 
     async def consume_lots_fifo(self, symbol: str, quantity: Decimal) -> list[LotSnapshot]:
         """Mark ``quantity`` shares sold, oldest lots first.

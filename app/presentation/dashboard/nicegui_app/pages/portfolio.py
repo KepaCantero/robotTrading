@@ -33,6 +33,7 @@ from app.services.portfolio_management import (
     PlanContext,
     PortfolioManagementStore,
     ProfileAnswers,
+    RebalanceTrigger,
     SpainRebalanceTax,
     adopt_target,
     cooldown_ends_at,
@@ -484,18 +485,87 @@ def render(
                     ui.table(columns=columns, rows=rows, row_key="symbol").classes("w-full").props(
                         "flat bordered dense"
                     )
-                ui.button(
-                    "Apply to paper account",
-                    icon="science",
-                    on_click=lambda: _preview(
-                        target, positions, cash, prices, lots_by_symbol, last_rebalance
-                    ),
-                ).props("unelevated no-caps").classes("run-btn").style("margin-top:12px").tooltip(
-                    "Preview first: the exact trades and their tax impact in € — "
-                    "nothing is sent until you confirm."
-                )
+                with ui.row().classes("w-full items-center gap-sm no-wrap").style(
+                    "margin-top:12px"
+                ):
+                    ui.button(
+                        "Apply to paper account",
+                        icon="science",
+                        on_click=lambda: _preview(
+                            target, positions, cash, prices, lots_by_symbol, last_rebalance
+                        ),
+                    ).props("unelevated no-caps").classes("run-btn").tooltip(
+                        "Preview first: the exact trades and their tax impact in € — "
+                        "nothing is sent until you confirm."
+                    )
+                    ui.button(
+                        "Refresh",
+                        icon="refresh",
+                        on_click=lambda: render_state.refresh(),
+                    ).props("flat no-caps dense").tooltip(
+                        "Re-read the paper account and current prices."
+                    )
+                    ui.button(
+                        "Fresh start",
+                        icon="restart_alt",
+                        on_click=lambda: _fresh_start_dialog(pm_store),
+                    ).props("flat no-caps dense").style("color:var(--ds-bad)").tooltip(
+                        "Empty the paper account back to its starting cash and clear "
+                        "the tax lots (history stays for audit)."
+                    )
+
+        def _fresh_start_dialog(pm_store) -> None:
+            with ui.dialog() as dialog, ui.card().classes("min-w-[480px]"):
+                ui.label("Fresh paper start?").classes("text-h6")
+                ui.label(
+                    "This empties the paper account (positions and cash reset to the "
+                    "starting amount) and clears the tax lots. The event history stays "
+                    "as an audit trail. Nothing touches your real broker."
+                ).classes("text-body2")
+                with ui.row().classes("w-full justify-end gap-sm"):
+                    ui.button("Cancel", on_click=dialog.close).props("flat")
+
+                    async def _do_reset() -> None:
+                        await _reset_paper_account(pm_store)
+                        dialog.close()
+                        ui.notify("Paper account reset to its starting cash.", type="positive")
+                        render_state.refresh()
+
+                    ui.button(
+                        "Reset the paper account", icon="restart_alt", on_click=_do_reset
+                    ).props("unelevated no-caps").classes("run-btn")
+            dialog.open()
+
+        async def _reset_paper_account(pm_store) -> None:
+            """Supervised fresh start: broker account back to initial cash,
+            lots cleared, persisted paper state removed. Events are kept."""
+            from app.services.live_trading.broker_adapters.paper_adapter import PaperAdapter
+
+            broker = await _get_broker()
+            adapter = broker.adapter
+            if isinstance(adapter, PaperAdapter):
+                adapter.positions.clear()
+                if adapter.account is not None:
+                    adapter.account.cash_available = adapter.initial_cash
+                    adapter.account.portfolio_value = adapter.initial_cash
+                    adapter.account.buying_power = adapter.initial_cash
+                    adapter.account.equity = adapter.initial_cash
+                    adapter.account.margin_used = D("0")
+            Path(DEFAULT_PAPER_STATE_PATH).unlink(missing_ok=True)
+            cleared = await pm_store.clear_lots()
+            await pm_store.append_event(
+                trigger="manual",
+                action="reset",
+                reason=(
+                    "Fresh paper start: account emptied back to starting cash, "
+                    "tax lots cleared (this event is the audit trail)."
+                ),
+                details={"cleared_lots": cleared},
+            )
 
         async def _preview(target, positions, cash, prices, lots_by_symbol, last_rebalance) -> None:
+            cooling_until = cooldown_ends_at(last_rebalance, target.cooldown_days)
+            was_cooling = bool(cooling_until and cooling_until > datetime.utcnow())
             ctx = PlanContext(
                 target=target,
                 positions=positions,
@@ -503,6 +573,11 @@ def render(
                 prices=prices,
                 lots=lots_by_symbol,
                 last_rebalance=last_rebalance,
+                # The cooldown stops the ROBOT from churning — it must never
+                # lock out the owner: a manual click plans through it, with
+                # the bypass said out loud (supervision rule).
+                forced=True,
+                forced_trigger=RebalanceTrigger.MANUAL,
             )
             plan = plan_rebalance(ctx, tax_preview=SpainRebalanceTax().preview_sell)
 
@@ -512,6 +587,12 @@ def render(
                     "Real rules, imaginary money — every trade below goes through the "
                     "same risk gates as live trading."
                 ).classes("text-caption")
+                if was_cooling:
+                    ui.label(
+                        f"Supervised action: bypassing the robot's rest period "
+                        f"(until {cooling_until:%d %b %H:%M}) — you pressed the button, "
+                        f"this trades now."
+                    ).classes("text-caption text-warning")
                 ui.label(plan.summary).classes("text-body1")
                 if plan.trades:
                     columns = [
@@ -593,15 +674,34 @@ def render(
                                 "skipped": "grey",
                                 "planned": "info",
                                 "rejected": "negative",
+                                "reset": "warning",
                             }.get(event["action"], "grey")
                             ui.badge(event["action"], color=color).props("outline").classes(
                                 "q-mt-xs"
                             )
-                            with ui.column().classes("gap-0"):
+                            with ui.column().classes("gap-0 flex-1"):
                                 ui.label(event["reason"]).classes("text-body2")
                                 ui.label(
                                     f"{event['ts'][:16].replace('T', ' ')} · trigger {event['trigger']}"
                                 ).classes("text-caption")
+                                # Order-level detail: every fill/rejection the
+                                # supervisor is accountable for, not just the summary.
+                                details = event.get("details") or {}
+                                for order in details.get("executed") or []:
+                                    ui.label(
+                                        f"↳ {order.get('side')} {order.get('symbol')} · "
+                                        f"{D(str(order.get('quantity', '0'))).normalize():f} shares "
+                                        f"@ €{D(str(order.get('price', '0'))):,.2f} · "
+                                        f"order {str(order.get('order_id', ''))[:12]}"
+                                    ).classes("text-caption").style(
+                                        "color:var(--ds-good);padding-left:18px"
+                                    )
+                                for failed in details.get("failed") or []:
+                                    ui.label(
+                                        f"↳ ✗ {failed.get('symbol', '?')}: {failed.get('error', '?')}"
+                                    ).classes("text-caption").style(
+                                        "color:var(--ds-bad);padding-left:18px"
+                                    )
 
         ui.timer(0.1, render_state, once=True)
 

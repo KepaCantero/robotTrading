@@ -50,3 +50,10 @@ async def test_cash_never_increases_without_position(paper):
     with pytest.raises(ValueError, match="insufficient position"):
         await paper.place_order("AAPL", OrderSide.SELL, Decimal("5"), price=Decimal("100"))
     assert paper.account.cash_available == Decimal("900")
+
+
+@pytest.mark.asyncio
+async def test_account_is_eur(paper):
+    """The user's IBKR paper account is EUR-based: every € the dashboard
+    prints must be the account's own currency (was USD until 2026-10-27)."""
+    assert paper.account.currency == "EUR"
