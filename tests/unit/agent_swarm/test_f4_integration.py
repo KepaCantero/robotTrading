@@ -63,8 +63,10 @@ class TestStrategyOverrides:
     """D03: T3.1 module parameters reach the engine as strategy overrides."""
 
     def test_module_specific_passthrough_and_position_cap_mapped(self):
+        # max_position_size es FRACCIÓN 0-1 (contrato de module_parameters.yaml
+        # y trading_config: "Maximum position size (0-1)") — nunca un porcentaje.
         cfg = SimpleNamespace(
-            max_position_size=10,  # 10% per position
+            max_position_size=0.10,  # 10% per position
             module_specific={"rebalance_days": 60, "satellite_top_k": 3},
         )
         overrides = _strategy_overrides_from({"dividend_tracking": cfg}, "dividend_tracking")
@@ -72,8 +74,28 @@ class TestStrategyOverrides:
         assert overrides["satellite_top_k"] == 3
         assert overrides["weight_cap"] == 0.10  # el límite del perfil CAPA los pesos
 
+    def test_weight_cap_never_lands_below_engine_position_floor(self):
+        # Regresión del bug /100: 0.10 (10%) se convertía en 0.001, la
+        # estrategia lo setattr-eaba tras su clamp, suggested_max_position_size
+        # hacía ceil(0.1)/100=1% y el validador del motor (piso 5%) rechazaba
+        # TODAS las compras → runs REJECTED con 0 trades.
+        from decimal import Decimal
+
+        from app.domain.strategies.dividend_core_satellite import DividendCoreSatelliteStrategy
+
+        cfg = SimpleNamespace(max_position_size=Decimal("0.10"), module_specific={})
+        overrides = _strategy_overrides_from({"dividend_tracking": cfg}, "dividend_tracking")
+        strategy = DividendCoreSatelliteStrategy(
+            {"name": "d", "enabled": True, "symbols": ["SCHD", "VIG", "VYMI"]}
+        )
+        for key, value in overrides.items():
+            if hasattr(strategy, key):
+                setattr(strategy, key, value)
+        floor = 0.05  # validator_min_position_pct del motor
+        assert strategy.suggested_max_position_size >= floor
+
     def test_falls_back_to_first_module_when_strategy_absent(self):
-        cfg = SimpleNamespace(max_position_size=5, module_specific={"lookback_days": 126})
+        cfg = SimpleNamespace(max_position_size=0.05, module_specific={"lookback_days": 126})
         overrides = _strategy_overrides_from({"other_module": cfg}, "dividend_tracking")
         assert overrides["lookback_days"] == 126
 

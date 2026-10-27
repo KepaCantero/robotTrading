@@ -171,8 +171,11 @@ def _strategy_overrides_from(modules: dict, strategy: str) -> dict:
     """D03: translate a T3.1 ModuleParameterSet into strategy overrides.
 
     ``module_specific`` keys (rebalance_days, satellite_top_k, ...) pass
-    through verbatim; ``max_position_size`` (percent) maps to the strategy's
-    ``weight_cap`` so a profile position limit actually caps the weights.
+    through verbatim; ``max_position_size`` maps verbatim to the strategy's
+    ``weight_cap`` — BOTH are fractions 0-1 (module_parameters.yaml and
+    trading_config define max_position_size as "Maximum position size (0-1)").
+    A /100 here once poisoned every weight cap (0.10 → 0.001 → engine
+    position floor 1% → ALL buys rejected → zero-trade REJECTED runs).
     Returns {} when T3.1 produced nothing usable — never invents params.
     """
     config = modules.get(strategy) if modules else None
@@ -184,7 +187,7 @@ def _strategy_overrides_from(modules: dict, strategy: str) -> dict:
     max_position_size = getattr(config, "max_position_size", None)
     if max_position_size is not None:
         try:
-            overrides.setdefault("weight_cap", float(max_position_size) / 100.0)
+            overrides.setdefault("weight_cap", float(max_position_size))
         except (TypeError, ValueError):
             pass
     return overrides
