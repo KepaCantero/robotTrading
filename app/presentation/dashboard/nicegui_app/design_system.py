@@ -156,11 +156,6 @@ def _build_css() -> str:
 """
 
 
-def inject() -> None:
-    """Add the design-system stylesheet to the current page (call per page)."""
-    ui.add_head_html(f"<style>{_build_css()}</style>")
-
-
 # ═══════════════════════════════════════════════════════════════════
 # COMPONENTS — pages build ONLY from these
 # ═══════════════════════════════════════════════════════════════════
@@ -298,3 +293,73 @@ def term(label_text: str, key: str | None = None) -> ui.label:
         )
         eli5_tooltip(element, key, plain)
     return element
+
+
+# ═══════════════════════════════════════════════════════════════════
+# Beauty pass — depth, gradients, motion (calm, never gamified)
+# ═══════════════════════════════════════════════════════════════════
+
+BEAUTY_CSS = """
+.ds-hero {
+  background: linear-gradient(135deg, var(--ds-surface) 0%, #eaf3ee 55%, #f6ecd9 100%);
+  border: 1px solid var(--ds-line); border-radius: var(--ds-radius-l);
+  padding: var(--ds-space-xl) var(--ds-space-xl); position: relative; overflow: hidden;
+}
+.ds-hero::after {
+  content: ""; position: absolute; right: -60px; top: -60px; width: 220px; height: 220px;
+  background: radial-gradient(circle, rgba(63,143,133,0.16), transparent 65%); border-radius: 50%;
+}
+.ds-hero__title {
+  font-size: 30px; font-weight: 800; letter-spacing: -0.5px; color: var(--ds-text);
+  background: linear-gradient(90deg, var(--ds-text), var(--ds-teal_deep));
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  margin: 0;
+}
+.ds-hero__sub { color: var(--ds-text_soft); max-width: 640px; margin-top: 8px; line-height: 1.5; }
+.ds-grad-num {
+  background: linear-gradient(120deg, var(--ds-teal_deep), var(--ds-good));
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.ds-card--hover { transition: transform var(--ds-motion), box-shadow var(--ds-motion); }
+.ds-card--hover:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(62,58,49,0.13); }
+.ds-chip {
+  width: 38px; height: 38px; border-radius: 11px; display: inline-flex;
+  align-items: center; justify-content: center; font-size: 20px; flex: none;
+}
+.ds-chip--done { background: var(--ds-good_tint); color: var(--ds-good); }
+.ds-chip--ready { background: rgba(63,143,133,0.14); color: var(--ds-teal_deep); }
+.ds-chip--active { background: var(--ds-warn_tint); color: var(--ds-warn); }
+.ds-chip--todo { background: var(--ds-surface_alt); color: var(--ds-text_soft); }
+.ds-chip--blocked { background: var(--ds-surface_alt); color: var(--ds-text_soft); }
+.ds-option {
+  width: 100%; justify-content: flex-start; text-align: left; min-height: 48px;
+  background: var(--ds-surface); border: 1.5px solid var(--ds-line);
+  border-radius: var(--ds-radius-s); color: var(--ds-text);
+  transition: all var(--ds-motion); padding: 10px 16px; font-weight: 500;
+}
+.ds-option:hover { border-color: var(--ds-teal); transform: translateX(3px); }
+.ds-option--selected {
+  background: rgba(63,143,133,0.12); border-color: var(--ds-teal);
+  color: var(--ds-teal_deep); font-weight: 700;
+  box-shadow: 0 2px 8px rgba(63,143,133,0.18);
+}
+@keyframes ds-fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.ds-enter { animation: ds-fade-up 380ms ease both; }
+@media (prefers-reduced-motion: reduce) {
+  .ds-enter, .ds-card--hover, .ds-option { animation: none; transition: none; }
+}
+"""
+
+
+def inject(*, beauty: bool = True) -> None:
+    """Add the design-system stylesheet to the current page (call per page)."""
+    css = _build_css() + (BEAUTY_CSS if beauty else "")
+    ui.add_head_html(f"<style>{css}</style>")
+
+
+def hero(title: str, sub: str) -> ui.element:
+    """The page-opening band: gradient, one promise, no noise."""
+    with ui.element("div").classes("ds-hero ds-enter w-full") as e:
+        ui.label(title).classes("ds-hero__title")
+        ui.label(sub).classes("ds-hero__sub")
+    return e

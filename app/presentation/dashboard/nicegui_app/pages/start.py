@@ -69,6 +69,17 @@ def render() -> None:
         "province": "Madrid",
         "goal": None,
     }
+    option_buttons: dict[str, list] = {}
+
+    def _option(key: str, value, label: str) -> ui.button:
+        """One answer choice — the selected state glows, siblings un-glow."""
+        b = (
+            ui.button(label, on_click=lambda: _pick(key, value, label, b))
+            .classes("ds-option")
+            .props("no-caps unelevated")
+        )
+        option_buttons.setdefault(key, []).append(b)
+        return b
 
     with ui.column().classes("w-full max-w-[1040px] mx-auto p-8 gap-6"):
         ds.section_heading(
@@ -79,16 +90,14 @@ def render() -> None:
 
         # ── the 5 question cards ─────────────────────────────────────
         with ui.grid(columns=2).classes("gap-4 w-full"):
-            with ds.card(title="1 · How old are you?").classes("opt-card"):
+            with ds.card(title="1 · How old are you?").classes("ds-card--hover ds-enter"):
                 for label, age in AGE_OPTIONS.items():
-                    ui.button(label, on_click=lambda a=age, t=label: _pick("age", a, t)).classes(
-                        "ds-btn ds-btn--secondary opt-btn"
-                    ).props("no-caps unelevated outline")
-            with ds.card(title="2 · How long until you need it?"):
+                    _option("age", age, label)
+            with ds.card(title="2 · How long until you need it?").classes(
+                "ds-card--hover ds-enter"
+            ):
                 for label in HORIZON_WINDOWS:
-                    ui.button(label, on_click=lambda t=label: _pick("horizon", t, t)).classes(
-                        "ds-btn ds-btn--secondary opt-btn"
-                    ).props("no-caps unelevated outline")
+                    _option("horizon", label, label)
             with ds.card(title="3 · How do you feel about falls?"):
                 t3 = ds.eli5_tooltip(
                     ui.label(
@@ -100,9 +109,7 @@ def render() -> None:
                 )
                 del t3
                 for label, value in RISK_OPTIONS.items():
-                    ui.button(label, on_click=lambda v=value, t=label: _pick("risk", v, t)).classes(
-                        "ds-btn ds-btn--secondary opt-btn"
-                    ).props("no-caps unelevated outline")
+                    _option("risk", value, label)
             with ds.card(title="4 · Where do you pay taxes?"):
                 ui.select(
                     {p: p for p in SPANISH_PROVINCES},
@@ -123,8 +130,12 @@ def render() -> None:
         # ── proposal + validation area ───────────────────────────────
         proposal = ui.column().classes("w-full gap-6")
 
-        def _pick(key: str, value, _label: str) -> None:
+        def _pick(key: str, value, _label: str, _btn=None) -> None:
             answers[key] = value
+            for b in option_buttons.get(key, []):
+                b.classes(remove="ds-option--selected")
+            if _btn is not None:
+                _btn.classes(add="ds-option--selected")
             filled = sum(1 for k in ("age", "horizon", "risk", "goal") if answers[k])
             status.text = (
                 f"{filled}/4 key questions answered"
@@ -168,25 +179,47 @@ def render() -> None:
 
         def _pie(universe: list[str]) -> None:
             n = len(universe)
-            data = [{"value": round(100 / n, 1), "name": s} for s in universe]
+            colors = [
+                "#3f8f85",
+                "#7fb98b",
+                "#f3d9a4",
+                "#b9cfc5",
+                "#e8a87c",
+                "#8db6c9",
+                "#d9b8a6",
+                "#a3b86c",
+            ]
+            data = [
+                {
+                    "value": round(100 / n, 1),
+                    "name": s,
+                    "itemStyle": {"color": colors[i % len(colors)]},
+                }
+                for i, s in enumerate(universe)
+            ]
             chart = ui.echart(
                 {
                     "tooltip": {"trigger": "item", "formatter": "{b}: {c}%"},
                     "series": [
                         {
                             "type": "pie",
-                            "radius": ["42%", "68%"],
+                            "radius": ["48%", "74%"],
                             "itemStyle": {
-                                "borderRadius": 6,
+                                "borderRadius": 8,
                                 "borderColor": "#fffdf6",
-                                "borderWidth": 2,
+                                "borderWidth": 3,
+                                "shadowBlur": 12,
+                                "shadowColor": "rgba(62,58,49,0.12)",
                             },
-                            "label": {"formatter": "{b}"},
+                            "label": {"formatter": "{b}", "color": "#3e3a31"},
+                            "emphasis": {"scaleSize": 8},
+                            "animationType": "scale",
+                            "animationEasing": "elasticOut",
                             "data": data,
                         }
                     ],
                 }
-            ).classes("w-full h-64")
+            ).classes("w-full h-72 ds-enter")
             del chart
 
         # ── validation: the REAL pipeline, narrated ──────────────────

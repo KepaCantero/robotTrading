@@ -1413,6 +1413,7 @@ def render(
                                 ui.label(sub).classes("dt-sub")
 
                 # ── Mission Control (UI-3): the macro loop, honest states ──
+                from app.presentation.dashboard.nicegui_app import design_system as _ds
                 from app.presentation.dashboard.nicegui_app.components.mission_control import (
                     mission_control_band as _mc_band,
                 )
@@ -1420,7 +1421,14 @@ def render(
                     inject as _ds_inject,
                 )
 
+                _ds_hero = _ds.hero
+
                 _ds_inject()
+                _ds_hero(
+                    "Mission Control",
+                    "Your whole investment loop, live: the robot below builds, "
+                    "tests and watches a portfolio you can actually understand.",
+                )
                 _mc_holder = ui.column().classes("w-full gap-0 q-mb-sm")
 
                 async def _mc_refresh() -> None:

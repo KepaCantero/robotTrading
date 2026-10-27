@@ -112,7 +112,7 @@ class TestAppHome:
         async with user_simulation(root) as user:
             await user.open("/")
             # Layout elements
-            await user.should_see("AlgoTrading")
+            await user.should_see("robotTrading")
             await user.should_see("Backtesting Dashboard")
             await user.should_see("Dark")
             # Navigation buttons (from PAGES definition in theme)

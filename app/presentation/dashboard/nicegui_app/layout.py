@@ -90,22 +90,51 @@ class AppShell:
 
     @classmethod
     def _build_shell(cls) -> None:
-        """Drawer + header, built inside each page so the menu shows everywhere."""
-        dark = ui.dark_mode(True)
+        """Drawer + header, built inside each page so the menu shows everywhere.
 
-        with ui.left_drawer(bordered=True).classes("bg-[#1a1a2e]"):
-            ui.label("AlgoTrading").classes("text-h5 font-bold text-white q-pa-md")
-            ui.separator().classes("q-mb-md")
+        UI beauty pass: ONE visual language — the chrome speaks the same
+        warm cream/teal design system as the pages (the old dark-blue
+        chrome around light pages read as two apps glued together).
+        """
+        from app.presentation.dashboard.nicegui_app import design_system as ds
+
+        ds.inject()
+        dark = ui.dark_mode(False)
+
+        ui.add_head_html(
+            "<style>"
+            ".q-drawer { background: #f9f5ec !important; }"
+            ".q-drawer .text-h5, .q-drawer .q-btn { color: #3e3a31 !important; }"
+            ".q-drawer .q-btn:hover { background: rgba(63,143,133,0.10) !important; }"
+            ".q-header { background: #fffdf6 !important; border-bottom: 1px solid #e2d9c8; }"
+            ".q-header .text-h6, .q-header .q-btn, .q-header .text-caption "
+            "{ color: #3e3a31 !important; }"
+            "body { background: #fffdf6; }"
+            "</style>"
+        )
+
+        with ui.left_drawer(bordered=True).classes("bg-[#f9f5ec]"):
+            ui.html(
+                '<div style="font-weight:800;font-size:19px;color:#2e6b63;'
+                'padding:14px 16px 4px;letter-spacing:-0.3px">robotTrading</div>'
+                '<div style="font-size:11.5px;color:#6f6858;padding:0 16px 10px">'
+                "a portfolio you can understand</div>"
+            )
+            ui.separator().classes("q-mb-sm")
             with ui.column().classes("w-full gap-0"):
                 for page in PAGES:
                     ui.button(
                         page["name"],
                         icon=page["icon"],
                         on_click=lambda _, r=page["route"]: ui.navigate.to(r),
-                    ).props("flat align=left").classes("w-full text-white text-body1")
+                    ).props("flat align=left no-caps").classes("w-full text-body1").style(
+                        "color:#3e3a31;justify-content:flex-start;min-height:42px"
+                    )
 
-        with ui.header().classes("items-center justify-between bg-[#0f3460]"):
-            ui.label("Backtesting Dashboard").classes("text-h6")
+        with ui.header().classes("items-center justify-between"):
+            ui.label("Backtesting Dashboard").classes("text-h6").style(
+                "font-weight:700;color:#3e3a31"
+            )
             with ui.row().classes("items-center gap-sm"):
                 mode_label = ui.label("Dark").classes("text-caption")
                 ui.button(
