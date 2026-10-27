@@ -141,12 +141,87 @@ def _fmt_pct(weight: Decimal) -> str:
     return f"{(weight * D('100')):.1f}%"
 
 
+def _role_chip(rationale: str) -> tuple[str, str]:
+    """Plain-English role from the SAME rationale the engine wrote —
+    the chip never invents a role the portfolio didn't state."""
+    r = (rationale or "").lower()
+    if any(k in r for k in ("dividend", "income", "renta", "yield")):
+        return "Income engine", "info"
+    if any(k in r for k in ("bond", "defensive", "cash", "stability", "staples", "low vol")):
+        return "Safety cushion", "good"
+    if any(k in r for k in ("growth", "appreciation", "momentum")):
+        return "Growth booster", "warn"
+    return "Diversifier", "good"
+
+
+def _render_interactive_pie(holdings, weight_fmt=_fmt_pct) -> None:
+    """UI-2: every slice is clickable → the symbol's plain-language card."""
+    from app.presentation.dashboard.nicegui_app import design_system as ds
+
+    data = [
+        {"value": float(h.weight) * 100, "name": h.symbol, "rationale": h.rationale}
+        for h in holdings
+    ]
+    with ui.row().classes("w-full items-start no-wrap gap-md"):
+        chart = ui.echart(
+            {
+                "tooltip": {"trigger": "item", "formatter": "{b}: {c}%"},
+                "series": [
+                    {
+                        "type": "pie",
+                        "radius": ["45%", "72%"],
+                        "itemStyle": {
+                            "borderRadius": 6,
+                            "borderColor": "#fffdf6",
+                            "borderWidth": 2,
+                        },
+                        "label": {"formatter": "{b}"},
+                        "data": data,
+                    }
+                ],
+            }
+        ).classes("h-64 w-72 shrink-0")
+
+        detail = ui.column().classes("flex-1 gap-sm")
+
+        def _show(name: str) -> None:
+            detail.clear()
+            with detail:
+                holding = next((h for h in holdings if h.symbol == name), None)
+                if holding is None:
+                    return
+                chip, tone = _role_chip(holding.rationale)
+                with ds.card(title=holding.symbol):
+                    ds.validation_badge("partial" if tone == "warn" else "fees", text=chip)
+                    ui.label(holding.rationale or "Part of your mix.").classes("q-mt-sm")
+                    facts = _corpus_facts(holding.symbol)
+                    ui.label(
+                        f"{weight_fmt(holding.weight)} of your portfolio · "
+                        + (
+                            f"{facts['days']:,} days of history, "
+                            f"€{facts['avg_volume_m']:.1f}M/day traded"
+                            if facts
+                            else "no local history"
+                        )
+                    ).classes("text-caption")
+
+        chart.on("click", lambda e: _show(e.args["name"]))
+        ui.label("Tap a slice to see what it does for you.").classes("text-caption")
+
+
+def _inject_ds() -> None:
+    from app.presentation.dashboard.nicegui_app import design_system as ds
+
+    ds.inject()
+
+
 def render(
     executor: Any = None,
     store: Any = None,
 ) -> None:
     """Render the Portfolio page (signature matches the page registry)."""
     install_fx()
+    _inject_ds()  # UI-2: the interactive pie + symbol cards speak the design system
     ui.dark_mode(False)
 
     with ui.element("div").classes("light-sheet w-full"):
@@ -246,6 +321,7 @@ def render(
                     else "Curated starter portfolio — the first winning backtest replaces it."
                 )
                 ui.label(provenance).classes("text-caption")
+                _render_interactive_pie(target.holdings)
                 columns = [
                     {"name": "symbol", "label": "ETF", "field": "symbol", "align": "left"},
                     {"name": "weight", "label": "Target", "field": "weight", "align": "right"},
