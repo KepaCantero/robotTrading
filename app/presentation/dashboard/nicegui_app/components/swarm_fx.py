@@ -1,10 +1,11 @@
-"""Light, calm theme for the Agent Swarm page.
+"""Next-gen calm skin for the Agent Swarm + Portfolio pages.
 
-Popular/official pattern for finance configuration tools (Stripe/Google
-style): soft gray canvas, white cards, one teal accent, green/amber/red
-reserved exclusively for status. Plain language, progressive disclosure,
-quiet motion. Also ships an optional muted sound-cue synth (off by
-default).
+One accent (teal), warm cream surfaces, generous radius, layered soft
+shadows, and a dark "technical detail" terminal for confident contrast —
+the look of a product, not a project. Status colors (sage/honey/
+terracotta) stay reserved exclusively for state. Plain language, quiet
+motion, visible focus. Also ships the optional muted sound-cue synth
+(off by default).
 """
 
 from __future__ import annotations
@@ -22,38 +23,61 @@ CSS = """
   --tx: #3e3a31;
   --tx2: #6f6858;
   --tx3: #948b77;
-  --run: #2e7d74;     /* soft teal — running (AA on cream) */
-  --ok: #3e7d4f;      /* sage      — done (AA)              */
-  --warn: #93672a;    /* honey     — warnings (AA)          */
-  --bad: #ab4f3f;     /* terracotta — failure (AA)          */
-  --accent: #557f63;
+  --run: #2e7d74;     /* ONE accent — teal (running + interactive) */
+  --run-deep: #2e6b63;
+  --ok: #3e7d4f;      /* sage      — done only (AA)              */
+  --warn: #93672a;    /* honey     — warnings only (AA)          */
+  --bad: #ab4f3f;     /* terracotta — failure only (AA)          */
+  --accent: #3f8f85;  /* = design-system teal: hover borders     */
   --tint-run: #e8f3ee;
   --tint-ok: #eef5e7;
   --tint-bad: #f9ece6;
+  --shadow-1: 0 1px 2px rgba(62,58,49,.04), 0 8px 24px -12px rgba(62,58,49,.10);
+  --shadow-2: 0 2px 6px rgba(62,58,49,.06), 0 18px 40px -16px rgba(62,58,49,.16);
 }
 
 /* The swarm page fills the content area edge-to-edge with warm cream. */
 .light-sheet {
-  padding: 22px 24px 28px 24px;
+  padding: 28px 32px 40px 32px;
   min-height: calc(100vh - 90px);
   font-family: 'Inter', 'Segoe UI', sans-serif;
   color: var(--tx);
 }
 
 .panel {
-  background: var(--card);
+  background: linear-gradient(180deg, #fffefa 0%, var(--card) 100%);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 16px;
+  box-shadow: var(--shadow-1);
+  transition: box-shadow .25s ease;
 }
+.panel:hover { box-shadow: var(--shadow-2); }
 
-.page-title { font-size: 1.5rem; font-weight: 700; color: var(--tx); margin: 0; }
-.page-sub { color: var(--tx2); font-size: .95rem; margin-top: 2px; }
+.page-title {
+  font-size: 1.6rem; font-weight: 700; color: var(--tx);
+  letter-spacing: -0.01em; margin: 0;
+}
+.page-sub { color: var(--tx2); font-size: .95rem; margin-top: 4px; }
 
 .lbl {
-  font-size: 11px; font-weight: 600; letter-spacing: .1em;
+  font-size: 11px; font-weight: 700; letter-spacing: .12em;
   text-transform: uppercase; color: var(--tx3);
 }
-.help { font-size: 12.5px; color: var(--tx2); line-height: 1.4; }
+.help { font-size: 12.5px; color: var(--tx2); line-height: 1.45; }
+
+/* novice affordance: the ONE place to begin */
+.start-pill {
+  display: inline-flex; align-items: center;
+  font-size: 10px; font-weight: 700; letter-spacing: .09em;
+  color: #6d5510; background: #f3d9a4;
+  border-radius: 999px; padding: 3px 10px;
+  animation: pill-glow 2.6s ease-in-out infinite;
+}
+@keyframes pill-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(243,217,164,.9); }
+  50%      { box-shadow: 0 0 0 6px rgba(243,217,164,0); }
+}
+.run-note { text-align: center; margin-top: 6px; }
 
 .hotkey-hint {
   font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--tx3);
@@ -64,7 +88,7 @@ CSS = """
 /* ── status chip (global run state) ───────────────────────────────── */
 .state-chip {
   display: inline-flex; align-items: center; gap: 8px;
-  font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 999px;
+  font-size: 13px; font-weight: 600; padding: 7px 15px; border-radius: 999px;
   border: 1px solid var(--line); color: var(--tx2); background: var(--card);
 }
 .state-chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--tx3); }
@@ -79,13 +103,14 @@ CSS = """
 /* progress bar */
 .prog-track { height: 8px; border-radius: 999px; background: #ece5d3; overflow: hidden; }
 .prog-fill { height: 100%; width: 0%; border-radius: 999px;
-  background: var(--run); transition: width .5s cubic-bezier(.2,.8,.3,1); }
+  background: linear-gradient(90deg, var(--run), var(--accent));
+  transition: width .5s cubic-bezier(.2,.8,.3,1); }
 .prog-fill.full { background: var(--ok); }
 
 /* ── pipeline steps ───────────────────────────────────────────────── */
 .pstep {
   display: flex; gap: 12px; align-items: flex-start;
-  padding: 9px 12px; border-radius: 10px; border: 1px solid transparent;
+  padding: 10px 12px; border-radius: 12px; border: 1px solid transparent;
   cursor: pointer; transition: background .2s ease, border-color .2s ease;
 }
 .pstep:hover { background: #f6f1e4; border-color: var(--line); }
@@ -95,14 +120,14 @@ CSS = """
 .pstep.skipped { opacity: .45; }
 
 .pnum {
-  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+  width: 32px; height: 32px; border-radius: 10px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  font-size: 13px; font-weight: 600; background: #eef2f7; color: var(--tx2);
+  font-size: 13px; font-weight: 700; background: #f0ebdd; color: var(--tx2);
   transition: all .3s ease;
 }
-.pstep.running .pnum { background: var(--run); color: #fff; }
-.pstep.done .pnum { background: var(--ok); color: #fff; }
-.pstep.failed .pnum { background: var(--bad); color: #fff; }
+.pstep.running .pnum { background: var(--run); color: #fffdf6; }
+.pstep.done .pnum { background: var(--ok); color: #fffdf6; }
+.pstep.failed .pnum { background: var(--bad); color: #fffdf6; }
 
 .pstep-name { font-size: 14px; font-weight: 600; color: var(--tx); line-height: 1.25; }
 .pstep-desc { font-size: 12px; color: var(--tx2); line-height: 1.35; }
@@ -114,7 +139,7 @@ CSS = """
 /* ── result card ──────────────────────────────────────────────────── */
 .verdict {
   font-size: 22px; font-weight: 700; letter-spacing: .02em;
-  padding: 10px 22px; border-radius: 12px; display: inline-block;
+  padding: 10px 22px; border-radius: 14px; display: inline-block;
   animation: verdict-in .3s ease;
 }
 .verdict.ok  { color: var(--ok);  background: var(--tint-ok);  border: 1px solid color-mix(in srgb, var(--ok) 35%, var(--card)); }
@@ -122,35 +147,40 @@ CSS = """
 .verdict.bad { color: var(--bad); background: var(--tint-bad); border: 1px solid color-mix(in srgb, var(--bad) 35%, var(--card)); }
 @keyframes verdict-in { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; } }
 
-.metric-tile { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.metric-tile {
+  border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
+  background: var(--card); transition: transform .15s ease, box-shadow .2s ease;
+}
+.metric-tile:hover { transform: translateY(-1px); box-shadow: var(--shadow-1); }
 .metric-tile .k { font-size: 11px; color: var(--tx3); font-weight: 600; }
-.metric-tile .v { font-size: 18px; font-weight: 700; color: var(--tx); margin-top: 2px; }
+.metric-tile .v { font-size: 20px; font-weight: 700; color: var(--tx); margin-top: 3px; }
 
-/* ── execution log (technical detail) ─────────────────────────────── */
+/* ── execution log (technical detail) — confident dark terminal ──── */
 .term-line { font-family: 'JetBrains Mono', monospace; font-size: 11.5px;
   line-height: 1.55; white-space: normal; }
-.term-ts { color: var(--tx3); }
-.term-info { color: var(--tx2); }
-.term-good { color: var(--ok); }
-.term-warn { color: var(--warn); }
-.term-bad  { color: var(--bad); }
-.term-neutral { color: var(--tx2); }
-.term-caret::after { content: '▍'; animation: caret 1.1s step-end infinite; color: var(--run); }
+.term-ts { color: #8f8776; }
+.term-info { color: #cfc8b8; }
+.term-good { color: #9fd0a8; }
+.term-warn { color: #e5c07b; }
+.term-bad  { color: #e8a79a; }
+.term-neutral { color: #b5ad9c; }
+.term-caret::after { content: '▍'; animation: caret 1.1s step-end infinite; color: #7fc4ba; }
 @keyframes caret { 50% { opacity: 0; } }
 
-/* The dashboard shell is dark; while the swarm page is mounted, the whole
-   chrome goes light seamlessly (:has() un-applies automatically on leave). */
+/* The dashboard shell goes light seamlessly while the swarm page is
+   mounted (:has() un-applies automatically on leave). */
 body:has(.light-sheet) { background: var(--bg); }
 body:has(.light-sheet) .q-page,
 body:has(.light-sheet) .q-page-container { background: var(--bg) !important; }
 body:has(.light-sheet) .q-header {
-  background: #efe8d7 !important;
+  background: rgba(241,234,217,.92) !important;
+  backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--line);
 }
 body:has(.light-sheet) .q-header .text-h6 { color: var(--tx); }
 body:has(.light-sheet) .q-header .text-caption { color: var(--tx2); }
 body:has(.light-sheet) .q-drawer {
-  background: #f3eee1 !important;
+  background: #f5f0e3 !important;
   border-right: 1px solid var(--line) !important;
 }
 body:has(.light-sheet) .q-drawer .text-h5 { color: var(--tx); }
@@ -181,9 +211,9 @@ body:has(.light-sheet) .q-separator { background: var(--line); }
 /* ── motion upgrades ──────────────────────────────────────────────── */
 .pstep.running .pnum { animation: pnum-ripple 1.6s ease-out infinite; }
 @keyframes pnum-ripple {
-  0%   { box-shadow: 0 0 0 0 rgba(95,143,133,.35); }
-  70%  { box-shadow: 0 0 0 12px rgba(95,143,133,0); }
-  100% { box-shadow: 0 0 0 0 rgba(95,143,133,0); }
+  0%   { box-shadow: 0 0 0 0 rgba(63,143,133,.35); }
+  70%  { box-shadow: 0 0 0 12px rgba(63,143,133,0); }
+  100% { box-shadow: 0 0 0 0 rgba(63,143,133,0); }
 }
 .pstep.done .pnum { animation: pnum-pop .45s cubic-bezier(.2,2,.4,1); }
 @keyframes pnum-pop { 0% { transform: scale(.6); } 60% { transform: scale(1.18); } 100% { transform: scale(1); } }
@@ -204,13 +234,15 @@ body:has(.light-sheet) .q-separator { background: var(--line); }
 @keyframes tile-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
 .run-btn {
-  background: linear-gradient(135deg, #6aa17b, #4f8a72) !important;
-  font-weight: 600; letter-spacing: .03em;
-  transition: transform .15s ease, box-shadow .2s ease !important;
-  box-shadow: 0 2px 8px rgba(106,161,123,.28);
+  background: linear-gradient(135deg, var(--accent), var(--run-deep)) !important;
+  color: #fffdf6 !important;
+  font-weight: 700; letter-spacing: .02em; border-radius: 12px; min-height: 46px;
+  transition: transform .15s ease, box-shadow .2s ease, filter .2s ease !important;
+  box-shadow: 0 6px 18px -6px rgba(46,107,99,.5);
 }
-.run-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(106,161,123,.38); }
-.run-btn:disabled { transform: none; box-shadow: none; }
+.run-btn:hover { transform: translateY(-1px); filter: brightness(1.05);
+  box-shadow: 0 10px 24px -8px rgba(46,107,99,.6); }
+.run-btn:disabled { transform: none; box-shadow: none; filter: none; }
 
 /* ── accessibility: visible focus + reduced motion ────────────────── */
 .light-sheet :focus-visible,
@@ -234,18 +266,38 @@ body:has(.light-sheet) .q-separator { background: var(--line); }
   }
 }
 
-/* ── docs & help tiles ────────────────────────────────────────────── */
-.doc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+/* ── run theater — the home's status headline ─────────────────────── */
+.theater-title {
+  font-size: 1.45rem; font-weight: 700; letter-spacing: -0.01em; line-height: 1.15;
+  animation: theater-in .3s ease both;
+}
+@keyframes theater-in { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+.run-theater { transition: border-color .3s ease; }
+
+/* mission-rail stage cards: interactive → they lift */
+button.ds-card { transition: transform .15s ease, box-shadow .2s ease, border-color .2s ease; }
+button.ds-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px -8px rgba(62,58,49,.28);
+  border-color: color-mix(in srgb, var(--run) 40%, var(--line));
+}
+
+/* ── docs & help tiles (footer band) ──────────────────────────────── */
+.doc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 10px;
+}
 .doc-tile {
   display: flex; flex-direction: column; gap: 2px;
-  padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px;
-  background: var(--card); text-decoration: none;
+  padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px;
+  background: var(--card); text-decoration: none; box-shadow: none;
   transition: transform .15s ease, border-color .2s, box-shadow .2s;
 }
 .doc-tile:hover {
   transform: translateY(-2px);
   border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
-  box-shadow: 0 4px 12px rgba(106, 161, 123, .16);
+  box-shadow: 0 4px 14px rgba(63,143,133,.18);
 }
 .doc-tile .dt-icon { font-size: 18px; line-height: 1; }
 .doc-tile .dt-name { font-size: 13px; font-weight: 600; color: var(--tx); }
@@ -253,8 +305,8 @@ body:has(.light-sheet) .q-separator { background: var(--line); }
 
 /* ── step track (replaces the list) ───────────────────────────────── */
 .now-panel {
-  border: 1px solid var(--line); border-radius: 10px;
-  background: var(--card); padding: 10px 14px;
+  border: 1px solid var(--line); border-radius: 14px;
+  background: var(--card); padding: 12px 16px;
   transition: border-color .3s ease, background .3s ease;
 }
 .now-panel[data-state="running"] { border-color: color-mix(in srgb, var(--run) 35%, var(--line)); background: var(--tint-run); }
@@ -286,9 +338,9 @@ body:has(.light-sheet) .q-separator { background: var(--line); }
   animation: node-pulse 1.6s ease-out infinite; }
 .pnode.n-running .pnode-num { color: var(--run); font-weight: 700; }
 @keyframes node-pulse {
-  0%   { box-shadow: 0 0 0 0 rgba(95,143,133,.35); }
-  70%  { box-shadow: 0 0 0 10px rgba(95,143,133,0); }
-  100% { box-shadow: 0 0 0 0 rgba(95,143,133,0); }
+  0%   { box-shadow: 0 0 0 0 rgba(63,143,133,.35); }
+  70%  { box-shadow: 0 0 0 10px rgba(63,143,133,0); }
+  100% { box-shadow: 0 0 0 0 rgba(63,143,133,0); }
 }
 .pnode.n-failed { border-color: var(--bad); background: var(--bad); }
 .pnode.n-failed .pnode-num { color: #fffdf6; }
@@ -301,9 +353,9 @@ body:has(.light-sheet) .q-separator { background: var(--line); }
 .swarm-json {
   font-family: 'JetBrains Mono', monospace; font-size: 11.5px; line-height: 1.5;
   white-space: pre-wrap; word-break: break-word;
-  color: #4a4536; background: #f4eeda;
-  border: 1px solid var(--line); border-radius: 8px;
-  padding: 12px; margin: 0; max-height: 420px; overflow: auto;
+  color: #ded7c6; background: #312e27;
+  border: 1px solid #453f33; border-radius: 12px;
+  padding: 14px; margin: 0; max-height: 420px; overflow: auto;
 }
 """
 

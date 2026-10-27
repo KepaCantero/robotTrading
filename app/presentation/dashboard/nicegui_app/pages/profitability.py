@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any
 
 from nicegui import ui
 
+from app.presentation.dashboard.nicegui_app import design_system as ds
 from app.presentation.dashboard.nicegui_app.components.metric_cards import skeleton_card
 from app.presentation.dashboard.nicegui_app.theme import COLORS
 
@@ -47,7 +48,8 @@ def _build_summary_cards(results: list[ProfitabilityResult]) -> None:
 
     with ui.row().classes("w-full wrap gap-md q-mb-lg"):
         with (
-            ui.card()
+            ui.element("div")
+            .classes("panel q-pa-md flex-1")
             .classes("q-pa-md")
             .style(f"border-left: 4px solid {COLORS['primary']}; min-width: 150px")
         ):
@@ -55,7 +57,8 @@ def _build_summary_cards(results: list[ProfitabilityResult]) -> None:
             ui.label(str(total)).classes("text-h5 font-bold")
 
         with (
-            ui.card()
+            ui.element("div")
+            .classes("panel q-pa-md flex-1")
             .classes("q-pa-md")
             .style(f"border-left: 4px solid {COLORS['pass_']}; min-width: 150px")
         ):
@@ -65,7 +68,8 @@ def _build_summary_cards(results: list[ProfitabilityResult]) -> None:
             )
 
         with (
-            ui.card()
+            ui.element("div")
+            .classes("panel q-pa-md flex-1")
             .classes("q-pa-md")
             .style(f"border-left: 4px solid {COLORS['fail']}; min-width: 150px")
         ):
@@ -73,7 +77,8 @@ def _build_summary_cards(results: list[ProfitabilityResult]) -> None:
             ui.label(str(fail_count)).classes("text-h5 font-bold").style(f"color: {COLORS['fail']}")
 
         with (
-            ui.card()
+            ui.element("div")
+            .classes("panel q-pa-md flex-1")
             .classes("q-pa-md")
             .style(f"border-left: 4px solid {COLORS['inconclusive']}; min-width: 150px")
         ):
@@ -83,7 +88,8 @@ def _build_summary_cards(results: list[ProfitabilityResult]) -> None:
             )
 
         with (
-            ui.card()
+            ui.element("div")
+            .classes("panel q-pa-md flex-1")
             .classes("q-pa-md")
             .style(f"border-left: 4px solid {COLORS['accent']}; min-width: 150px")
         ):
@@ -93,7 +99,8 @@ def _build_summary_cards(results: list[ProfitabilityResult]) -> None:
             )
 
         with (
-            ui.card()
+            ui.element("div")
+            .classes("panel q-pa-md flex-1")
             .classes("q-pa-md")
             .style(f"border-left: 4px solid {COLORS['secondary']}; min-width: 150px")
         ):
@@ -167,11 +174,12 @@ def render(
     profitability: ProfitabilityEngine | None,
 ) -> None:
     """Render the Profitability page content."""
+    ds.inject()
     with ui.column().classes("w-full q-pa-lg"):
-        ui.label("Profitability Analysis").classes("text-h4 q-mb-md")
-        ui.label(
-            "Aggregated profitability verdicts and summary statistics across all runs."
-        ).classes("text-grey q-mb-lg")
+        ds.section_heading(
+            "Profitability Analysis",
+            "Aggregated profitability verdicts and summary statistics across all runs.",
+        )
 
         # Summary stats (populated asynchronously)
         summary_container = ui.column().classes("w-full q-mb-lg")

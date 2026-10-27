@@ -14,6 +14,7 @@ import asyncio
 import html
 import json
 import logging
+import re
 import uuid
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
@@ -23,6 +24,7 @@ from typing import TYPE_CHECKING, Any
 
 from nicegui import ui
 
+from app.presentation.dashboard.nicegui_app import design_system as ds
 from app.presentation.dashboard.nicegui_app.components.agent_card import StepTrack
 from app.presentation.dashboard.nicegui_app.components.mission_log import MissionLog
 from app.presentation.dashboard.nicegui_app.components.office_scene import OfficeScene
@@ -537,18 +539,7 @@ def extract_portfolio(results: dict) -> dict:
     }
 
 
-WARM_PALETTE = [
-    "#8fb7a8",
-    "#d9b98a",
-    "#a9bfd3",
-    "#b7a8d0",
-    "#7fb3a8",
-    "#d3bd8a",
-    "#b3c9d0",
-    "#d0a8a3",
-    "#96c9b5",
-    "#c2ad8f",
-]
+WARM_PALETTE = ds.CHART_MUTED
 
 
 def build_allocation_chart(allocations: list[dict]) -> dict | None:
@@ -597,7 +588,7 @@ def build_module_exposure_chart(parameter_set: dict) -> dict | None:
         "color": WARM_PALETTE,
         "tooltip": {"trigger": "axis", "axisPointer": {"type": "shadow"}},
         "grid": {"left": 120, "right": 30, "top": 10, "bottom": 24},
-        "xAxis": {"type": "value", "axisLabel": {"color": "#948b77", "formatter": "{value}%"}},
+        "xAxis": {"type": "value", "axisLabel": {"color": "#6f6858", "formatter": "{value}%"}},
         "yAxis": {
             "type": "category",
             "data": [r["module"] for r in rows],
@@ -639,14 +630,14 @@ def build_equity_curve_chart(equity_points: list) -> dict | None:
         "xAxis": {
             "type": "category",
             "data": dates,
-            "axisLabel": {"color": "#948b77", "rotate": 35, "fontSize": 11},
+            "axisLabel": {"color": "#6f6858", "rotate": 35, "fontSize": 11},
             "boundaryGap": False,
             "axisLine": {"lineStyle": {"color": "#d8cdb4"}},
         },
         "yAxis": {
             "type": "value",
             "name": "Portfolio value",
-            "nameTextStyle": {"color": "#948b77", "padding": [0, 0, 0, 30]},
+            "nameTextStyle": {"color": "#6f6858", "padding": [0, 0, 0, 30]},
             "axisLabel": {
                 "color": "#6f6858",
                 "fontSize": 12,
@@ -694,7 +685,7 @@ def build_risk_adjustment_chart(adjusted: list[dict]) -> dict | None:
         "tooltip": {"trigger": "axis", "axisPointer": {"type": "shadow"}},
         "legend": {"top": 0, "textStyle": {"color": "#6f6858"}},
         "grid": {"left": 110, "right": 24, "top": 34, "bottom": 24},
-        "xAxis": {"type": "value", "axisLabel": {"color": "#948b77"}},
+        "xAxis": {"type": "value", "axisLabel": {"color": "#6f6858"}},
         "yAxis": {"type": "category", "data": modules, "axisLabel": {"color": "#3e3a31"}},
         "series": [
             {
@@ -1088,89 +1079,169 @@ def render(
             for blob in ("blob-a", "blob-b", "blob-c"):
                 ui.element("div").classes(f"blob {blob}").props("aria-hidden=true")
 
-            # ── Header ─────────────────────────────────────────────────
-            with ui.row().classes("w-full items-center no-wrap gap-md"):
-                with ui.column().classes("gap-0"):
-                    ui.label("Set up and run your strategy").classes("page-title")
-                    ui.label(
-                        "The system walks through 10 steps, from your profile to a "
-                        "final decision. It takes about a second."
-                    ).classes("page-sub")
-                ui.element("div").classes("flex-1")
-                ui.label("ALT+R run · ALT+P replay").classes("hotkey-hint")
+            # ── Mission Control — the promise + the macro loop, full width.
+            # (Was a squeezed middle column inside the config row — the
+            # "broken carousel" sliver. A novice reads top-down: promise,
+            # where I am, then what to do.)
+            from app.presentation.dashboard.nicegui_app import design_system as _ds
+            from app.presentation.dashboard.nicegui_app.components.mission_control import (
+                mission_control_band as _mc_band,
+            )
+            from app.presentation.dashboard.nicegui_app.design_system import inject as _ds_inject
 
-            with ui.row().classes("w-full items-start gap-lg q-mt-md no-wrap"):
-                # ── 1 · Configure (left) ────────────────────────────────
-                with (
-                    ui.element("div").classes("panel q-pa-md").style("width: 380px; flex-shrink: 0")
-                ):
-                    ui.label("1 · CONFIGURE").classes("lbl q-mb-sm")
+            _ds_inject()
+            _ds.hero(
+                "Mission Control",
+                "Your whole investment loop, live: the robot below builds, "
+                "tests and watches a portfolio you can actually understand.",
+            )
+            _mc_holder = ui.column().classes("w-full gap-0 q-mb-md")
 
-                    capital = ui.number(
-                        "Initial capital (€)",
-                        value=100_000,
-                        min=100,
-                        max=10_000_000,
-                        step=1000,
-                    )
-                    ui.label("How much money you want to start with.").classes("help q-mb-sm")
+            async def _mc_refresh() -> None:
+                try:
+                    _mc_runs = await store.list_runs(limit=30)
+                except Exception:  # noqa: BLE001 - the band never blocks the page
+                    _mc_runs = []
+                _mc_holder.clear()
+                with _mc_holder:
+                    _mc_band(_mc_runs)
 
-                    objetivo = ui.select(
-                        OBJECTIVES, value="MAXIMIZAR_CAPITAL", label="Your goal"
-                    ).classes("w-full")
-                    ui.label("What you want to achieve with this investment.").classes(
-                        "help q-mb-sm"
-                    )
+            _mc_holder.clear()
+            with _mc_holder:
+                _mc_band(None)  # first paint; real states arrive in a blink
+            ui.timer(0.05, _mc_refresh, once=True)
 
-                    riesgo = ui.select(
-                        {"bajo": "Low", "medio": "Medium", "alto": "High"},
-                        value="medio",
-                        label="Risk level",
-                    ).classes("w-full")
-                    ui.label("How much risk you are comfortable taking.").classes("help q-mb-sm")
+            with ui.column().classes("w-full gap-lg q-mt-md"):
+                # ── 1 · Set it up — a full-width strip, not a sidebar form.
+                # Three answers across the page, one button, done.
+                with ui.element("div").classes("panel q-pa-lg w-full"):
+                    with ui.row().classes("items-center gap-sm q-mb-md no-wrap"):
+                        ui.label("1 · SET IT UP").classes("lbl")
+                        ui.label("START HERE").classes("start-pill")
 
-                    edad = ui.number("Your age", value=35, min=18, max=100, step=1)
-                    ui.label("Used for suitability and long-term planning.").classes("help q-mb-sm")
+                    # ── The three essentials, inline across the page ──
+                    with ui.row().classes("w-full items-start gap-lg wrap"):
+                        with ui.column().classes("gap-xs flex-1").style("min-width: 200px"):
+                            capital = ui.number(
+                                "Initial capital (€)",
+                                value=100_000,
+                                min=100,
+                                max=10_000_000,
+                                step=1000,
+                            ).classes("w-full")
+                            ui.label("How much money you want to start with.").classes("help")
 
-                    provincia = ui.select(
-                        SPANISH_PROVINCES, value="Madrid", label="Province (tax residence)"
-                    ).classes("w-full")
-                    ui.label(
-                        "Sets the Spanish tax rules applied to your gains (19/21/23%)."
-                    ).classes("help q-mb-sm")
+                        with ui.column().classes("gap-xs flex-1").style("min-width: 240px"):
+                            objetivo = ui.select(
+                                OBJECTIVES, value="MAXIMIZAR_CAPITAL", label="Your goal"
+                            ).classes("w-full")
+                            ui.label("What you want to achieve with this investment.").classes(
+                                "help"
+                            )
 
-                    universe_options = available_universe()
-                    default_universe = [s for s in DEFAULT_UNIVERSE if s in universe_options]
-                    periodo = ui.select(
-                        {
-                            "6m": "Last 6 months",
-                            "1y": "Last year",
-                            "2y": "Last 2 years",
-                            "5y": "Last 5 years",
-                            "10y": "Last 10 years",
-                            "max": "All available data",
-                            "custom": "Custom dates…",
-                        },
-                        value="1y",
-                        label="Investment period",
-                    ).classes("w-full")
-                    ui.label(
-                        "How long you stay invested — the strategy is tested on exactly "
-                        "this slice of history, money never leaves."
-                    ).classes("help")
+                        universe_options = available_universe()
+                        default_universe = [s for s in DEFAULT_UNIVERSE if s in universe_options]
+                        with ui.column().classes("gap-xs flex-1").style("min-width: 240px"):
+                            periodo = ui.select(
+                                {
+                                    "6m": "Last 6 months",
+                                    "1y": "Last year",
+                                    "2y": "Last 2 years",
+                                    "5y": "Last 5 years",
+                                    "10y": "Last 10 years",
+                                    "max": "All available data",
+                                    "custom": "Custom dates…",
+                                },
+                                value="1y",
+                                label="Investment period",
+                            ).classes("w-full")
+                            ui.label(
+                                "How long you stay invested — tested on exactly "
+                                "this slice of history, money never leaves."
+                            ).classes("help")
 
-                    ui.label("Universe").classes("lbl q-mb-xs")
-                    modo_universo = ui.toggle(
-                        {"auto": "Automatic", "manual": "Manual"},
-                        value="auto",
-                    ).classes("w-full")
-                    ui.label(
-                        "Automatic: the app screens your CSV library (fresh data, "
-                        "liquidity, enough history) and tests the most liquid symbols. "
-                        "Manual: pick symbols under Advanced options."
-                    ).classes("help q-mb-sm")
+                    # The action line: one button, its promise, and the live
+                    # answer to "did it work?" — all on a single strip.
+                    with ui.row().classes("w-full items-center gap-md wrap q-mt-md"):
+                        run_button = (
+                            ui.button("Run my backtest", icon="play_arrow")
+                            .props("size=md unelevated")
+                            .classes("run-btn")
+                            .style("min-width: 240px")
+                            .mark("run_pipeline")
+                            .tooltip(
+                                "Replays history with your settings — nothing is "
+                                "bought or sold. Keyboard: ALT+R."
+                            )
+                        )
+                        ui.label(
+                            "Nothing is bought or sold: the plan is tested on history first."
+                        ).classes("help").style("flex:1;min-width:220px")
+                        state_chip = ui.element("div").classes("state-chip")
+                        with state_chip:
+                            ui.element("span").classes("dot")
+                            state_text = ui.label("Ready").classes("state-text")
+                        step_text = ui.label("Step 0 of 10").classes("pstep-meta")
+                        replay_last_btn = (
+                            ui.button("Replay last", icon="replay")
+                            .props("flat dense")
+                            .mark("replay_last")
+                            .tooltip("Re-run the latest pipeline visually (ALT+P)")
+                        )
+                        replay_last_btn.disable()
 
-                    with ui.expansion("Advanced options", icon="tune").classes("w-full q-mt-xs"):
+                    async def replay_last() -> None:
+                        last_id = view.get("last_run_id")
+                        if last_id:
+                            await replay_run(last_id)
+                        else:
+                            ui.notify("No previous runs yet.", type="warning")
+
+                    replay_last_btn.on_click(replay_last)
+
+                    with ui.element("div").classes("w-full q-mt-xs prog-wrap"):
+                        prog_fill = ui.element("div").classes("prog-fill")
+
+                    # ── Everything else is pre-set; open only to fine-tune ──
+                    fine_tune = ui.expansion(
+                        "Fine-tune — everything else is pre-set for you", icon="tune"
+                    ).classes("w-full q-mt-md")
+                    with fine_tune:
+                        riesgo = ui.select(
+                            {"bajo": "Low", "medio": "Medium", "alto": "High"},
+                            value="medio",
+                            label="Risk level",
+                        ).classes("w-full")
+                        ui.label("How much risk you are comfortable taking.").classes(
+                            "help q-mb-sm"
+                        )
+
+                        edad = ui.number("Your age", value=35, min=18, max=100, step=1)
+                        ui.label("Used for suitability and long-term planning.").classes(
+                            "help q-mb-sm"
+                        )
+
+                        provincia = ui.select(
+                            SPANISH_PROVINCES, value="Madrid", label="Province (tax residence)"
+                        ).classes("w-full")
+                        ui.label(
+                            "Sets the Spanish tax rules applied to your gains (19/21/23%)."
+                        ).classes("help q-mb-sm")
+
+                        ui.separator().classes("q-mb-sm")
+                        ui.label("Universe").classes("lbl q-mb-xs")
+                        modo_universo = ui.toggle(
+                            {"auto": "Automatic", "manual": "Manual"},
+                            value="auto",
+                        ).classes("w-full")
+                        ui.label(
+                            "Automatic: the app screens your CSV library (fresh data, "
+                            "liquidity, enough history) and tests the most liquid symbols. "
+                            "Manual: pick the symbols yourself just below."
+                        ).classes("help q-mb-sm")
+                        # Choosing Manual must reveal the symbol picker below
+                        # — otherwise the toggle seems to do nothing.
+                        modo_universo.on_value_change(lambda e: fine_tune.set_value(True))
                         target = ui.number(
                             "Monthly target (€) — empty = automatic",
                             value=None,
@@ -1331,122 +1402,38 @@ def render(
                         ui.notify("Pipeline started", icon="play_arrow")
                         asyncio.create_task(_run_pipeline(request, run_id))
 
-                    run_button = (
-                        ui.button("Run pipeline", icon="play_arrow")
-                        .props("size=md unelevated")
-                        .classes("run-btn w-full q-mt-md")
-                        .mark("run_pipeline")
-                        .on_click(run_pipeline)
+                    run_button.on_click(run_pipeline)
+
+                # ── 2 · What is happening + result ───────────────────────
+                with ui.column().classes("w-full gap-md"):
+                    # Run theater — the page's status headline. One glance
+                    # answers "what state am I in?" before any detail.
+                    theater_holder = ui.column().classes("w-full gap-0")
+
+                    def render_theater(state: str, title: str, sub: str) -> None:
+                        theater_holder.clear()
+                        tone = {
+                            "idle": "var(--tx2)",
+                            "running": "var(--run)",
+                            "done": "var(--ok)",
+                            "bad": "var(--bad)",
+                        }[state]
+                        with theater_holder:
+                            with (
+                                ui.element("div")
+                                .classes("panel q-pa-md w-full run-theater")
+                                .style(f"border-left:4px solid {tone}")
+                            ):
+                                ui.label(title).classes("theater-title").style(f"color:{tone}")
+                                ui.label(sub).classes("help").style("margin-top:2px;font-size:13px")
+
+                    render_theater(
+                        "idle",
+                        "Ready when you are.",
+                        "Answer the three questions on the left and press Run — "
+                        "the whole plan builds in about a second.",
                     )
 
-                    # live run state
-                    with ui.row().classes("w-full items-center q-mt-md no-wrap"):
-                        state_chip = ui.element("div").classes("state-chip")
-                        with state_chip:
-                            ui.element("span").classes("dot")
-                            state_text = ui.label("Ready").classes("state-text")
-                        step_text = ui.label("Step 0 of 10").classes("pstep-meta")
-                        replay_last_btn = (
-                            ui.button("Replay last", icon="replay")
-                            .props("flat dense color=teal")
-                            .mark("replay_last")
-                            .tooltip("Re-run the latest pipeline visually (ALT+P)")
-                        )
-                        replay_last_btn.disable()
-
-                    async def replay_last() -> None:
-                        last_id = view.get("last_run_id")
-                        if last_id:
-                            await replay_run(last_id)
-                        else:
-                            ui.notify("No previous runs yet.", type="warning")
-
-                    replay_last_btn.on_click(replay_last)
-
-                    with ui.element("div").classes("w-full q-mt-xs prog-wrap"):
-                        prog_fill = ui.element("div").classes("prog-fill")
-
-                    # docs & how-tos
-                    ui.separator().classes("q-mt-md q-mb-sm")
-                    ui.label("HELP & DOCS").classes("lbl q-mb-xs")
-                    with ui.element("div").classes("doc-grid"):
-                        for icon, name, sub, href in (
-                            ("📖", "All documentation", "Browse every guide", "/docs/"),
-                            (
-                                "🧩",
-                                "How the system works",
-                                "ELI5, with pictures",
-                                "/docs/eli5/01-how-the-system-works/",
-                            ),
-                            (
-                                "🖥️",
-                                "About this dashboard",
-                                "What you are looking at",
-                                "/docs/eli5/11-dashboard/",
-                            ),
-                            (
-                                "🚀",
-                                "Getting started",
-                                "Install and first steps",
-                                "/docs/quickstart/",
-                            ),
-                            (
-                                "🔤",
-                                "Plain-English glossary",
-                                "Every term, one breath",
-                                "/glossary",
-                            ),
-                            (
-                                "🛟",
-                                "Trust & risk",
-                                "What can go wrong",
-                                "/trust",
-                            ),
-                        ):
-                            with (
-                                ui.link(target=href)
-                                .classes("doc-tile")
-                                .props("target=_blank rel=noopener")
-                            ):
-                                ui.label(icon).classes("dt-icon")
-                                ui.label(name).classes("dt-name")
-                                ui.label(sub).classes("dt-sub")
-
-                # ── Mission Control (UI-3): the macro loop, honest states ──
-                from app.presentation.dashboard.nicegui_app import design_system as _ds
-                from app.presentation.dashboard.nicegui_app.components.mission_control import (
-                    mission_control_band as _mc_band,
-                )
-                from app.presentation.dashboard.nicegui_app.design_system import (
-                    inject as _ds_inject,
-                )
-
-                _ds_hero = _ds.hero
-
-                _ds_inject()
-                _ds_hero(
-                    "Mission Control",
-                    "Your whole investment loop, live: the robot below builds, "
-                    "tests and watches a portfolio you can actually understand.",
-                )
-                _mc_holder = ui.column().classes("w-full gap-0 q-mb-sm")
-
-                async def _mc_refresh() -> None:
-                    try:
-                        _mc_runs = await store.list_runs(limit=30)
-                    except Exception:  # noqa: BLE001 - the band never blocks the page
-                        _mc_runs = []
-                    _mc_holder.clear()
-                    with _mc_holder:
-                        _mc_band(_mc_runs)
-
-                _mc_holder.clear()
-                with _mc_holder:
-                    _mc_band(None)  # first paint; real states arrive in a blink
-                ui.timer(0.05, _mc_refresh, once=True)
-
-                # ── 2 · What is happening + result (right) ──────────────
-                with ui.column().classes("flex-1 gap-md").style("min-width: 0"):
                     with ui.element("div").classes("panel q-pa-md"):
                         ui.label("2 · WHAT IS HAPPENING").classes("lbl q-mb-xs")
                         ui.label(
@@ -1454,6 +1441,13 @@ def render(
                             "below executes it live. Click any worker or step to see "
                             "exactly what went in and what came out."
                         ).classes("help q-mb-sm")
+                        with ui.row().classes("gap-xs wrap q-mb-sm"):
+                            for chip in (
+                                "10 steps · about a second",
+                                "real engine, real fees",
+                                "€0 — nothing is bought",
+                            ):
+                                ui.label(chip).classes("hotkey-hint")
                         office = OfficeScene(on_click=lambda aid: open_details(aid))
                         track = StepTrack(on_click=lambda aid: open_details(aid))
 
@@ -1522,6 +1516,52 @@ def render(
                                 ).on_click(_replay_clicked)
                         ui.timer(0.1, refresh_history, once=True)
 
+            # ── Help & docs — a quiet footer band, out of the action zone.
+            # Help belongs at the end of the journey (and in the header "?"),
+            # never inside the configuration form.
+            ui.separator().classes("q-mt-lg q-mb-md")
+            ui.label("HELP & DOCS").classes("lbl q-mb-xs")
+            with ui.element("div").classes("doc-grid"):
+                for icon, name, sub, href in (
+                    ("📖", "All documentation", "Browse every guide", "/docs/"),
+                    (
+                        "🧩",
+                        "How the system works",
+                        "ELI5, with pictures",
+                        "/docs/eli5/01-how-the-system-works/",
+                    ),
+                    (
+                        "🖥️",
+                        "About this dashboard",
+                        "What you are looking at",
+                        "/docs/eli5/11-dashboard/",
+                    ),
+                    (
+                        "🚀",
+                        "Getting started",
+                        "Install and first steps",
+                        "/docs/quickstart/",
+                    ),
+                    (
+                        "🔤",
+                        "Plain-English glossary",
+                        "Every term, one breath",
+                        "/glossary",
+                    ),
+                    (
+                        "🛟",
+                        "Trust & risk",
+                        "What can go wrong",
+                        "/trust",
+                    ),
+                ):
+                    with (
+                        ui.link(target=href).classes("doc-tile").props("target=_blank rel=noopener")
+                    ):
+                        ui.label(icon).classes("dt-icon")
+                        ui.label(name).classes("dt-name")
+                        ui.label(sub).classes("dt-sub")
+
     # ── Details dialog ────────────────────────────────────────────────────
     detail_dialog = ui.dialog().props("full-width")
     with detail_dialog, ui.element("div").classes("panel q-pa-lg w-full"):
@@ -1561,6 +1601,12 @@ def render(
             step_text.text = "Step 0 of 10"
             prog_fill.style("width: 0%")
             prog_fill.classes(remove="full")
+            render_theater(
+                "idle",
+                "Ready when you are.",
+                "Answer the three questions on the left and press Run — "
+                "the whole plan builds in about a second.",
+            )
             return
 
         states = getattr(run, "agents", None) or view["states"]
@@ -1573,14 +1619,39 @@ def render(
             state_chip.classes(add="running")
             state_text.text = "Running…"
             step_text.text = f"Step {min(completed + 1, 10)} of 10"
+            running_aid = next((aid for aid, a in states.items() if a.status == "RUNNING"), None)
+            running_name = (
+                SPEC_BY_AGENT[running_aid].name if running_aid else f"step {completed + 1}"
+            )
+            # Strip the internal T-codes ("T4.1 Backtest…" → "Backtest…"):
+            # the theater speaks plain English only.
+            running_name = re.sub(r"^T\d+(?:\.\d+)?\s+", "", running_name)
+            render_theater(
+                "running",
+                f"Working: {running_name}",
+                "Nothing is bought or sold — every step's input and output "
+                "is recorded and inspectable.",
+            )
         elif status == "failed":
             state_chip.classes(add="bad")
             state_text.text = "Failed"
             step_text.text = f"Step {completed + 1} of 10"
+            render_theater(
+                "bad",
+                "Stopped — nothing hidden.",
+                "A step reported a problem. Click it on the rail below for "
+                "the exact error; nothing was traded.",
+            )
         else:
             state_chip.classes(add="done")
             state_text.text = "Completed"
             step_text.text = f"Step {completed} of 10"
+            render_theater(
+                "done",
+                "Done — your honest numbers are below.",
+                "Verdict, fees, taxes and the exact portfolio the plan "
+                "would hold, all from this one run.",
+            )
 
         prog_fill.style(f"width: {completed * 10}%")
         prog_fill.classes(add="full") if status == "completed" else prog_fill.classes(remove="full")
@@ -1595,7 +1666,17 @@ def render(
             return
         with portfolio_container:
             with ui.element("div").classes("panel q-pa-md w-full"):
-                ui.label("PORTFOLIO").classes("lbl q-mb-xs")
+                with ui.row().classes("w-full items-center no-wrap q-mb-xs"):
+                    ui.label("PORTFOLIO").classes("lbl")
+                    ui.element("div").classes("flex-1")
+                    ui.button(
+                        "Continue on paper →",
+                        icon="science",
+                        on_click=lambda: ui.navigate.to("/portfolio"),
+                    ).props("flat dense no-caps").style("color:var(--ds-teal_deep)").tooltip(
+                        "Take this plan to your paper account: real rules, "
+                        "imaginary money, nothing to fear."
+                    )
 
                 # ── STOCK POSITIONS (IB-style table) ────────────────────
                 if trades:

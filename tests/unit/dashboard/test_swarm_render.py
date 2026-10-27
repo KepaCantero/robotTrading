@@ -31,9 +31,9 @@ async def test_swarm_page_renders(user: User, register_page):
     client = await user.open("/swarm-test")
 
     assert client is not None
-    await user.should_see("Set up and run your strategy")
-    await user.should_see("Run pipeline")
-    await user.should_see("1 · CONFIGURE")
+    await user.should_see("Mission Control")
+    await user.should_see("Run my backtest")
+    await user.should_see("1 · SET IT UP")
     await user.should_see("2 · WHAT IS HAPPENING")
     await user.should_see("Ready")
 
@@ -47,7 +47,7 @@ async def test_swarm_page_shows_step_track(user: User, register_page):
     assert len(nodes) == 10
     assert len(connectors) == 9
     await user.should_see("Ready to start")
-    await user.should_see("Press Run pipeline")
+    await user.should_see("Press Run my backtest")
 
 
 async def test_swarm_page_config_form_has_plain_helpers(user: User, register_page):
@@ -55,7 +55,7 @@ async def test_swarm_page_config_form_has_plain_helpers(user: User, register_pag
 
     await user.should_see("How much money you want to start with.")
     await user.should_see("What you want to achieve with this investment.")
-    await user.should_see("Advanced options")
+    await user.should_see("Fine-tune — everything else is pre-set for you")
 
 
 async def test_swarm_page_has_period_and_tax_inputs(user: User, register_page):

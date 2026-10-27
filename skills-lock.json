@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "ux-kit": {
+      "source": "flklr-dev/ux-kit",
+      "sourceType": "github",
+      "skillPath": "skills/ux-kit/SKILL.md",
+      "computedHash": "521cd3354d8b72ae26a4ee844b7066f17f0e4a73a4d57498b0900641554ca405"
+    }
+  }
+}

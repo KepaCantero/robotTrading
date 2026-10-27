@@ -179,16 +179,7 @@ def render() -> None:
 
         def _pie(universe: list[str]) -> None:
             n = len(universe)
-            colors = [
-                "#3f8f85",
-                "#7fb98b",
-                "#f3d9a4",
-                "#b9cfc5",
-                "#e8a87c",
-                "#8db6c9",
-                "#d9b8a6",
-                "#a3b86c",
-            ]
+            colors = ds.CHART_CATEGORICAL
             data = [
                 {
                     "value": round(100 / n, 1),

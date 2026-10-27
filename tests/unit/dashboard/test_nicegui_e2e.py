@@ -113,7 +113,7 @@ class TestAppHome:
             await user.open("/")
             # Layout elements
             await user.should_see("robotTrading")
-            await user.should_see("Backtesting Dashboard")
+            await user.should_see("robotTrading")
             await user.should_see("Dark")
             # Navigation buttons (from PAGES definition in theme)
             await user.should_see("Agent Swarm")
@@ -121,7 +121,7 @@ class TestAppHome:
             await user.should_see("History & Compare")
             await user.should_see("Config Viewer")
             await user.should_see("Profitability")
-            await user.should_see("Set up and run your strategy")
+            await user.should_see("Mission Control")
 
 
 # ---------------------------------------------------------------------------
@@ -431,22 +431,22 @@ class TestTheme:
         assert required.issubset(set(COLORS.keys()))
 
     def test_profitability_color_pass(self) -> None:
-        """profitability_color('PASS') should return green."""
+        """profitability_color('PASS') should return the design-system good token."""
         from app.presentation.dashboard.nicegui_app.theme import profitability_color
 
-        assert profitability_color("PASS") == "#4CAF50"
+        assert profitability_color("PASS") == "#2e7d4f"
 
     def test_profitability_color_fail(self) -> None:
-        """profitability_color('FAIL') should return red."""
+        """profitability_color('FAIL') should return the design-system bad token."""
         from app.presentation.dashboard.nicegui_app.theme import profitability_color
 
-        assert profitability_color("FAIL") == "#F44336"
+        assert profitability_color("FAIL") == "#b3402f"
 
     def test_profitability_color_inconclusive(self) -> None:
-        """profitability_color('INCONCLUSIVE') should return amber."""
+        """profitability_color('INCONCLUSIVE') should return the honey_deep token."""
         from app.presentation.dashboard.nicegui_app.theme import profitability_color
 
-        assert profitability_color("INCONCLUSIVE") == "#FFC107"
+        assert profitability_color("INCONCLUSIVE") == "#6d5510"
 
     def test_pages_list_contains_core_pages(self) -> None:
         """The PAGES list must contain the core dashboard routes."""

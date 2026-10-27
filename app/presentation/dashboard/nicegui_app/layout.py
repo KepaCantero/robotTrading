@@ -64,18 +64,29 @@ class AppShell:
     @classmethod
     def _build_mobile_nav(cls) -> None:
         """Bottom navigation for phones (UI-5): 44px targets, safe-area
-        padding for notched phones, hidden on desktop."""
+        padding for notched phones, hidden on desktop. Colors come from
+        the design-system TOKENS so the bar speaks the same cream/teal
+        language as the rest of the chrome (the old navy bar was the one
+        element left over from the pre-UI-0 theme)."""
+        from app.presentation.dashboard.nicegui_app import design_system as ds
+
+        c = ds.TOKENS["color"]
+        teal = c["teal"].lstrip("#")
+        teal_rgb = f"{int(teal[0:2], 16)},{int(teal[2:4], 16)},{int(teal[4:6], 16)}"
         ui.add_head_html(
             '<link rel="manifest" href="/pwa/manifest.webmanifest">'
-            '<meta name="theme-color" content="#3f8f85">'
+            f'<meta name="theme-color" content="{c["teal"]}">'
             '<link rel="apple-touch-icon" href="/pwa/icon-192.png">'
             "<style>"
             ".ds-mobile-nav { display: none; }"
             "@media (max-width: 900px) {"
             "  .ds-mobile-nav { display: flex; position: fixed; bottom: 0; left: 0;"
-            "    right: 0; z-index: 50; background: #16213e; border-top: 1px solid #2a3b5c;"
+            f"    right: 0; z-index: 50; background: {c['bg']};"
+            f"    border-top: 1px solid {c['line']};"
             "    padding-bottom: env(safe-area-inset-bottom); }"
-            "  .ds-mobile-nav button { flex: 1; min-height: 56px; color: #cfd8e6; }"
+            f"  .ds-mobile-nav button {{ flex: 1; min-height: 56px; color: {c['text_soft']}; }}"
+            "  .ds-mobile-nav button:hover, .ds-mobile-nav button:active"
+            f" {{ background: rgba({teal_rgb},0.10); border-radius: 8px; }}"
             "  body { padding-bottom: 64px; }"
             "}"
             "</style>"
@@ -110,7 +121,35 @@ class AppShell:
             ".q-header .text-h6, .q-header .q-btn, .q-header .text-caption "
             "{ color: #3e3a31 !important; }"
             "body { background: #fffdf6; }"
+            ".q-drawer .q-btn.nav-active { background: rgba(63,143,133,0.12) !important; "
+            "color: #2e6b63 !important; font-weight: 600; border-radius: 8px; "
+            "box-shadow: inset 3px 0 0 #3f8f85; }"
             "</style>"
+        )
+
+        ui.add_body_html(
+            "<script>"
+            "(function(){"
+            "if(window.__navActive) return; window.__navActive = true;"
+            "function mark(){"
+            "  var path = location.pathname.replace(/\\/+$/, '') || '/';"
+            "  document.querySelectorAll('.q-drawer .q-btn').forEach(function(b){"
+            "    var r = b.getAttribute('data-route'); if(!r) return;"
+            "    var norm = r.replace(/\\/+$/, '') || '/';"
+            "    var on = norm === path || (norm !== '/' && path.indexOf(norm) === 0);"
+            "    b.classList.toggle('nav-active', on);"
+            "  });"
+            "}"
+            "function watch(){"
+            "  var d = document.querySelector('.q-drawer');"
+            "  if(d) new MutationObserver(mark).observe(d, {childList:true, subtree:true});"
+            "}"
+            "mark(); watch(); setTimeout(watch, 600); setTimeout(watch, 2000);"
+            "var push = history.pushState;"
+            "history.pushState = function(){ push.apply(history, arguments);"
+            "  setTimeout(mark, 30); };"
+            "})();"
+            "</script>"
         )
 
         with ui.left_drawer(bordered=True).classes("bg-[#f9f5ec]"):
@@ -121,21 +160,47 @@ class AppShell:
                 "a portfolio you can understand</div>"
             )
             ui.separator().classes("q-mb-sm")
+
+            # Nav v2 — grouped by intent, not a flat 12-link dump: a novice
+            # sees the three things to DO first; the reference pages live
+            # under Library.
+            by_route = {page["route"]: page for page in PAGES}
+            nav_groups: list[tuple[str, list[str]]] = [
+                ("Run", ["/", "/portfolio", "/optimize"]),
+                ("Understand", ["/trust", "/start", "/glossary", "/docs/"]),
+                (
+                    "Library",
+                    ["/results", "/history", "/objectives", "/config", "/profitability", "/design"],
+                ),
+            ]
             with ui.column().classes("w-full gap-0"):
-                for page in PAGES:
-                    ui.button(
-                        page["name"],
-                        icon=page["icon"],
-                        on_click=lambda _, r=page["route"]: ui.navigate.to(r),
-                    ).props("flat align=left no-caps").classes("w-full text-body1").style(
-                        "color:#3e3a31;justify-content:flex-start;min-height:42px"
+                for group_label, routes in nav_groups:
+                    ui.label(group_label.upper()).style(
+                        "font-size:10.5px;font-weight:700;letter-spacing:.12em;"
+                        "color:#948b77;padding:10px 16px 4px"
                     )
+                    for route in routes:
+                        page = by_route.get(route)
+                        if page is None:
+                            continue
+                        ui.button(
+                            page["name"],
+                            icon=page["icon"],
+                            on_click=lambda _, r=route: ui.navigate.to(r),
+                        ).props(f"flat align=left no-caps data-route={route}").classes(
+                            "w-full text-body1"
+                        ).style("color:#3e3a31;justify-content:flex-start;min-height:42px")
 
         with ui.header().classes("items-center justify-between"):
-            ui.label("Backtesting Dashboard").classes("text-h6").style(
-                "font-weight:700;color:#3e3a31"
-            )
+            with ui.row().classes("items-baseline gap-sm no-wrap"):
+                ui.label("robotTrading").classes("text-h6").style(
+                    "font-weight:800;letter-spacing:-0.3px;color:#3e3a31"
+                )
+                ui.label("paper, honest numbers").classes("text-caption").style("color:#6f6858")
             with ui.row().classes("items-center gap-sm"):
+                ui.button(icon="help_outline", on_click=lambda: ui.navigate.to("/docs/")).props(
+                    "flat round"
+                ).tooltip("Help & documentation")
                 mode_label = ui.label("Dark").classes("text-caption")
                 ui.button(
                     icon="dark_mode",

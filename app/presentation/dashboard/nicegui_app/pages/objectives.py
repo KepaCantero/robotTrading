@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any
 
 from nicegui import ui
 
+from app.presentation.dashboard.nicegui_app import design_system as ds
 from app.presentation.dashboard.nicegui_app.theme import COLORS
 
 if TYPE_CHECKING:
@@ -98,7 +99,10 @@ def _format_value(metric: str, value: float) -> str:
 
 def render(store: BacktestResultStore | None) -> None:
     """Render the objectives compliance page."""
-    ui.label("Objectives & Compliance").classes("text-h4 q-mb-md")
+    ds.section_heading(
+        "Objectives & Compliance",
+        "Did the run actually meet the goal you set? Checked against real rules, not vibes.",
+    )
     ui.label("Every saved run, checked against the integration-test targets.").classes(
         "text-grey q-mb-lg"
     )
@@ -144,16 +148,16 @@ def render(store: BacktestResultStore | None) -> None:
             # ── Summary ────────────────────────────────────────────────────
             total = len(runs)
             with ui.row().classes("w-full items-stretch"):
-                with ui.card().classes("flex-1"):
+                with ui.element("div").classes("panel q-pa-md flex-1"):
                     ui.label("Runs evaluated").classes("text-caption text-grey")
                     ui.label(str(total)).classes("text-h3")
-                with ui.card().classes("flex-1"):
+                with ui.element("div").classes("panel q-pa-md flex-1"):
                     ui.label("Pass ALL objectives").classes("text-caption text-grey")
                     ui.label(str(runs_passing_all)).classes(
                         "text-h3",
                     ).style(f"color: {COLORS['profit'] if runs_passing_all else COLORS['loss']}")
                 for metric, passed in per_objective_pass.items():
-                    with ui.card().classes("flex-1"):
+                    with ui.element("div").classes("panel q-pa-md flex-1"):
                         ui.label(OBJECTIVES[metric]["label"]).classes("text-caption text-grey")
                         ui.label(f"{passed}/{total}").classes("text-h5")
                         ui.linear_progress(
@@ -200,8 +204,12 @@ def render(store: BacktestResultStore | None) -> None:
                                 else "help"
                             ),
                         ).props("outline").style(
-                            "color: #4CAF50" if chip.startswith("✓") else "color: #F44336"
+                            f"color: {COLORS['profit']}"
+                            if chip.startswith("✓")
+                            else f"color: {COLORS['loss']}"
                         )
 
-    ui.button("Refresh", icon="refresh", on_click=load).props("color=primary q-mb-md")
+    ui.button("Refresh", icon="refresh", on_click=load).props("unelevated no-caps q-mb-md").classes(
+        "run-btn"
+    )
     ui.timer(0.05, load, once=True)

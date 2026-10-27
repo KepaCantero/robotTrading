@@ -1,29 +1,38 @@
 """Theme configuration for the NiceGUI backtesting dashboard.
 
 Provides color palette, dark/light mode constants, and shared style definitions.
-Trading industry standard: dark mode by default.
+Semantic colors are sourced from the UI-0 design-system TOKENS
+(design_system.py) so every consumer speaks the one cream/teal palette;
+the legacy Material values (#4CAF50/#F44336/#2196F3…) failed the AA bar
+on cream and split the visual language.
 """
 
 from __future__ import annotations
+
+from app.presentation.dashboard.nicegui_app.design_system import TOKENS
+
+_T = TOKENS["color"]
 
 # ── Color Palette ──────────────────────────────────────────────────────────────
 # Semantic colors - consistent across the entire dashboard
 
 COLORS: dict[str, str] = {
     # Profit / Loss
-    "profit": "#4CAF50",
-    "loss": "#F44336",
-    "warning": "#FF9800",
-    "neutral": "#9E9E9E",
+    "profit": _T["good"],
+    "loss": _T["bad"],
+    "warning": _T["warn"],
+    "neutral": _T["text_soft"],
     # Status
-    "pass_": "#4CAF50",
-    "fail": "#F44336",
-    "inconclusive": "#FFC107",
+    "pass_": _T["good"],
+    "fail": _T["bad"],
+    "inconclusive": _T["honey_deep"],
     # Brand
-    "primary": "#2196F3",
-    "secondary": "#607D8B",
-    "accent": "#00BCD4",
-    # Backgrounds (dark mode)
+    "primary": _T["teal_deep"],
+    "secondary": _T["text_soft"],
+    "accent": _T["teal"],
+    # Backgrounds (dark mode) — legacy dark chrome kept for the dark-mode
+    # toggle; the shell renders light by default and nothing on the live
+    # page path reads these keys today.
     "bg_dark": "#1a1a2e",
     "bg_card_dark": "#16213e",
     "bg_header_dark": "#0f3460",
@@ -72,6 +81,7 @@ ECHARTS_LIGHT_THEME = {
 
 PAGES = [
     {"name": "Agent Swarm", "icon": "smart_toy", "route": "/"},
+    {"name": "Start", "icon": "flag", "route": "/start"},
     {"name": "Portfolio", "icon": "account_balance", "route": "/portfolio"},
     {"name": "Optimize", "icon": "tune", "route": "/optimize"},
     {"name": "Results", "icon": "analytics", "route": "/results"},

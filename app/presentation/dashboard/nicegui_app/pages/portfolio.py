@@ -141,6 +141,16 @@ def _fmt_pct(weight: Decimal) -> str:
     return f"{(weight * D('100')):.1f}%"
 
 
+def _stat_tile(label: str, value: str, color: str = "var(--ds-text)") -> None:
+    """Small paper-account stat: label + big number, design-system skin."""
+    with ui.element("div").style(
+        "min-width:150px;padding:12px 16px;background:var(--ds-surface_alt);"
+        "border:1px solid var(--ds-line);border-radius:12px"
+    ):
+        ui.label(label).style("font-size:11px;font-weight:600;color:var(--ds-text_soft)")
+        ui.label(value).style(f"font-size:20px;font-weight:700;color:{color};margin-top:3px")
+
+
 def _role_chip(rationale: str) -> tuple[str, str]:
     """Plain-English role from the SAME rationale the engine wrote —
     the chip never invents a role the portfolio didn't state."""
@@ -247,11 +257,11 @@ def render(
 
         with ui.row().classes("w-full items-center no-wrap gap-md"):
             with ui.column().classes("gap-0 q-mr-md"):
-                ui.label("Portfolio").classes("hud-title")
+                ui.label("Portfolio").classes("page-title")
                 ui.label(
                     "Your investments on autopilot: answer five questions, get a "
                     "portfolio you can understand, and let the robot keep it on track."
-                ).classes("hud-sub")
+                ).classes("page-sub")
 
         target_state: dict[str, Any] = {}
 
@@ -260,8 +270,8 @@ def render(
             pm_store = await _get_store()
             target = await pm_store.get_active_target()
             target_state["target"] = target
-            if target is None:
-                _render_questionnaire(first_time=True)
+            if target is None or target_state.get("editing"):
+                _render_questionnaire(first_time=target is None)
                 return
             _render_digest_card(target)
             _render_target_card(target)
@@ -269,7 +279,7 @@ def render(
             await _render_history_card(pm_store)
 
         def _render_questionnaire(first_time: bool = False) -> None:
-            with ui.card().classes("w-full q-mt-md card-soft"):
+            with ui.element("div").classes("panel q-pa-md w-full q-mt-md"):
                 ui.label("1 · Tell us about you").classes("text-h6")
                 ui.label(
                     "Five questions — the robot turns them into a concrete portfolio "
@@ -286,11 +296,20 @@ def render(
                     province = ui.select(
                         {p: p for p in PROVINCES}, value="Madrid", label="Province (taxes)"
                     ).classes("min-w-[160px]")
-                ui.button(
-                    "Build my portfolio",
-                    icon="auto_awesome",
-                    on_click=lambda: _build(objective, drawdown, age, province),
-                ).props("unelevated").classes("btn-primary")
+                with ui.row().classes("items-center gap-sm"):
+                    ui.button(
+                        "Build my portfolio",
+                        icon="auto_awesome",
+                        on_click=lambda: _build(objective, drawdown, age, province),
+                    ).props("unelevated no-caps").classes("run-btn")
+                    if not first_time:
+                        ui.button(
+                            "Keep current portfolio",
+                            on_click=lambda: (
+                                target_state.__setitem__("editing", False),
+                                render_state.refresh(),
+                            ),
+                        ).props("flat no-caps").tooltip("Go back without changing anything")
 
         async def _build(objective, drawdown, age, province) -> None:
             pm_store = await _get_store()
@@ -310,6 +329,7 @@ def render(
                 else ("medium" if tolerance <= 20 else "aggressive")
             )
             target = await adopt_target(pm_store, profile, DEFAULT_SWARM_DB_PATH)
+            target_state["editing"] = False
             winner = await latest_winner(DEFAULT_SWARM_DB_PATH)
             source = (
                 f"your latest winning backtest ({winner['decision_status']})"
@@ -324,13 +344,16 @@ def render(
             render_state.refresh()
 
         def _render_target_card(target) -> None:
-            with ui.card().classes("w-full q-mt-md card-soft"):
+            with ui.element("div").classes("panel q-pa-md w-full q-mt-md"):
                 with ui.row().classes("w-full items-center justify-between no-wrap"):
                     ui.label("2 · Your portfolio").classes("text-h6")
                     with ui.row().classes("gap-sm"):
                         ui.button(
                             "Change profile",
-                            on_click=lambda: render_state.refresh(),
+                            on_click=lambda: (
+                                target_state.__setitem__("editing", True),
+                                render_state.refresh(),
+                            ),
                         ).props("flat dense").tooltip("Re-answer the questionnaire")
                 provenance = (
                     f"Adopted from winning run {target.source_run_id} "
@@ -414,7 +437,7 @@ def render(
             total = sum(positions.values(), D("0")) + cash
             drifts = compute_drift(target.holdings, positions, total, target.drift_band_pct)
 
-            with ui.card().classes("w-full q-mt-md card-soft"):
+            with ui.element("div").classes("panel q-pa-md w-full q-mt-md"):
                 with ui.row().classes("w-full items-center justify-between no-wrap"):
                     ui.label("3 · On track?").classes("text-h6")
                     cooldown_left = cooldown_ends_at(last_rebalance, target.cooldown_days)
@@ -427,35 +450,50 @@ def render(
                         "Paper account is empty — the first rebalance will deploy the cash."
                     ).classes("text-caption")
                 else:
+                    invested = sum(positions.values(), D("0"))
+                    unrealized = sum((p.unrealized_pl for p in positions_map.values()), D("0"))
+                    pl_color = "var(--ds-good)" if unrealized >= 0 else "var(--ds-bad)"
+                    with ui.row().classes("w-full gap-sm wrap q-mb-md"):
+                        _stat_tile("Paper account", f"€{total:,.0f}")
+                        _stat_tile("Invested", f"€{invested:,.0f}")
+                        _stat_tile("Cash", f"€{cash:,.0f}")
+                        _stat_tile("Unrealized P&L", f"€{unrealized:+,.0f}", pl_color)
                     columns = [
                         {"name": "symbol", "label": "ETF", "field": "symbol", "align": "left"},
                         {"name": "target", "label": "Target", "field": "target", "align": "right"},
                         {"name": "current", "label": "Now", "field": "current", "align": "right"},
                         {"name": "drift", "label": "Drift", "field": "drift", "align": "right"},
+                        {"name": "pl", "label": "P&L", "field": "pl", "align": "right"},
                         {"name": "status", "label": "Status", "field": "status", "align": "left"},
                     ]
                     rows = []
                     for drift in drifts:
+                        pl_pos = positions_map.get(drift.symbol)
                         rows.append(
                             {
                                 "symbol": drift.symbol,
                                 "target": _fmt_pct(drift.target_weight),
                                 "current": _fmt_pct(drift.current_weight),
                                 "drift": f"{(drift.drift * D('100')):+.1f} pp",
+                                "pl": (
+                                    f"€{pl_pos.unrealized_pl:+,.0f}" if pl_pos is not None else "—"
+                                ),
                                 "status": "⚠ outside band" if drift.breached else "✓ in band",
                             }
                         )
                     ui.table(columns=columns, rows=rows, row_key="symbol").classes("w-full").props(
                         "flat bordered dense"
                     )
-                    ui.label(f"Cash €{cash:,.0f} · total €{total:,.0f}").classes("text-caption")
                 ui.button(
-                    "Preview rebalance",
-                    icon="balance",
+                    "Apply to paper account",
+                    icon="science",
                     on_click=lambda: _preview(
                         target, positions, cash, prices, lots_by_symbol, last_rebalance
                     ),
-                ).props("unelevated").classes("btn-primary")
+                ).props("unelevated no-caps").classes("run-btn").style("margin-top:12px").tooltip(
+                    "Preview first: the exact trades and their tax impact in € — "
+                    "nothing is sent until you confirm."
+                )
 
         async def _preview(target, positions, cash, prices, lots_by_symbol, last_rebalance) -> None:
             ctx = PlanContext(
@@ -469,7 +507,11 @@ def render(
             plan = plan_rebalance(ctx, tax_preview=SpainRebalanceTax().preview_sell)
 
             with ui.dialog() as dialog, ui.card().classes("min-w-[720px]"):
-                ui.label("Rebalance preview").classes("text-h6")
+                ui.label("Apply to your paper account").classes("text-h6")
+                ui.label(
+                    "Real rules, imaginary money — every trade below goes through the "
+                    "same risk gates as live trading."
+                ).classes("text-caption")
                 ui.label(plan.summary).classes("text-body1")
                 if plan.trades:
                     columns = [
@@ -509,7 +551,7 @@ def render(
                             "Confirm and send orders",
                             icon="send",
                             on_click=lambda: _confirm(plan, dialog),
-                        ).props("unelevated").classes("btn-primary")
+                        ).props("unelevated no-caps").classes("run-btn")
             dialog.open()
 
         async def _confirm(plan, dialog) -> None:
@@ -536,7 +578,7 @@ def render(
 
         async def _render_history_card(pm_store) -> None:
             events = await pm_store.list_events(limit=20)
-            with ui.card().classes("w-full q-mt-md card-soft"):
+            with ui.element("div").classes("panel q-pa-md w-full q-mt-md"):
                 ui.label("4 · What the robot did, and why").classes("text-h6")
                 if not events:
                     ui.label("No rebalances yet — history will explain each one here.").classes(

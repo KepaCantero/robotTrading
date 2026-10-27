@@ -14,6 +14,8 @@ from typing import Any
 import yaml
 from nicegui import ui
 
+from app.presentation.dashboard.nicegui_app import design_system as ds
+
 logger = logging.getLogger(__name__)
 
 _CONFIG_PATH = Path("config/portfolio/profile_batch_backtest.yaml")
@@ -49,7 +51,7 @@ def _load_config() -> dict[str, Any]:
 
 def _render_dict_card(title: str, data: dict[str, Any], depth: int = 0) -> None:
     """Render a dictionary as a card with key-value pairs."""
-    with ui.card().classes("w-full q-mb-md"):
+    with ui.element("div").classes("panel q-pa-md w-full q-mb-md"):
         ui.label(title).classes("text-h6 q-mb-sm")
         ui.separator().classes("q-mb-sm")
 
@@ -61,7 +63,9 @@ def _render_dict_card(title: str, data: dict[str, Any], depth: int = 0) -> None:
                 elif isinstance(value, list):
                     ui.label(str(value)).classes("text-grey")
                 elif isinstance(value, bool):
-                    color = "#4CAF50" if value else "#F44336"
+                    from app.presentation.dashboard.nicegui_app.theme import COLORS
+
+                    color = COLORS["profit"] if value else COLORS["loss"]
                     ui.label(str(value)).style(f"color: {color}")
                 else:
                     ui.label(str(value)).classes("text-body2")
@@ -81,12 +85,18 @@ def _render_nested_dict(data: dict[str, Any]) -> None:
 
 def _render_risk_section(risk_params: dict[str, Any]) -> None:
     """Render risk parameters with sub-cards per risk level."""
-    with ui.card().classes("w-full q-mb-md"):
+    with ui.element("div").classes("panel q-pa-md w-full q-mb-md"):
         ui.label("Risk Parameters").classes("text-h6 q-mb-sm")
         ui.separator().classes("q-mb-sm")
 
         for level, params in risk_params.items():
-            with ui.card().classes("w-full q-mb-sm").style("border-left: 4px solid #FF9800"):
+            from app.presentation.dashboard.nicegui_app.theme import COLORS
+
+            with (
+                ui.element("div")
+                .classes("panel q-pa-md w-full q-mb-sm")
+                .style(f"border-left: 4px solid {COLORS['warning']}")
+            ):
                 ui.label(f"Risk Level: {level}").classes("text-subtitle1 font-bold")
                 with ui.row().classes("w-full wrap gap-lg q-mt-sm"):
                     for key, value in params.items():
@@ -97,12 +107,18 @@ def _render_risk_section(risk_params: dict[str, Any]) -> None:
 
 def _render_objective_section(objectives: dict[str, Any]) -> None:
     """Render objective parameters with sub-cards per objective."""
-    with ui.card().classes("w-full q-mb-md"):
+    with ui.element("div").classes("panel q-pa-md w-full q-mb-md"):
         ui.label("Strategy / Objective Parameters").classes("text-h6 q-mb-sm")
         ui.separator().classes("q-mb-sm")
 
         for objective, params in objectives.items():
-            with ui.card().classes("w-full q-mb-sm").style("border-left: 4px solid #2196F3"):
+            from app.presentation.dashboard.nicegui_app.theme import COLORS
+
+            with (
+                ui.element("div")
+                .classes("panel q-pa-md w-full q-mb-sm")
+                .style(f"border-left: 4px solid {COLORS['primary']}")
+            ):
                 ui.label(f"Objective: {objective}").classes("text-subtitle1 font-bold")
                 with ui.row().classes("w-full wrap gap-lg q-mt-sm"):
                     for key, value in params.items():
@@ -114,7 +130,7 @@ def _render_objective_section(objectives: dict[str, Any]) -> None:
 def _render_simple_section(title: str, data: Any) -> None:
     """Render a simple section (not a dict of dicts)."""
     if isinstance(data, dict):
-        with ui.card().classes("w-full q-mb-md"):
+        with ui.element("div").classes("panel q-pa-md w-full q-mb-md"):
             ui.label(title).classes("text-h6 q-mb-sm")
             ui.separator().classes("q-mb-sm")
 
@@ -124,7 +140,7 @@ def _render_simple_section(title: str, data: Any) -> None:
                         ui.label(key).classes("text-caption text-grey")
                         ui.label(str(value)).classes("text-body2")
     elif isinstance(data, list):
-        with ui.card().classes("w-full q-mb-md"):
+        with ui.element("div").classes("panel q-pa-md w-full q-mb-md"):
             ui.label(title).classes("text-h6 q-mb-sm")
             ui.separator().classes("q-mb-sm")
             with ui.row().classes("w-full wrap gap-md"):
@@ -137,9 +153,9 @@ def _render_simple_section(title: str, data: Any) -> None:
 
 def render() -> None:
     """Render the Config Viewer page content."""
+    ds.inject()
     with ui.column().classes("w-full q-pa-lg"):
-        ui.label("Config Viewer").classes("text-h4 q-mb-md")
-        ui.label(f"Configuration loaded from: {_CONFIG_PATH}").classes("text-grey q-mb-lg")
+        ds.section_heading("Config Viewer", f"Configuration loaded from: {_CONFIG_PATH}")
 
         config = _load_config()
 
@@ -171,7 +187,7 @@ def render() -> None:
         # ── Symbols ────────────────────────────────────────────────────────
         if "symbols" in config:
             _render_simple_section("Symbols Universe", {"count": len(config["symbols"])})
-            with ui.card().classes("w-full q-mb-md"):
+            with ui.element("div").classes("panel q-pa-md w-full q-mb-md"):
                 ui.label("Symbols").classes("text-h6 q-mb-sm")
                 ui.separator().classes("q-mb-sm")
                 with ui.row().classes("w-full wrap gap-xs"):

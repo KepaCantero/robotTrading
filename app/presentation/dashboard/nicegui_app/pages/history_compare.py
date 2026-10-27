@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any
 
 from nicegui import ui
 
+from app.presentation.dashboard.nicegui_app import design_system as ds
 from app.presentation.dashboard.nicegui_app.theme import COLORS
 
 if TYPE_CHECKING:
@@ -128,7 +129,7 @@ def _build_comparison_section(
         ui.button(
             "Compare",
             icon="compare",
-        ).props("color=primary").on_click(
+        ).props("unelevated no-caps").classes("run-btn").on_click(
             lambda: _run_compare(store, select_a, select_b, diff_container)
         )
 
@@ -196,7 +197,7 @@ async def _run_compare(
 
 def _render_diff(diff: dict[str, Any]) -> None:
     """Render the comparison diff as a table."""
-    with ui.card().classes("w-full"):
+    with ui.element("div").classes("panel q-pa-md w-full"):
         ui.label("Comparison Results").classes("text-h6 q-mb-md")
 
         columns = [
@@ -258,16 +259,18 @@ def render(
 ) -> None:
     """Render the History & Compare page content."""
     with ui.column().classes("w-full q-pa-lg"):
-        ui.label("History & Compare").classes("text-h4 q-mb-md")
+        ds.section_heading(
+            "History & Compare", "Every past run, side by side — the honest memory of the robot."
+        )
         ui.label("View past backtest runs and compare results side by side.").classes(
             "text-grey q-mb-lg"
         )
 
-        with ui.card().classes("w-full q-pa-lg"):
+        with ui.element("div").classes("panel q-pa-md w-full"):
             ui.label("Run History").classes("text-h6 q-mb-md")
             _build_runs_table(store, profitability)
 
         ui.separator().classes("q-mt-lg q-mb-lg")
 
-        with ui.card().classes("w-full q-pa-lg"):
+        with ui.element("div").classes("panel q-pa-md w-full"):
             _build_comparison_section(store)

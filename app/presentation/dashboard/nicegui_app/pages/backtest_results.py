@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 
 from nicegui import ui
 
+from app.presentation.dashboard.nicegui_app import design_system as ds
 from app.presentation.dashboard.nicegui_app.components.metric_cards import metric_card
 from app.presentation.dashboard.nicegui_app.components.profitability_badge import (
     profitability_badge,
@@ -57,7 +58,7 @@ def _render_run_details(
 ) -> None:
     """Render the full run details card."""
     # ── Header ────────────────────────────────────────────────────────────
-    with ui.card().classes("w-full q-pa-lg"):
+    with ui.element("div").classes("panel q-pa-md w-full"):
         ui.label(f"Run: {run.run_id}").classes("text-h6")
         with ui.row().classes("q-mt-sm q-mb-md gap-md"):
             ui.label(f"Strategy: {run.strategy_name}").classes("text-body2")
@@ -131,7 +132,7 @@ def _render_run_details(
 
     # ── Config Snapshot ───────────────────────────────────────────────────
     if run.config_snapshot:
-        with ui.card().classes("w-full q-pa-lg q-mt-md"):
+        with ui.element("div").classes("panel q-pa-md w-full q-mt-md"):
             ui.label("Configuration Snapshot").classes("text-h6 q-mb-sm")
             ui.separator().classes("q-mb-sm")
             try:
@@ -145,7 +146,7 @@ def _render_run_details(
                 ui.label(run.config_snapshot).classes("text-caption text-grey")
 
     # ── Metadata ──────────────────────────────────────────────────────────
-    with ui.card().classes("w-full q-pa-lg q-mt-md"):
+    with ui.element("div").classes("panel q-pa-md w-full q-mt-md"):
         ui.label("Metadata").classes("text-h6 q-mb-sm")
         ui.separator().classes("q-mb-sm")
         with ui.row().classes("w-full wrap gap-lg"):
@@ -168,12 +169,12 @@ def render(
     profitability: ProfitabilityEngine | None,
 ) -> None:
     """Render the Backtest Results page content."""
+    ds.inject()
     with ui.column().classes("w-full q-pa-lg"):
-        ui.label("Backtest Results").classes("text-h4 q-mb-md")
-        ui.label("Select a run to view detailed results.").classes("text-grey q-mb-lg")
+        ds.section_heading("Backtest Results", "Select a run to view detailed results.")
 
         # ── Run Selector ──────────────────────────────────────────────────
-        with ui.card().classes("w-full q-pa-lg"):
+        with ui.element("div").classes("panel q-pa-md w-full"):
             ui.label("Select Run").classes("text-h6 q-mb-md")
 
             with ui.row().classes("w-full items-center gap-lg"):

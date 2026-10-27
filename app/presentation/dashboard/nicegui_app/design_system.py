@@ -85,6 +85,36 @@ AA_PAIRS: list[tuple[str, str]] = [
     ("honey_deep", "honey"),
 ]
 
+#: Categorical series palette for charts (pie/donut/stacked bars): brand
+#: tokens first, then extra distinguishable warm hues for 5+ series.
+#: These are series FILLS (decorative), so no AA pair applies — chart
+#: axis/legend TEXT still uses text / text_soft.
+CHART_CATEGORICAL: list[str] = [
+    TOKENS["color"]["teal"],
+    "#7fb98b",  # leaf green
+    TOKENS["color"]["honey"],
+    TOKENS["color"]["sage"],
+    "#e8a87c",  # terracotta
+    "#8db6c9",  # dusty blue
+    "#d9b8a6",  # clay
+    "#a3b86c",  # olive
+]
+
+#: Muted 10-series palette for dense charts (equity curves, stacked bars)
+#: where vivid neighbors would vibrate. Same rule as above: fills only.
+CHART_MUTED: list[str] = [
+    "#8fb7a8",
+    "#d9b98a",
+    "#a9bfd3",
+    "#b7a8d0",
+    "#7fb3a8",
+    "#d3bd8a",
+    "#b3c9d0",
+    "#d0a8a3",
+    "#96c9b5",
+    "#c2ad8f",
+]
+
 # ═══════════════════════════════════════════════════════════════════
 # CSS — custom properties + component classes (built ONLY from TOKENS)
 # ═══════════════════════════════════════════════════════════════════

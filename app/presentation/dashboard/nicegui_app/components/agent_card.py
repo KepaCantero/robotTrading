@@ -47,7 +47,7 @@ class StepTrack:
                 with ui.column().classes("gap-0 flex-1").style("min-width: 0"):
                     self.now_title = ui.label("Ready to start").classes("now-title")
                     self.now_desc = ui.label(
-                        "Press Run pipeline — the team will get to work."
+                        "Press Run my backtest — the team will get to work."
                     ).classes("help")
                 self.now_meta = ui.label("").classes("pstep-meta")
 
@@ -132,7 +132,7 @@ class StepTrack:
             self._set_now(
                 "",
                 "Ready to start",
-                "Press Run pipeline — the team will get to work.",
+                "Press Run my backtest — the team will get to work.",
                 "",
             )
 

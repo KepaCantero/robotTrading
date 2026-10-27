@@ -289,7 +289,9 @@ def render(
                 results_container.clear()
                 with results_container:  # noqa: SIM117
                     with (
-                        ui.card().classes("w-full q-pa-lg").style("border-left: 4px solid #F44336")
+                        ui.card()
+                        .classes("w-full q-pa-lg")
+                        .style(f"border-left: 4px solid {COLORS['loss']}")
                     ):
                         ui.label("Backtest Error").classes("text-h6 text-negative")
                         ui.label("An unexpected error occurred during backtest execution.").classes(

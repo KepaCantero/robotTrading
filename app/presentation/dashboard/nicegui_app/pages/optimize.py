@@ -1,6 +1,7 @@
 """Optimize page: strategy parameter tuning + tax optimization.
 
-Two panels:
+Two panels, both in the UI-0 design-system language (same cards,
+buttons and honest numbers as /start and /trust):
 1 · TUNE PARAMETERS — grid-search the strategy's params with the real
    engine, compare baseline vs best, adopt with one click, full history.
 2 · TAX OPTIMIZER — the repo's real TaxOptimizedPortfolioBuilder: shows
@@ -16,8 +17,7 @@ from typing import TYPE_CHECKING, Any
 
 from nicegui import ui
 
-from app.presentation.dashboard.nicegui_app.components.swarm_fx import install as install_fx
-from app.services.agent_swarm.serialization import pretty  # noqa: F401
+from app.presentation.dashboard.nicegui_app import design_system as ds
 
 if TYPE_CHECKING:
     from app.services.agent_swarm.executor import Capa2PipelineExecutor
@@ -36,45 +36,57 @@ PERIOD_PRESETS = {
     "10y": "Last 10 years",
 }
 
+_SOFT = "color:var(--ds-text_soft);font-size:var(--ds-small-size)"
+_LABEL = (
+    "font-size:var(--ds-caption-size);font-weight:600;"
+    "color:var(--ds-text_soft);letter-spacing:0.6px"
+)
+
+
+def _tile(label: str, value: str) -> None:
+    """Small stat tile (h2-size value on the inset surface)."""
+    with ui.element("div").style(
+        "min-width:150px;padding:12px 16px;background:var(--ds-surface_alt);"
+        "border:1px solid var(--ds-line);border-radius:var(--ds-radius-s)"
+    ):
+        ui.label(label).style(_LABEL)
+        ui.label(value).style(
+            "font-size:var(--ds-h2-size);font-weight:var(--ds-h2-weight);"
+            "color:var(--ds-text);margin-top:4px"
+        )
+
 
 def render(
     executor: Capa2PipelineExecutor | None,
     store: SwarmRunStore | None,
 ) -> None:
     """Render the Optimize page."""
-    install_fx()
+    ds.inject()
     ui.dark_mode(False)
+    ui.add_head_html(
+        "<style>body { background: var(--ds-bg); font-family: var(--ds-font); "
+        "color: var(--ds-text); }</style>"
+    )
 
-    with ui.element("div").classes("light-sheet w-full"):
-        for blob in ("blob-a", "blob-b", "blob-c"):
-            ui.element("div").classes(f"blob {blob}").props("aria-hidden=true")
+    with ui.column().classes("w-full max-w-[1180px] mx-auto p-8 gap-6"):
+        ds.section_heading(
+            "Optimize",
+            "Tune strategy parameters with the real engine, and check "
+            "if your portfolio can save on taxes.",
+        )
 
-        with ui.row().classes("w-full items-center no-wrap gap-md"):
-            with ui.column().classes("gap-0 q-mr-md"):
-                ui.label("Optimize").classes("hud-title")
-                ui.label(
-                    "Tune strategy parameters with the real engine, and check "
-                    "if your portfolio can save on taxes."
-                ).classes("hud-sub")
-
-        with ui.row().classes("w-full items-start gap-lg q-mt-md no-wrap"):
+        with ui.row().classes("w-full items-start gap-6 no-wrap"):
             # ── Left: config ────────────────────────────────────────────
-            with ui.element("div").classes("panel q-pa-md").style("width: 380px; flex-shrink: 0"):
-                ui.label("1 · CONFIGURE").classes("lbl q-mb-sm")
-
+            with ds.card("1 · Configure").style("width: 380px; flex-shrink: 0"):
                 estrategia = ui.select(
                     STRATEGIES, value="mean_reversion", label="Strategy"
                 ).classes("w-full")
-                ui.label("The real strategy whose parameters will be tuned.").classes(
-                    "help q-mb-sm"
-                )
+                ui.label("The real strategy whose parameters will be tuned.").style(_SOFT)
 
                 periodo = ui.select(PERIOD_PRESETS, value="1y", label="Test period").classes(
                     "w-full"
                 )
-                ui.label("Longer periods give more reliable results but take longer.").classes(
-                    "help q-mb-sm"
-                )
+                ui.label("Longer periods give more reliable results but take longer.").style(_SOFT)
 
                 from app.presentation.dashboard.nicegui_app.pages.swarm import available_universe
 
@@ -85,33 +97,32 @@ def render(
                     value=["AAPL", "MSFT", "GOOGL"],
                     label="Universe",
                 ).classes("w-full")
-                ui.label("3-5 symbols keeps optimization fast.").classes("help")
+                ui.label("3-5 symbols keeps optimization fast.").style(_SOFT)
 
                 # ── Optimize button ─────────────────────────────────────
                 optimize_button = (
-                    ui.button("Optimize parameters", icon="tune")
-                    .props("color=teal unelevated dense")
-                    .classes("w-full q-mt-md run-btn")
+                    ds.button("Optimize parameters")
+                    .classes("w-full")
+                    .style("margin-top:16px")
                     .mark("optimize_run")
                 )
 
-                optimize_status = ui.label("").classes("help")
+                optimize_status = ui.label("").style(_SOFT)
 
             # ── Right: results + tax ────────────────────────────────────
-            with ui.column().classes("flex-1 gap-md").style("min-width: 0"):
-                optimize_results = ui.column().classes("w-full gap-md")
-                param_history = ui.column().classes("w-full gap-xs")
+            with ui.column().classes("flex-1 gap-6").style("min-width: 0"):
+                optimize_results = ui.column().classes("w-full gap-6")
+                param_history = ui.column().classes("w-full gap-3")
 
                 # ── Tax optimizer panel ─────────────────────────────────
-                with ui.element("div").classes("panel q-pa-md w-full"):
-                    ui.label("2 · TAX OPTIMIZER").classes("lbl q-mb-xs")
+                with ds.card("2 · Tax optimizer").classes("w-full"):
                     ui.label(
                         "Uses the repo's TaxOptimizedPortfolioBuilder with the "
                         "SpainTaxEngine (19/21/23% progressive). Enter your "
                         "current positions to see harvesting opportunities."
-                    ).classes("help q-mb-sm")
+                    ).style(_SOFT)
 
-                    with ui.row().classes("w-full gap-sm no-wrap"):
+                    with ui.row().classes("w-full gap-2 no-wrap").style("margin-top:8px"):
                         taxa_symbol = ui.input("Symbol (e.g. AAPL)", value="AAPL").classes("flex-1")
                         taxa_value = ui.number(
                             "Position value (€)", value=50000, min=0, step=1000
@@ -120,26 +131,28 @@ def render(
                             "Cost basis (€)", value=55000, min=0, step=1000
                         ).classes("flex-1")
 
-                    add_position_btn = ui.button("Add position", icon="add").props(
-                        "flat dense color=teal"
+                    add_position_btn = ds.button("Add position", primary=False).style(
+                        "margin-top:8px"
                     )
-                    positions_list = ui.column().classes("w-full gap-xs q-mt-xs")
+                    positions_list = ui.column().classes("w-full gap-2")
                     positions: list[dict[str, Decimal]] = []
 
                     def refresh_positions() -> None:
                         positions_list.clear()
                         with positions_list:
                             if not positions:
-                                ui.label("No positions yet.").classes("help")
+                                ui.label("No positions yet.").style(_SOFT)
                             for i, pos in enumerate(positions):
-                                with ui.row().classes("w-full items-center no-wrap gap-sm"):
+                                with ui.row().classes("w-full items-center no-wrap gap-2"):
                                     ui.label(
                                         f"{pos['symbol']}: €{pos['value']:,.0f} "
                                         f"(cost €{pos['cost']:,.0f})"
-                                    ).classes("help").style("flex: 1")
+                                    ).style(f"flex:1;{_SOFT}")
                                     loss = pos["cost"] - pos["value"]
                                     if loss > 0:
-                                        ui.label(f"−€{loss:,.0f} loss").classes("pstep-meta bad")
+                                        ui.label(f"−€{loss:,.0f} loss").style(
+                                            "color:var(--ds-bad);font-size:var(--ds-small-size)"
+                                        )
                                     rm = ui.button(icon="close").props(
                                         "flat round dense size=xs color=grey-6"
                                     )
@@ -168,12 +181,11 @@ def render(
                     refresh_positions()
 
                     tax_button = (
-                        ui.button("Analyze taxes", icon="account_balance")
-                        .props("color=teal outline dense")
-                        .classes("q-mt-sm")
+                        ds.button("Analyze taxes", primary=False)
+                        .style("margin-top:12px")
                         .mark("tax_analyze")
                     )
-                    tax_results = ui.column().classes("w-full gap-sm q-mt-sm")
+                    tax_results = ui.column().classes("w-full gap-3").style("margin-top:8px")
 
                     async def run_tax_analysis() -> None:
                         if not positions:
@@ -208,23 +220,23 @@ def render(
                         tax_results.clear()
                         with tax_results:
                             if result.harvesting_opportunities:
-                                with ui.row().classes("w-full gap-sm wrap"):
-                                    _tax_tile(
-                                        "Tax benefit", f"€{result.tax_benefit_estimated:,.0f}"
-                                    )
-                                    _tax_tile(
+                                with ui.row().classes("w-full gap-3 wrap"):
+                                    _tile("Tax benefit", f"€{result.tax_benefit_estimated:,.0f}")
+                                    _tile(
                                         "After-tax return",
                                         f"{result.after_tax_return_pct:.2f}%",
                                     )
-                                    _tax_tile("Harvest", ", ".join(result.harvesting_opportunities))
-                                ui.label("RECOMMENDED ADJUSTMENTS").classes("lbl q-mt-md q-mb-xs")
+                                    _tile("Harvest", ", ".join(result.harvesting_opportunities))
+                                ui.label("RECOMMENDED ADJUSTMENTS").style(
+                                    f"{_LABEL};margin-top:16px"
+                                )
                                 for adj in result.adjustments_made:
-                                    ui.label(f"→ {adj}").classes("help")
+                                    ui.label(f"→ {adj}").style(_SOFT)
                             else:
-                                ui.label(
+                                ds.empty_state(
                                     "No tax harvesting opportunities found — "
                                     "your positions have no unrealized losses."
-                                ).classes("help")
+                                )
 
                     tax_button.on_click(run_tax_analysis)
 
@@ -259,38 +271,38 @@ def render(
 
             optimize_results.clear()
             with optimize_results:
-                with ui.element("div").classes("panel q-pa-md w-full"):
-                    ui.label("RESULTS").classes("lbl q-mb-sm")
-                    with ui.row().classes("w-full gap-sm wrap"):
-                        _tax_tile("Current return", f"{result.baseline.get('return_pct', '?')}%")
-                        _tax_tile("Current Sharpe", str(result.baseline.get("sharpe", "?")))
-                        _tax_tile("Best return", f"{result.best.get('return_pct', '?')}%")
-                        _tax_tile("Best Sharpe", str(result.best.get("sharpe", "?")))
-                    ui.label(f"Best parameters: {result.best_params}").classes("help q-mt-sm")
+                with ds.card("Results").classes("w-full"):
+                    with ui.row().classes("w-full gap-3 wrap"):
+                        _tile("Current return", f"{result.baseline.get('return_pct', '?')}%")
+                        _tile("Current Sharpe", str(result.baseline.get("sharpe", "?")))
+                        _tile("Best return", f"{result.best.get('return_pct', '?')}%")
+                        _tile("Best Sharpe", str(result.best.get("sharpe", "?")))
+                    ui.label(f"Best parameters: {result.best_params}").style(
+                        f"{_SOFT};margin-top:12px"
+                    )
                     if result.improved:
-                        adopt_btn = (
-                            ui.button("Adopt best parameters", icon="check_circle")
-                            .props("color=teal dense")
-                            .classes("q-mt-sm")
-                        )
-                        adopt_btn.on_click(lambda: adopt_params(result))
+                        ds.button(
+                            "Adopt best parameters", on_click=lambda: adopt_params(result)
+                        ).style("margin-top:12px")
                     else:
-                        ui.label("Current parameters are already optimal in this grid.").classes(
-                            "help q-mt-sm"
+                        ui.label("Current parameters are already optimal in this grid.").style(
+                            f"{_SOFT};margin-top:12px"
                         )
 
                     # trials table
                     if result.trials:
-                        ui.label("ALL TRIALS").classes("lbl q-mt-md q-mb-xs")
+                        ui.label("ALL TRIALS").style(f"{_LABEL};margin:16px 0 4px")
                         for trial in result.trials:
-                            with ui.row().classes("w-full items-center no-wrap gap-sm"):
-                                ui.label(str(trial["params"])).classes("help").style(
-                                    "flex: 1; min-width: 0"
+                            with ui.row().classes("w-full items-center no-wrap gap-2"):
+                                ui.label(str(trial["params"])).style(f"flex:1;{_SOFT}").style(
+                                    "min-width:0"
                                 )
-                                ui.label(f"ret {trial.get('return_pct', '?')}%").classes(
-                                    "pstep-meta"
+                                ui.label(f"ret {trial.get('return_pct', '?')}%").style(
+                                    "font-size:var(--ds-small-size);color:var(--ds-text_soft)"
                                 )
-                                ui.label(f"sharpe {trial.get('sharpe', '?')}").classes("pstep-meta")
+                                ui.label(f"sharpe {trial.get('sharpe', '?')}").style(
+                                    "font-size:var(--ds-small-size);color:var(--ds-text_soft)"
+                                )
 
             await refresh_param_history()
 
@@ -322,20 +334,23 @@ def render(
             if not sets:
                 return
             with param_history:
-                with ui.element("div").classes("panel q-pa-md w-full"):
-                    ui.label("PARAMETER HISTORY").classes("lbl q-mb-xs")
+                with ds.card("Parameter history").classes("w-full"):
                     for entry in sets[:8]:
-                        with ui.row().classes("w-full items-center no-wrap gap-sm"):
-                            ui.label("●" if entry["is_active"] else "○").classes(
-                                "term-good" if entry["is_active"] else "help"
+                        with ui.row().classes("w-full items-center no-wrap gap-2"):
+                            ui.label("●" if entry["is_active"] else "○").style(
+                                "color:var(--ds-good)"
+                                if entry["is_active"]
+                                else "color:var(--ds-text_soft)"
                             )
-                            ui.label(f"{entry['strategy']} · {entry['params']}").classes(
-                                "help"
-                            ).style("flex: 1; min-width: 0")
-                            ui.label(entry["created_at"][:16]).classes("help")
+                            ui.label(f"{entry['strategy']} · {entry['params']}").style(
+                                f"flex:1;{_SOFT}"
+                            ).style("min-width:0")
+                            ui.label(entry["created_at"][:16]).style(_SOFT)
                             if not entry["is_active"]:
-                                btn = ui.button("Restore", icon="history").props(
-                                    "flat dense color=teal size=xs"
+                                btn = (
+                                    ui.button("Restore", icon="history")
+                                    .props("flat dense size=xs")
+                                    .style("color:var(--ds-teal_deep)")
                                 )
                                 btn.on_click(lambda _, pid=entry["id"]: restore_params(pid))
 
@@ -348,9 +363,3 @@ def render(
 
         optimize_button.on_click(run_optimize)
         ui.timer(0.1, refresh_param_history, once=True)
-
-
-def _tax_tile(label: str, value: str) -> None:
-    with ui.element("div").classes("metric-tile"):
-        ui.label(label).classes("k")
-        ui.label(value).classes("v")
