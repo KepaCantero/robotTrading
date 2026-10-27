@@ -28,6 +28,7 @@ def root() -> None:
 ui.run(
     root=root,
     title="AlgoTrading Dashboard",
+    language="en",  # UI-7 a11y: screen readers need the page language
     port=int(os.environ.get("DASHBOARD_PORT", "8503")),
     reload=False,
     show=False,
