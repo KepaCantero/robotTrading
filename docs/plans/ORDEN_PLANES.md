@@ -67,13 +67,15 @@ Verificación: goldens 19/19, swarm+optimization 211/211, orquestación
 - Ambos dicen internamente "borrador para aprobación": el usuario ya los
   puso en cola; arrancan con su «empieza».
 
-### 4 — DESPUÉS: UI "Beat Them All"
-**`PLAN_UI_BEAT_THEM_ALL.md`** (fases UI-0..UI-7)
-
-Orden del usuario 25-10-2026: tras el bloque 3 (la UI narra el loop
-validado; sin B1–B4 narraría stubs). UI-0 (design system) es independiente
-y puede avanzar en paralelo cuando se quiera. Detalle y dependencias en §0
-de ese plan.
+### 4 — ✅ COMPLETO (27-10-2026): UI "Beat Them All"
+**`PLAN_UI_BEAT_THEM_ALL.md`** — las 8 fases aterrizadas: UI-0 design
+system con gate AA ejecutable (de2f51d9) · UI-1 wizard /start (a8b0b7c8) ·
+UI-2 pie interactivo (47703c2d) · UI-3 Mission Control (ec29f871) · UI-4
+/trust (5e96d1a2) · UI-5 móvil+PWA (63fb5966) · UI-6 digest+glosario
+(e08e739d) · UI-7 auditoría a11y ejecutable + fix lang (0b2ee2ed). El loop
+del novato (0→cartera validada, números honestos, cero jerga) está contado
+de punta a punta. Pendiente usuario: prueba REAL en teléfono (A23 =
+loopback; exponer a LAN es decisión suya) y Lighthouse manual (Chrome).
 
 ### 5 — FUTURO (sin orden interno todavía)
 - Dinero real: reutilizar `archivo/ROLLOUT_PLAN.md` como referencia de escalado
