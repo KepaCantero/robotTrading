@@ -21,13 +21,16 @@ from app.presentation.dashboard.nicegui_app.pages.swarm import (
 )
 
 
-def test_dividend_goal_uses_real_objective_key():
+def test_dividend_goal_defaults_to_the_passing_passive():
+    """User (2026-10-27): 'dejalo por default la que pasa' — the dividend
+    preset is the static passive with the AUTOMATIC universe (None), the
+    configuration the system's own verdict recommends every run."""
     assert "MAXIMIZAR_DIVIDENDOS" in OBJECTIVES
-    assert preset_for_goal("MAXIMIZAR_DIVIDENDOS") == ("dividend_tracking", DIVIDEND_ETF_UNIVERSE)
+    assert preset_for_goal("MAXIMIZAR_DIVIDENDOS") == ("static_ew", None)
 
 
 def test_preset_is_case_insensitive():
-    assert preset_for_goal("maximizar_dividendos") == ("dividend_tracking", DIVIDEND_ETF_UNIVERSE)
+    assert preset_for_goal("maximizar_dividendos") == ("static_ew", None)
     assert preset_for_goal("Capital_Preservation") == ("low_volatility", LOW_VOL_UNIVERSE)
 
 
@@ -47,20 +50,13 @@ class TestLongHorizonUniverse:
     silencio a la década disponible; con horizonte largo el preset de
     dividendos cambia al universo con histórico desde 2003-2007."""
 
-    def test_short_horizon_keeps_ten_year_universe(self):
-        assert preset_for_goal("MAXIMIZAR_DIVIDENDOS", 120) == (
-            "dividend_tracking",
-            DIVIDEND_ETF_UNIVERSE,
-        )
-
-    def test_long_horizon_switches_to_deep_history_universe(self):
+    def test_passive_preset_stays_automatic_at_any_horizon(self):
+        # static_ew + universo AUTOMÁTICO: la pantalla del corpus decide
+        # por ventana (miembros que cubren), no una lista curada.
+        assert preset_for_goal("MAXIMIZAR_DIVIDENDOS", 120) == ("static_ew", None)
         assert preset_for_goal("MAXIMIZAR_DIVIDENDOS", LONG_HORIZON_MONTHS) == (
-            "dividend_tracking",
-            DEEP_DIVIDEND_ETF_UNIVERSE,
-        )
-        assert preset_for_goal("maximizar_dividendos", 240) == (
-            "dividend_tracking",
-            DEEP_DIVIDEND_ETF_UNIVERSE,
+            "static_ew",
+            None,
         )
 
     def test_goal_without_deep_universe_is_unchanged(self):

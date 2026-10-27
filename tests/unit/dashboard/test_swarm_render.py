@@ -67,7 +67,8 @@ async def test_swarm_page_has_period_and_tax_inputs(user: User, register_page):
     await user.open("/swarm-test")
 
     await user.should_see("Investment period")
-    await user.should_see("Last year")
+    # Default (user 2026-10-27): 10 years — the configuration that passes
+    await user.should_see("Last 10 years")
     await user.should_see("Your age")
     await user.should_see("Province (tax residence)")
     await user.should_not_see("Time frame (months)")

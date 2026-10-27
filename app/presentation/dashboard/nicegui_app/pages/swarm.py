@@ -192,9 +192,14 @@ LONG_HORIZON_MONTHS = 180
 #: universo sectorial Vanguard para la anomalía de baja volatilidad
 LOW_VOL_UNIVERSE = ["VDC", "VCR", "VDE", "VFH", "VHT", "VIS", "VGT", "VAW", "VNQ", "VPU", "VOX"]
 
-#: objetivo → (estrategia real, universo) que la UI preselecciona
-GOAL_PRESETS: dict[str, tuple[str, list[str]]] = {
-    "MAXIMIZAR_DIVIDENDOS": ("dividend_tracking", DIVIDEND_ETF_UNIVERSE),
+#: objetivo → (estrategia real, universo) que la UI preselecciona.
+#: Dividendos 2026-10-27 (user: "dejalo por default la que pase"): el
+#: preset pasa a static_ew con universo AUTOMÁTICO (None) — es el
+#: veredicto que el propio sistema da en cada run ("deploy the static
+#: portfolio") y la única configuración que pasa los gates honestos en
+#: esta ventana (CONDITIONAL). dividend_tracking sigue en el dropdown.
+GOAL_PRESETS: dict[str, tuple[str, list[str] | None]] = {
+    "MAXIMIZAR_DIVIDENDOS": ("static_ew", None),
     "CAPITAL_PRESERVATION": ("low_volatility", LOW_VOL_UNIVERSE),
 }
 
@@ -206,7 +211,7 @@ LONG_HORIZON_UNIVERSES: dict[str, list[str]] = {
 
 def preset_for_goal(
     goal: str | None, horizon_months: float | None = None
-) -> tuple[str, list[str]] | None:
+) -> tuple[str, list[str] | None] | None:
     """Preset (estrategia, universo) para un objetivo, insensible a mayúsculas.
 
     Con ``horizon_months`` >= LONG_HORIZON_MONTHS el universo cambia al de
@@ -219,7 +224,10 @@ def preset_for_goal(
     if preset is None:
         return None
     strategy_name, universe = preset
-    if horizon_months is not None and horizon_months >= LONG_HORIZON_MONTHS:
+    # universos manuales alternativos solo cuando el preset trae lista;
+    # un preset con universo AUTOMÁTICO (None) deja que la pantalla del
+    # corpus decima por ventana, que es el camino verificado.
+    if isinstance(universe, list) and horizon_months is not None and horizon_months >= LONG_HORIZON_MONTHS:
         universe = LONG_HORIZON_UNIVERSES.get(key, universe)
     return strategy_name, universe
 
@@ -1133,7 +1141,9 @@ def render(
 
                         with ui.column().classes("gap-xs flex-1").style("min-width: 240px"):
                             objetivo = ui.select(
-                                OBJECTIVES, value="MAXIMIZAR_CAPITAL", label="Your goal"
+                                # Default (user 2026-10-27): the configuration that PASSES honestly —
+                            # dividends + 10y + High + Automatic (all symbols).
+                            OBJECTIVES, value="MAXIMIZAR_DIVIDENDOS", label="Your goal"
                             ).classes("w-full")
                             ui.label("What you want to achieve with this investment.").classes(
                                 "help"
@@ -1151,7 +1161,7 @@ def render(
                                     "max": "All available data",
                                     "custom": "Custom dates…",
                                 },
-                                value="1y",
+                                value="10y",
                                 label="Investment period",
                             ).classes("w-full")
                             ui.label(
@@ -1208,7 +1218,7 @@ def render(
                     with fine_tune:
                         riesgo = ui.select(
                             {"bajo": "Low", "medio": "Medium", "alto": "High"},
-                            value="medio",
+                            value="alto",
                             label="Risk level",
                         ).classes("w-full")
                         ui.label("How much risk you are comfortable taking.").classes(
@@ -1230,13 +1240,14 @@ def render(
                         ui.separator().classes("q-mb-sm")
                         ui.label("Universe").classes("lbl q-mb-xs")
                         modo_universo = ui.toggle(
-                            {"auto": "Automatic", "manual": "Manual"},
+                            {"auto": "Automatic", "auto-all": "Automatic (all)", "manual": "Manual"},
                             value="auto",
                         ).classes("w-full")
                         ui.label(
                             "Automatic: the app screens your CSV library (fresh data, "
                             "liquidity, enough history) and tests the most liquid symbols. "
-                            "Manual: pick the symbols yourself just below."
+                            "'Automatic (all)': EVERY symbol covering the window — 395 on "
+                            "10y, honest warning: 25+ minutes per run. Manual: pick below."
                         ).classes("help q-mb-sm")
                         # Choosing Manual must reveal the symbol picker below
                         # — otherwise the toggle seems to do nothing.
@@ -1292,7 +1303,7 @@ def render(
                                 "static_ew": "Static equal-weight (passive)",
                                 "pairs_trading": "Pairs trading (spread z-score)",
                             },
-                            value="mean_reversion",
+                            value="static_ew",  # el default que pasa (preset dividendos)
                             label="Strategy (real engine)",
                         ).classes("w-full")
                         ui.label(
@@ -1309,6 +1320,12 @@ def render(
                                 return
                             strategy_name, preset_universe = preset
                             estrategia.value = strategy_name
+                            if not preset_universe:
+                                # universo AUTOMÁTICO (goal-aware): el
+                                # camino verificado que pasa los gates
+                                modo_universo.value = "auto"
+                                return
+                            modo_universo.value = "manual"
                             disponibles = (
                                 {
                                     opt
@@ -1391,6 +1408,7 @@ def render(
                             backtest_start=start_iso,
                             backtest_end=end_iso,
                             symbols=symbols,
+                            exhaustive_universe=modo_universo.value == "auto-all",
                             investor_age=int(edad.value) if edad.value else None,
                             tax_province=provincia.value,
                             strategy=estrategia.value,
@@ -1974,12 +1992,19 @@ def render(
                     from app.services.agent_swarm.optimizer import optimize as run_grid
 
                     optimize_button.disable()
-                    if modo_universo.value == "auto":
-                        auto = await asyncio.to_thread(auto_universe, goal=objetivo.value)
+                    if modo_universo.value in ("auto", "auto-all"):
+                        auto = await asyncio.to_thread(
+                            auto_universe,
+                            goal=objetivo.value,
+                            exhaustive=modo_universo.value == "auto-all",
+                        )
                         symbols = auto.symbols
+                        estimate = "HOURS — every combination over all symbols" if (
+                            modo_universo.value == "auto-all"
+                        ) else "may take a few minutes"
                         optimize_status.text = (
                             f"Searching over {len(symbols)} auto-picked symbols "
-                            "(real engine, may take a few minutes)…"
+                            f"(real engine, {estimate})…"
                         )
                     else:
                         symbols = [str(s).upper() for s in (universo.value or [])] or list(

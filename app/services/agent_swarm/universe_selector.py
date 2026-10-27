@@ -354,6 +354,7 @@ def auto_universe(
     today: date | None = None,
     goal: str | None = None,
     window_start: date | None = None,
+    exhaustive: bool = False,
 ) -> AutoUniverseResult:
     """Derive the run universe from the corpus (deterministic).
 
@@ -365,18 +366,26 @@ def auto_universe(
     family (a raw liquidity top always surfaces the same mega-caps and
     three copies of the S&P 500). Falls back to ``DEFAULT_UNIVERSE`` —
     loudly — when nothing survives the screen.
+
+    ``exhaustive=True`` (user 2026-10-27: "automatic y todos los
+    símbolos"): NO curated goal filter, NO family caps, NO top-k — every
+    symbol that survives the basic screen enters the universe. The passive
+    default (static_ew) is a whole-market portfolio, not a hand-picked
+    shortlist; the coverage gate still rules on window fit.
     """
     effective_today = today or date.today()
     scan = scan_corpus(Path(data_dir))
     goal_key = (goal or "").upper().strip()
-    goal_filter = GOAL_FILTERS.get(goal_key)
-    goal_label = goal_key if goal_filter else ""
+    goal_filter = None if exhaustive else GOAL_FILTERS.get(goal_key)
+    goal_label = (goal_key if goal_filter else "") or ("exhaustive" if exhaustive else "")
+    k = len(scan.symbols) if exhaustive else k
     dropped: dict[str, int] = {
         "unreadable": len(scan.unreadable),
         "out-of-goal": 0,
         "short-history": 0,
         "stale": 0,
         "illiquid": 0,
+        "uncovered-window": 0,
     }
     candidates: list[CorpusSymbol] = []
     for sym in scan.symbols:
@@ -388,6 +397,14 @@ def auto_universe(
             dropped["stale"] += 1
         elif sym.avg_dollar_volume < MIN_DOLLAR_VOLUME:
             dropped["illiquid"] += 1
+        elif (
+            exhaustive
+            and window_start is not None
+            and sym.first_date > window_start
+        ):
+            # el gate STRICTO de cobertura rechazaría la run entera con
+            # estos símbolos dentro: fuera del universo aquí, contados.
+            dropped["uncovered-window"] += 1
         else:
             candidates.append(sym)
 
@@ -417,7 +434,9 @@ def auto_universe(
         )
 
     ranked = sorted(candidates, key=lambda s: (-s.avg_dollar_volume, s.symbol))
-    if goal_filter:
+    if exhaustive:
+        picked, overlap_dropped = [s.symbol for s in ranked], 0  # todos, sin caps
+    elif goal_filter:
         picked, overlap_dropped = _one_per_overlap_family(ranked, k, window_start)
     else:
         picked = _diversify(ranked, k)

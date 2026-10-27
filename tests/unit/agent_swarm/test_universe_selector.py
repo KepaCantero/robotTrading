@@ -62,6 +62,7 @@ class TestAutoUniverse:
             "short-history": 1,
             "stale": 1,
             "illiquid": 1,
+            "uncovered-window": 0,
         }
         assert not result.fallback_used
 
@@ -393,3 +394,30 @@ class TestOverlapFamilyDedupe:
         result = auto_universe(tmp_path, today=TODAY, goal="MAXIMIZAR_DIVIDENDOS")
         assert {"SCHD", "NOBL", "DVY", "VYMI"} <= set(result.symbols)
         assert "VYM" not in result.symbols and "DES" in result.symbols
+
+
+class TestExhaustiveUniverse:
+    """User (2026-10-27): 'automatic y todos los símbolos' — exhaustive
+    mode keeps EVERY screened symbol (no goal filter, no family caps, no
+    top-k) but drops symbols that cannot cover the window start (the
+    strict coverage gate would fail the whole run otherwise)."""
+
+    def test_exhaustive_keeps_all_screened_symbols(self, tmp_path):
+        write_csv(tmp_path, "LIQ", 700, close=100.0, volume=2_000_000)
+        write_csv(tmp_path, "AAA", 700, close=100.0, volume=1_000_000)
+        write_csv(tmp_path, "THIN", 700, volume=100.0)  # still illiquid: out
+        result = auto_universe(
+            tmp_path, today=TODAY, goal="MAXIMIZAR_DIVIDENDOS", exhaustive=True
+        )
+        assert result.symbols == ["LIQ", "AAA"]  # no goal filter, no caps
+
+    def test_exhaustive_drops_symbols_missing_the_window(self, tmp_path):
+        write_csv(tmp_path, "OLD", 900, close=100.0, volume=2_000_000)
+        # 600 bars ending yesterday: enough history, but only starts ~600
+        # days back — a 800-day window needs more
+        write_csv(tmp_path, "NEW", 600, close=100.0, volume=2_000_000)
+        result = auto_universe(
+            tmp_path, today=TODAY, window_start=TODAY - timedelta(days=800), exhaustive=True
+        )
+        assert result.symbols == ["OLD"]
+        assert result.dropped["uncovered-window"] == 1

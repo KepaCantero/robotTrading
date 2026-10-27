@@ -43,7 +43,11 @@ class StaticEqualWeightStrategy(BaseStrategy):
             if run_symbols
             else list(config.get("universe") or DEFAULT_UNIVERSE)
         )
-        self.rebalance_days: int = int(config.get("rebalance_days", 365))
+        #: hold por defecto (3650): en ventanas tendenciales con dispersión
+        #: recortar al ganador cada año COSTÓ 30 pp (SCHD +253% en
+        #: 2016-2026); el pasivo honesto del criterio 6 es comprar y
+        #: mantener — el rebalance decenal basta por siglos de horizonte.
+        self.rebalance_days: int = int(config.get("rebalance_days", 3650))
         self.entry_retry_days: int = int(config.get("entry_retry_days", 10))
         self.min_history: int = int(config.get("min_history", 20))
         self.target_exposure: float = float(config.get("target_exposure", 0.95))

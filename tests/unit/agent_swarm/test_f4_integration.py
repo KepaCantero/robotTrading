@@ -34,7 +34,9 @@ def _ctx(objective: str, strategy=None, modules=None):
 class TestResolveStrategy:
     def test_dividend_goal_without_strategy_runs_dividend_tracking(self):
         executor = Capa2PipelineExecutor.__new__(Capa2PipelineExecutor)  # no __init__ wiring
-        assert executor._resolve_strategy(_ctx("MAXIMIZAR_DIVIDENDOS")) == "dividend_tracking"
+        # goal preset now BEATS T3.1 modules: the dividend default is the
+        # passive that passes (user: "dejalo por default la que pasa")
+        assert executor._resolve_strategy(_ctx("MAXIMIZAR_DIVIDENDOS")) == "static_ew"
 
     def test_capital_preservation_maps_to_low_volatility(self):
         executor = Capa2PipelineExecutor.__new__(Capa2PipelineExecutor)
@@ -47,12 +49,15 @@ class TestResolveStrategy:
         )
         assert resolved == "static_ew"
 
-    def test_t31_module_beats_goal_fallback(self):
+    def test_goal_preset_beats_t31_module(self):
+        """Priority change (user 2026-10-27): the GOAL's preset is the
+        default that passes; T3.1 modules only decide for goals without
+        a preset."""
         executor = Capa2PipelineExecutor.__new__(Capa2PipelineExecutor)
         resolved = executor._resolve_strategy(
             _ctx("MAXIMIZAR_DIVIDENDOS", modules=["pairs_trading"])
         )
-        assert resolved == "pairs_trading"
+        assert resolved == "static_ew"
 
     def test_unknown_goal_falls_back_to_momentum(self):
         executor = Capa2PipelineExecutor.__new__(Capa2PipelineExecutor)

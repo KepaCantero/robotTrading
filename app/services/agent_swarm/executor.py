@@ -205,6 +205,10 @@ class SwarmRunRequest:
     constraints: dict | None = None
     market_regime: str = "sideways"  # bull / sideways / bear
     volatility_level: str = "normal"  # low / normal / high
+    #: Automatic universe WITHOUT the curated goal screen: every corpus
+    #: symbol that survives freshness/liquidity/history AND covers the
+    #: window (395 names on 10y). Honest cost: a 25+ minute run.
+    exhaustive_universe: bool = False
     backtest_start: str | None = None  # ISO date the test window opens
     backtest_end: str | None = None  # ISO date the test window closes
     symbols: list[str] | None = None  # universe to test over
@@ -390,10 +394,17 @@ class Capa2PipelineExecutor:
                     window_start = _date.fromisoformat(str(request.backtest_start)[:10])
                 except ValueError:
                     window_start = None
+            # Universo AUTOMÁTICO: por defecto el cribado consciente del
+            # objetivo (familias de solapamiento — el camino verificado
+            # que PASA en ~40s). ``exhaustive_universe`` (UI: "Automatic
+            # (all symbols)") lo quita: todos los símbolos que cubren la
+            # ventana — 395 en 10y — con el coste honesto: 25+ min/run.
+            goal_key = str(request.objetivo_inversion or "").upper()
             auto = await asyncio.to_thread(
                 auto_universe,
                 goal=request.objetivo_inversion,
                 window_start=window_start,
+                exhaustive=bool(getattr(request, "exhaustive_universe", False)),
             )
             ctx.auto_symbols = auto.symbols
             ctx.auto_universe_summary = auto.summary()
@@ -631,18 +642,27 @@ class Capa2PipelineExecutor:
 
     # ── T4.1 Backtest Orchestrator ───────────────────────────────────────────
 
-    #: objetivo → estrategia real (espejo del preset de swarm.py, D02)
+    #: objetivo → estrategia real (espejo del preset de swarm.py, D02).
+    #: Dividendos 2026-10-27: el default es EL QUE PASA — el pasivo que el
+    #: propio veredicto recomienda en cada run ("deploy the static
+    #: portfolio"); dividend_tracking sigue seleccionable a mano.
     _GOAL_STRATEGY: dict[str, str] = {
-        "MAXIMIZAR_DIVIDENDOS": "dividend_tracking",
+        "MAXIMIZAR_DIVIDENDOS": "static_ew",
         "CAPITAL_PRESERVATION": "low_volatility",
     }
 
     def _resolve_strategy(self, ctx: _Ctx) -> str:
-        """Effective strategy: explicit request override wins; otherwise the
-        T3.1 module; otherwise the objective's preset (D02: a dividend
-        request without strategy must never silently run mean_reversion)."""
+        """Effective strategy. Priority (user 2026-10-27: "dejalo por
+        default la que pasa"): explicit request override > the GOAL's
+        preset (the default the UI applies — for dividends, the passive
+        that passes honestly) > the T3.1 module > momentum. D02's rule
+        stands: a goal-only request never silently runs an unrelated
+        strategy."""
         if ctx.request.strategy:
             return ctx.request.strategy
+        goal = str(getattr(ctx.request, "objetivo_inversion", "") or "").upper()
+        if goal in self._GOAL_STRATEGY:
+            return self._GOAL_STRATEGY[goal]
         param_set = getattr(ctx, "param_result", None)
         modules = (
             list(param_set.parameter_set.module_parameters.keys())
@@ -651,9 +671,6 @@ class Capa2PipelineExecutor:
         )
         if modules:
             return modules[0]
-        goal = str(getattr(ctx.request, "objetivo_inversion", "") or "").upper()
-        if goal in self._GOAL_STRATEGY:
-            return self._GOAL_STRATEGY[goal]
         return "momentum_modular"
 
     def _t41_input(self, ctx: _Ctx):
