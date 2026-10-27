@@ -26,7 +26,7 @@ from nicegui import ui
 
 from app.presentation.dashboard.nicegui_app.components.swarm_fx import install as install_fx
 from app.services.agent_swarm.store import DEFAULT_SWARM_DB_PATH
-from app.services.live_trading.broker_connector import BrokerConnector, BrokerPosition, BrokerType
+from app.services.live_trading.broker_connector import BrokerConnector
 from app.services.live_trading.order_manager import OrderManager
 from app.services.portfolio_management import (
     OBJECTIVES,
@@ -40,12 +40,48 @@ from app.services.portfolio_management import (
     plan_rebalance,
 )
 from app.services.portfolio_management.executor import RebalanceExecutor
-from app.services.portfolio_management.paper_state import DEFAULT_PAPER_STATE_PATH, load_paper_state
 from app.services.portfolio_management.winner_adoption import latest_winner
 
 D = Decimal
-_DB_PATH = Path("data/portfolio_management.db")
+_DB_PATH = Path("data/portfolio_management.db")  # legacy path of slug "main"
 _CORPUS = Path("data/historical")
+
+#: Requirement (user 2026-10-27): paper trading holds MORE THAN ONE
+#: portfolio, each by NAME, each with its own account/lots/history.
+#: Active selection is module-level (single-user local dashboard) and the
+#: engines are cached per slug.
+_ACTIVE_SLUG = "main"
+_stores: dict[str, PortfolioManagementStore] = {}
+_brokers: dict[str, BrokerConnector] = {}
+
+
+async def _get_store() -> PortfolioManagementStore:
+    slug = _ACTIVE_SLUG
+    cached = _stores.get(slug)
+    if cached is not None:
+        return cached
+    from app.services.portfolio_management.named_portfolios import (
+        open_store,
+        prepare_store,
+    )
+
+    engine, store = open_store(slug)
+    await prepare_store(engine)
+    _stores[slug] = store
+    return store
+
+
+async def _get_broker() -> BrokerConnector:
+    slug = _ACTIVE_SLUG
+    cached = _brokers.get(slug)
+    if cached is not None:
+        return cached
+    from app.services.portfolio_management.named_portfolios import open_broker
+
+    connector = await open_broker(slug)
+    _brokers[slug] = connector
+    return connector
+
 
 #: Requirement 1's questionnaire — plain answers, no jargon.
 DRAWDOWN_CHOICES = {
@@ -54,59 +90,6 @@ DRAWDOWN_CHOICES = {
     "30": "30% or more — I am here for the long run",
 }
 PROVINCES = ["Madrid", "Barcelona", "Valencia", "Sevilla", "Zaragoza", "Otro"]
-
-_store: PortfolioManagementStore | None = None
-_broker: BrokerConnector | None = None
-
-
-async def _get_store() -> PortfolioManagementStore:
-    global _store
-    if _store is None:
-        from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-
-        from app.infrastructure.persistence.database import Base
-        from app.services.portfolio_management import store as store_module
-
-        _DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-        engine = create_async_engine(f"sqlite+aiosqlite:///{_DB_PATH}")
-        async with engine.begin() as connection:
-            await connection.run_sync(
-                Base.metadata.create_all,
-                tables=[
-                    store_module.TargetPortfolioRecord.__table__,
-                    store_module.PortfolioLotRecord.__table__,
-                    store_module.RebalanceEventRecord.__table__,
-                ],
-            )
-        _store = PortfolioManagementStore(async_sessionmaker(engine, expire_on_commit=False))
-    return _store
-
-
-async def _get_broker() -> BrokerConnector:
-    global _broker
-    if _broker is None:
-        connector = BrokerConnector(BrokerType.PAPER)
-        connector.adapter.auto_fill_orders = True
-        await connector.connect()
-        state = load_paper_state(DEFAULT_PAPER_STATE_PATH)
-        if state is not None and connector.adapter.account is not None:
-            cash, positions = state
-            connector.adapter.account.cash_available = cash
-            for symbol, data in positions.items():
-                quote = await connector.get_quote(symbol)
-                price = quote.price if quote else data["avg_price"]
-                quantity = data["quantity"]
-                connector.adapter.positions[symbol] = BrokerPosition(
-                    symbol=symbol,
-                    quantity=quantity,
-                    avg_price=data["avg_price"],
-                    current_price=price,
-                    market_value=quantity * price,
-                    unrealized_pl=(price - data["avg_price"]) * quantity,
-                    unrealized_pl_pct=D("0"),
-                )
-        _broker = connector
-    return _broker
 
 
 def _corpus_facts(symbol: str) -> dict[str, Any] | None:
@@ -257,12 +240,31 @@ def render(
             ui.element("div").classes(f"blob {blob}").props("aria-hidden=true")
 
         with ui.row().classes("w-full items-center no-wrap gap-md"):
-            with ui.column().classes("gap-0 q-mr-md"):
+            with ui.column().classes("gap-0 q-mr-md flex-1"):
                 ui.label("Portfolio").classes("page-title")
                 ui.label(
                     "Your investments on autopilot: answer five questions, get a "
                     "portfolio you can understand, and let the robot keep it on track."
                 ).classes("page-sub")
+            from app.services.portfolio_management.named_portfolios import list_portfolios
+
+            portfolios = list_portfolios()
+            options = {p["slug"]: p["name"] for p in portfolios}
+
+            def _switch_portfolio(e) -> None:
+                global _ACTIVE_SLUG
+                _ACTIVE_SLUG = str(e.value or "main")
+                render_state.refresh()
+
+            ui.select(
+                options,
+                value=_ACTIVE_SLUG if _ACTIVE_SLUG in options else "main",
+                label="Paper portfolio",
+                on_change=_switch_portfolio,
+            ).classes("min-w-[220px]").mark("portfolio_select").tooltip(
+                "Each portfolio keeps its own paper account. Send a validated run "
+                "from Mission Control to create a new one."
+            )
 
         target_state: dict[str, Any] = {}
 
@@ -485,8 +487,8 @@ def render(
                     ui.table(columns=columns, rows=rows, row_key="symbol").classes("w-full").props(
                         "flat bordered dense"
                     )
-                with ui.row().classes("w-full items-center gap-sm no-wrap").style(
-                    "margin-top:12px"
+                with (
+                    ui.row().classes("w-full items-center gap-sm no-wrap").style("margin-top:12px")
                 ):
                     ui.button(
                         "Apply to paper account",
@@ -540,6 +542,7 @@ def render(
             """Supervised fresh start: broker account back to initial cash,
             lots cleared, persisted paper state removed. Events are kept."""
             from app.services.live_trading.broker_adapters.paper_adapter import PaperAdapter
+            from app.services.portfolio_management.named_portfolios import paper_state_path
 
             broker = await _get_broker()
             adapter = broker.adapter
@@ -551,7 +554,9 @@ def render(
                     adapter.account.buying_power = adapter.initial_cash
                     adapter.account.equity = adapter.initial_cash
                     adapter.account.margin_used = D("0")
-            Path(DEFAULT_PAPER_STATE_PATH).unlink(missing_ok=True)
+            Path(
+                paper_state_path(_ACTIVE_SLUG)
+            ).unlink(missing_ok=True)
             cleared = await pm_store.clear_lots()
             await pm_store.append_event(
                 trigger="manual",

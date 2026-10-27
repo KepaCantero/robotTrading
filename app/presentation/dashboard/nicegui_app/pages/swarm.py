@@ -2087,12 +2087,26 @@ def render(
             )
             with result_panel:
                 ui.label("3 · RESULT").classes("lbl q-mb-sm")
-                with ui.row().classes("w-full items-center gap-lg no-wrap"):
+                # The signature moment (direction: calm fintech): the ONE
+                # number a novice came for, at headline size, honestly toned.
+                ret_hero = _as_float(metrics.get("total_return"))
+                if abs(ret_hero) < 0.05:
+                    ret_hero = 0.0  # a window with no trades is "0.0%", never "-0.0%"
+                hero_tone = {"ok": "var(--ok)", "mid": "var(--warn)", "bad": "var(--bad)"}[kind]
+                with ui.row().classes("w-full items-end gap-lg wrap"):
+                    with ui.column().classes("gap-xs"):
+                        ui.label(f"{ret_hero:+,.1f}%").style(
+                            f"font-size:52px;font-weight:800;letter-spacing:-0.02em;"
+                            f"line-height:1;color:{hero_tone};"
+                            "font-variant-numeric:tabular-nums"
+                        )
+                        ui.label(f"simulated over {period} · fees and slippage included").classes(
+                            "help"
+                        )
                     ui.label(title).classes(f"verdict {kind}")
-                    ui.label(meaning).classes("page-sub").style("flex:1")
+                    ui.label(meaning).classes("page-sub").style("flex:1;min-width:220px")
 
                 with ui.row().classes("w-full q-mt-md gap-sm wrap"):
-                    _metric_tile("Simulated return", metrics.get("total_return"), 0.0)
                     _metric_tile("Sharpe ratio", metrics.get("sharpe"), 0.08)
                     _metric_tile("Max drawdown", metrics.get("drawdown"), 0.16)
                     _metric_tile("Feasibility", metrics.get("feasibility"), 0.24)
@@ -2150,6 +2164,101 @@ def render(
                     ui.label("Next steps").classes("lbl q-mt-md q-mb-xs")
                     for step_item in metrics["next_steps"]:
                         ui.label(f"→ {step_item}").classes("help")
+
+                # A validated run is SENDABLE: named paper portfolio, its own
+                # account, managed and rebalanced on the Portfolio page.
+                if verdict in ("APPROVED", "CONDITIONAL"):
+                    ui.button(
+                        "Send to paper trading…",
+                        icon="rocket_launch",
+                        on_click=lambda: _send_to_paper_dialog(run, results, request),
+                    ).props("unelevated no-caps").classes("run-btn q-mt-md").mark(
+                        "send_to_paper"
+                    ).tooltip(
+                        "Creates a NAMED paper portfolio with these holdings and its "
+                        "own starting cash — your other portfolios are untouched."
+                    )
+
+    def _send_to_paper_dialog(run: Any, results: dict, request: Any) -> None:
+        from decimal import Decimal as _D
+
+        strat = str(getattr(request, "strategy", "") or "portfolio")
+        default_name = f"{strat} · {run.run_id[-6:]}"
+        with ui.dialog() as dialog, ui.card().classes("min-w-[520px]"):
+            ui.label("Send this portfolio to paper trading").classes("text-h6")
+            ui.label(
+                "You choose the name and the starting cash. Each paper portfolio "
+                "keeps its own account, its own history and its own rebalances — "
+                "you can run several side by side."
+            ).classes("help")
+            name_in = ui.input(
+                "Portfolio name", value=default_name
+            ).classes("w-full").mark("paper_name")
+            cash_in = ui.number(
+                "Starting cash (€)",
+                value=float(getattr(request, "capital_initial", 0) or 100000),
+                min=1000,
+                step=1000,
+            ).classes("w-full").mark("paper_cash")
+            with ui.row().classes("w-full justify-end gap-sm q-mt-md"):
+                ui.button("Cancel", on_click=dialog.close).props("flat")
+
+                async def _create() -> None:
+                    await _create_paper_portfolio(
+                        run, results, request, name_in.value, _D(str(cash_in.value or 100000))
+                    )
+                    dialog.close()
+
+                ui.button(
+                    "Create paper portfolio", icon="rocket_launch", on_click=_create
+                ).props("unelevated no-caps").classes("run-btn").mark("paper_create")
+        dialog.open()
+
+    async def _create_paper_portfolio(
+        run: Any, results: dict, request: Any, name: str, cash: Decimal
+    ) -> None:
+        from app.services.portfolio_management.named_portfolios import (
+            create_portfolio,
+            open_store,
+            prepare_store,
+        )
+        from app.services.portfolio_management.models import ProfileAnswers
+        from app.services.portfolio_management.winner_adoption import (
+            build_target,
+            winner_from_results,
+        )
+
+        winner = winner_from_results(getattr(run, "run_id", ""), results)
+        if winner is None:
+            ui.notify("This run is not adoptable (verdict or validation).", type="warning")
+            return
+        meta = create_portfolio(
+            name,
+            source_run_id=str(getattr(run, "run_id", "")),
+            strategy_name=str(winner.get("strategy_name") or ""),
+            decision_status=str(winner.get("decision_status") or ""),
+            initial_cash=cash,
+        )
+        engine, store = open_store(meta["slug"])
+        await prepare_store(engine)
+        risk_level = {"BAJO": "conservative", "MEDIO": "medium", "ALTO": "aggressive"}.get(
+            str(getattr(request, "risk_tolerance", "") or "").upper(), "medium"
+        )
+        profile = ProfileAnswers(
+            objective=str(getattr(request, "objetivo_inversion", "") or "BALANCED_GROWTH"),
+            risk_level=risk_level,
+            investor_age=getattr(request, "investor_age", None),
+            horizon_months=int(getattr(request, "investment_horizon", 120) or 120),
+            tax_province=str(getattr(request, "tax_province", "") or "Madrid"),
+        )
+        target = build_target(profile, winner)
+        await store.save_target(target)
+        ui.notify(
+            f"Paper portfolio “{meta['name']}” created from the run's holdings "
+            f"(your profile's risk rules applied) — €{cash:,.0f} starting cash. "
+            "Open the Portfolio page to manage it.",
+            type="positive",
+        )
 
     # ── View updates ──────────────────────────────────────────────────────
 

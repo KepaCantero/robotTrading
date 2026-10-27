@@ -148,6 +148,36 @@ async def latest_winner(db_path: str | Path = DEFAULT_SWARM_DB_PATH) -> dict[str
     return None
 
 
+def winner_from_results(run_id: str, results: dict[str, Any]) -> dict[str, Any] | None:
+    """Winner-shaped dict from ONE run's results (the swarm page holds it
+    in memory after a run): same shape `latest_winner` returns, so
+    `build_target` consumes either interchangeably. None when the run is
+    not adoptable (REJECTED decision or failed validation)."""
+    decision = results.get("deployment_decision") or {}
+    if not isinstance(decision, dict) or decision.get("status") not in WINNER_STATUSES:
+        return None
+    validation = results.get("validation")
+    if isinstance(validation, dict) and validation.get("passed") is False:
+        return None
+    portfolio = results.get("portfolio") or {}
+    holdings = _holdings_from_allocations(portfolio.get("allocations") or [])
+    if not holdings:
+        return None
+    return {
+        "run_id": run_id,
+        "started_at": None,
+        "decision_status": decision.get("status"),
+        "strategy_name": decision.get("strategy_name"),
+        "holdings": holdings,
+        "metrics": {
+            "annual_return_pct": portfolio.get("expected_portfolio_return_pct"),
+            "sharpe": portfolio.get("expected_portfolio_sharpe"),
+            "max_drawdown_pct": portfolio.get("expected_portfolio_drawdown_pct"),
+            "diversification": portfolio.get("diversification_ratio"),
+        },
+    }
+
+
 def _holdings_from_allocations(allocations: list[Any]) -> list[Holding]:
     """AllocationWeight dicts (module_name=symbol, weight_pct) -> Holdings
     rescaled to sum exactly 1."""
