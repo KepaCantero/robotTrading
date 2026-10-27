@@ -126,6 +126,13 @@ class AppShell:
 
             render(cls._store, cls._profitability)
 
+        @ui.page("/design")
+        def page_design():
+            cls._build_shell()
+            from app.presentation.dashboard.nicegui_app.pages.design import render
+
+            render()
+
         @ui.page("/history")
         def page_history():
             cls._build_shell()
