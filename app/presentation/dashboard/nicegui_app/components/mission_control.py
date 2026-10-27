@@ -22,7 +22,7 @@ STAGES: list[tuple[str, str, str]] = [
     ("Backtest", "/results", "history_edu"),
     ("Optimize", "/optimize", "tune"),
     ("Paper", "/portfolio", "science"),
-    ("Live", "", "lock"),
+    ("Live", "/trust", "lock"),  # the locked door leads to its explanation (UI-4)
 ]
 
 

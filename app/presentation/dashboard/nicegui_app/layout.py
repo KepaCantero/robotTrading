@@ -133,6 +133,13 @@ class AppShell:
 
             render()
 
+        @ui.page("/trust")
+        def page_trust():
+            cls._build_shell()
+            from app.presentation.dashboard.nicegui_app.pages.trust import render
+
+            render(cls._swarm_executor, cls._swarm_store)
+
         @ui.page("/design")
         def page_design():
             cls._build_shell()

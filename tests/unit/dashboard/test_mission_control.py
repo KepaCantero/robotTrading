@@ -42,5 +42,5 @@ def test_every_stage_has_a_plain_line_and_a_route():
         assert st["stage"] == name
         assert st["line"], name  # no empty narration
     routes = [r for _, r, _ in STAGES]
-    assert routes[-1] == ""  # Live has nowhere to go — it's locked
-    assert all(r for r in routes[:-1])
+    assert routes[-1] == "/trust"  # UI-4: the locked door leads to its explanation
+    assert all(r for r in routes)
