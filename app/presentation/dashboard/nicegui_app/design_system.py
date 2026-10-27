@@ -255,3 +255,46 @@ def _txt_span(classes: str, text: str) -> ui.label:
 
 def _txt_div_styled(style: str, text: str) -> ui.label:
     return ui.label(text).style(style)
+
+
+# ═══════════════════════════════════════════════════════════════════
+# UI-6 — plain-English glossary (the 0-jargon rule, data-backed)
+# ═══════════════════════════════════════════════════════════════════
+
+#: every financial term a novice meets on these pages, explained once,
+#: in one breath. The /glossary page renders it whole; eli5_tooltip and
+#: term() attach the same text where the word appears.
+GLOSSARY: dict[str, str] = {
+    "Portfolio": "All your investments together, like one basket you carry.",
+    "ETF": "A single ticker that holds many companies at once — instant diversity.",
+    "Dividend": "Cash a company pays you regularly, just for owning its shares.",
+    "Backtest": "Replaying the past with today's plan to see how it would have done.",
+    "Fees": "What trading costs — always included in our numbers, never hidden.",
+    "Walk-forward": "Testing on stretches of time the plan never saw while learning.",
+    "Drawdown": "How far it fell from its highest point before recovering.",
+    "Worst fall": "The biggest drop your portfolio ever took in the data we tested.",
+    "Rebalance": "Selling a bit of what grew too much to buy what lagged — back to plan.",
+    "Drift": "How far your real portfolio has wandered from its target weights.",
+    "Paper trading": "Real prices, real rules, imaginary money — the dress rehearsal.",
+    "Live trading": "The same robot moving real euros. Off by design for now.",
+    "Sharpe ratio": "Return per unit of bumps — higher means a smoother ride.",
+    "Optimize": "Quietly trying many settings in the past to pick sensible ones.",
+    "Equal-weight": "Every position the same size — the honest baseline we must beat.",
+    "Tax preview": "What selling would cost you in Spanish taxes, shown BEFORE you confirm.",
+}
+
+
+def term(label_text: str, key: str | None = None) -> ui.label:
+    """A term with its glossary tooltip attached — the word and its
+    explanation can never drift apart."""
+    key = (key or label_text).strip()
+    plain = GLOSSARY.get(key) or next(
+        (v for k, v in GLOSSARY.items() if k.lower() == key.lower()), ""
+    )
+    element = ui.label(label_text)
+    if plain:
+        element.classes("underline decoration-dotted cursor-help").style(
+            "color:var(--ds-teal_deep)"
+        )
+        eli5_tooltip(element, key, plain)
+    return element

@@ -172,6 +172,13 @@ class AppShell:
 
             render()
 
+        @ui.page("/glossary")
+        def page_glossary():
+            cls._build_shell()
+            from app.presentation.dashboard.nicegui_app.pages.glossary import render
+
+            render()
+
         @ui.page("/trust")
         def page_trust():
             cls._build_shell()

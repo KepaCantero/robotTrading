@@ -215,6 +215,23 @@ def _inject_ds() -> None:
     ds.inject()
 
 
+def _render_digest_card(target) -> None:
+    """UI-6: the weekly digest — what happened, what to do (usually nothing)."""
+    from app.presentation.dashboard.nicegui_app import design_system as ds
+    from app.presentation.dashboard.nicegui_app.components.weekly_digest import weekly_digest
+
+    with ds.card(title="This week, in plain English").classes("w-full q-mb-md"):
+        lines = weekly_digest(
+            last_run_status="completed" if getattr(target, "source_run_id", None) else None,
+            last_run_return_pct=None,
+            drift_status=None,
+        )
+        ui.label(lines["headline"]).style("color:var(--ds-text)")
+        ui.label(lines["action"]).style(
+            "color:var(--ds-text_soft);font-size:var(--ds-small-size);margin-top:6px"
+        )
+
+
 def render(
     executor: Any = None,
     store: Any = None,
@@ -246,6 +263,7 @@ def render(
             if target is None:
                 _render_questionnaire(first_time=True)
                 return
+            _render_digest_card(target)
             _render_target_card(target)
             await _render_drift_card(target, pm_store)
             await _render_history_card(pm_store)

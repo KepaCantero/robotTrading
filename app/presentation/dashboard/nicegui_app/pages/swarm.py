@@ -1390,6 +1390,18 @@ def render(
                                 "Install and first steps",
                                 "/docs/quickstart/",
                             ),
+                            (
+                                "🔤",
+                                "Plain-English glossary",
+                                "Every term, one breath",
+                                "/glossary",
+                            ),
+                            (
+                                "🛟",
+                                "Trust & risk",
+                                "What can go wrong",
+                                "/trust",
+                            ),
                         ):
                             with (
                                 ui.link(target=href)
