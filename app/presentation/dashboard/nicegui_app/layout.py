@@ -264,7 +264,8 @@ class AppShell:
             cls._build_shell()
             from app.presentation.dashboard.nicegui_app.pages.start import render
 
-            render()
+            # shared executor+store: wizard runs persist like any other
+            render(cls._swarm_executor, cls._swarm_store)
 
         @ui.page("/glossary")
         def page_glossary():

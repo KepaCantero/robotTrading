@@ -11,11 +11,15 @@ from __future__ import annotations
 
 import asyncio
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from nicegui import ui
 
 from app.presentation.dashboard.nicegui_app import design_system as ds
 from app.presentation.dashboard.nicegui_app.pages.swarm import SPANISH_PROVINCES, preset_for_goal
+
+if TYPE_CHECKING:
+    from app.services.agent_swarm.executor import Capa2PipelineExecutor, SwarmRunStore
 
 #: plain-English narration per pipeline stage (Mission Control vocabulary)
 STAGE_LINES: dict[str, str] = {
@@ -55,7 +59,18 @@ def _narration_for(stage_id: str) -> str:
     return STAGE_LINES.get(stage_id, "Working…")
 
 
-def render() -> None:
+def render(
+    executor: Capa2PipelineExecutor | None = None,
+    store: SwarmRunStore | None = None,
+) -> None:
+    """Render the wizard.
+
+    ``executor``/``store`` are the SHARED app instances (layout injects
+    them): runs launched here persist to swarm_runs.db and show up in
+    history/replay exactly like Mission Control runs. Without them every
+    wizard run was a throwaway — the user validated a portfolio and the
+    run vanished ("las ejecuciones no se guardan").
+    """
     ds.inject()
     ui.add_head_html(
         "<style>body { background: var(--ds-bg); font-family: var(--ds-font); "
@@ -77,6 +92,7 @@ def render() -> None:
             ui.button(label, on_click=lambda: _pick(key, value, label, b))
             .classes("ds-option")
             .props("no-caps unelevated")
+            .mark("opt_" + key + "_" + "".join(c for c in label if c.isalnum()))
         )
         option_buttons.setdefault(key, []).append(b)
         return b
@@ -122,10 +138,12 @@ def render() -> None:
                     for label, goal in GOAL_OPTIONS.items():
                         ui.button(
                             label, on_click=lambda g=goal, t=label: _pick("goal", g, t)
-                        ).classes("ds-btn ds-btn--secondary").props("no-caps unelevated outline")
+                        ).classes("ds-btn ds-btn--secondary").props(
+                            "no-caps unelevated outline"
+                        ).mark(f"goal_{goal}")
 
         status = ui.label("").style("color:var(--ds-teal_deep);font-weight:600")
-        go = ds.button("Show my portfolio →", on_click=lambda: _propose())
+        go = ds.button("Show my portfolio →", on_click=lambda: _propose()).mark("propose")
 
         # ── proposal + validation area ───────────────────────────────
         proposal = ui.column().classes("w-full gap-6")
@@ -174,7 +192,7 @@ def render() -> None:
                         icon="🌱",
                     )
             with ui.row().classes("gap-4"):
-                ds.button("Validate it", on_click=_validate)
+                ds.button("Validate it", on_click=_validate).mark("validate_it")
                 ds.button("Customize", on_click=lambda: ui.navigate.to("/swarm"), primary=False)
 
         def _pie(universe: list[str]) -> None:
@@ -233,7 +251,7 @@ def render() -> None:
                 backtest_start=start.isoformat(),
                 backtest_end=end.isoformat(),
             )
-            state = await Capa2PipelineExecutor().run(request)
+            state = await (executor or Capa2PipelineExecutor(store=store)).run(request)
             return {
                 "status": state.status,
                 "years": round(days / 365.25),
