@@ -1400,6 +1400,31 @@ def render(
                                 ui.label(name).classes("dt-name")
                                 ui.label(sub).classes("dt-sub")
 
+                # ── Mission Control (UI-3): the macro loop, honest states ──
+                from app.presentation.dashboard.nicegui_app.components.mission_control import (
+                    mission_control_band as _mc_band,
+                )
+                from app.presentation.dashboard.nicegui_app.design_system import (
+                    inject as _ds_inject,
+                )
+
+                _ds_inject()
+                _mc_holder = ui.column().classes("w-full gap-0 q-mb-sm")
+
+                async def _mc_refresh() -> None:
+                    try:
+                        _mc_runs = await store.list_runs(limit=30)
+                    except Exception:  # noqa: BLE001 - the band never blocks the page
+                        _mc_runs = []
+                    _mc_holder.clear()
+                    with _mc_holder:
+                        _mc_band(_mc_runs)
+
+                _mc_holder.clear()
+                with _mc_holder:
+                    _mc_band(None)  # first paint; real states arrive in a blink
+                ui.timer(0.05, _mc_refresh, once=True)
+
                 # ── 2 · What is happening + result (right) ──────────────
                 with ui.column().classes("flex-1 gap-md").style("min-width: 0"):
                     with ui.element("div").classes("panel q-pa-md"):
