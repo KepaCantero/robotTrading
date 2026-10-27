@@ -115,20 +115,39 @@ class DeployDecisionOrchestrator:
             # universo batió a la estrategia gestionada, la recomendación
             # desplegable ES el pasivo — decirlo explícitamente en vez de
             # esconder la underperformance tras "optimiza los parámetros".
+            # EXCEPCIÓN: si la estrategia YA ES el pasivo (static_ew), el
+            # gap residual es el coste real de ejecución (entrada t+1,
+            # comisiones, caps de liquidez) — no una "capa de gestión que
+            # resta valor", y no puede recomendarse desplegarse a sí mismo.
             ew_return = self._safe_float(backtest_result.get("universe_ew_return_pct"))
             strategy_return = self._safe_float(backtest_result.get("total_return"))
+            strategy_name = str(
+                recommendation.get("executed_strategy")
+                or recommendation.get("recommendation")
+                or ""
+            )
             if ew_return > 0 and strategy_return < ew_return:
-                reasons.append(
-                    f"Passive equal-weight of this universe did {ew_return:+.1f}% vs "
-                    f"{strategy_return:+.1f}% for the managed strategy "
-                    f"({strategy_return - ew_return:+.1f} pp): the management layer "
-                    "subtracted value — deploying the static portfolio is the honest option."
-                )
-                next_steps.insert(
-                    0,
-                    "Deploy the static equal-weight of this universe (annual rebalance) "
-                    f"instead of the managed strategy — it beat it by {ew_return - strategy_return:.1f} pp.",
-                )
+                if strategy_name == "static_ew":
+                    reasons.append(
+                        f"The passive twin of this universe did {ew_return:+.1f}% vs "
+                        f"{strategy_return:+.1f}% executed "
+                        f"({strategy_return - ew_return:+.1f} pp): that residual is the "
+                        "honest cost of real execution (t+1 entry, commissions, "
+                        "liquidity caps) — this IS the static portfolio."
+                    )
+                else:
+                    reasons.append(
+                        f"Passive equal-weight of this universe did {ew_return:+.1f}% vs "
+                        f"{strategy_return:+.1f}% for the managed strategy "
+                        f"({strategy_return - ew_return:+.1f} pp): the management layer "
+                        "subtracted value — deploying the static portfolio is the honest option."
+                    )
+                    next_steps.insert(
+                        0,
+                        "Deploy the static equal-weight of this universe (annual rebalance) "
+                        f"instead of the managed strategy — it beat it by "
+                        f"{ew_return - strategy_return:.1f} pp.",
+                    )
 
             decision_id = f"decision_{self._get_timestamp()}"
 

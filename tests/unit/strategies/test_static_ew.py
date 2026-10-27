@@ -100,3 +100,42 @@ class TestStaticEqualWeight:
         s.target_exposure = 0.95
         s.universe = ["A", "B", "C", "D"]
         assert s.suggested_max_position_size >= 0.95 / 4
+
+    def test_rejected_buy_is_retried_not_lost_forever(self) -> None:
+        """D05 para el pasivo: una compra rechazada por el cap de liquidez
+        del motor debe reconciliarse y re-emitirse en cadencia corta — no
+        dejar el sleeve en caja para siempre (VHYL 2016-2026: -30 pp)."""
+        s = make(rebalance_days=3650, entry_retry_days=10)
+        # día 0: entran los símbolos que cotizan (los 3 en el mismo día)
+        out = feed(s, {"AAA": [10.0] * 2, "BBB": [10.0] * 2, "CCC": [10.0] * 2})
+        buys = {sym for sym, side in out if side == "buy"}
+        assert {"AAA", "BBB"} <= buys  # los primeros en cotizar
+        # el motor rechaza la compra de BBB (liquidez)
+        s.on_fill("BBB", "buy", "rejected", D("100"), D("0"))
+        assert "BBB" not in s._holdings
+        # día siguiente: NO re-emite (cadencia corta, no diaria)
+        next_out = [s.generate_signals(quote(sym, 2, 10.0)) for sym in ("AAA", "BBB", "CCC")]
+        assert not any(sig for sigs in next_out for sig in sigs)
+        # tras entry_retry_days: re-emite SOLO lo faltante (BBB y el que aún
+        # no hubiera entrado)
+        retried = []
+        for day in range(3, 20):
+            for sym in ("AAA", "BBB", "CCC"):
+                for sig in s.generate_signals(quote(sym, day, 10.0)):
+                    side = sig.signal_type
+                    retried.append((sig.symbol, str(side.value if hasattr(side, "value") else side)))
+        assert ("BBB", "buy") in retried, "el sleeve rechazado se reintenta"
+        assert "AAA" not in {sym for sym, _ in retried}, "no re-compra lo ya en libro"
+        # y el fill la confirma
+        s.on_fill("BBB", "buy", "filled", D("100"), D("100"))
+        assert "BBB" in s._holdings
+
+    def test_fill_rejection_paths_reconcile_book(self) -> None:
+        s = make(rebalance_days=3650)
+        feed(s, {"AAA": [10.0], "BBB": [10.0], "CCC": [10.0]})
+        s.on_fill("AAA", "buy", "filled", D("1"), D("1"))
+        s.on_fill("BBB", "buy", "rejected", D("1"), D("0"))
+        assert "AAA" in s._holdings
+        assert "BBB" not in s._holdings
+        s.on_fill("AAA", "sell", "filled", D("1"), D("1"))
+        assert "AAA" not in s._holdings

@@ -699,6 +699,19 @@ class Capa2PipelineExecutor:
             else {}
         )
         overrides = _strategy_overrides_from(modules, strategy)
+        # ADOPTED params close the loop: "Adopt best parameters" (optimizer)
+        # saved a set per strategy — applying it here is the only way the
+        # adoption changes the NEXT run (before, the button was decorative).
+        # Adopted values WIN over the profile's generic ones: they were
+        # explicitly chosen for this strategy on real engine results.
+        if self.store is not None and self.store.is_initialized:
+            try:
+                adopted = await self.store.get_active_param_set(strategy)
+            except Exception:  # noqa: BLE001 - a param-set read must never kill a run
+                logger.warning("Could not read adopted params for %s", strategy, exc_info=True)
+                adopted = None
+            if adopted and adopted.get("params"):
+                overrides.update({k: v for k, v in adopted["params"].items()})
         if overrides:
             orchestrator._strategy_param_overrides = overrides  # noqa: SLF001
 
@@ -800,17 +813,39 @@ class Capa2PipelineExecutor:
         # DD por NORMA ACCIONARIAL: <20% excepcional, <25% sólido, <30% un
         # oso normal, <40% doloroso. Las bandas anteriores (<15 para el
         # máximo) no las cumplía NI SPY en 2016-2026.
-        dd_pts = (
-            25
-            if max_dd < 20
-            else 15
-            if max_dd < 25
-            else 10
-            if max_dd < 30
-            else 5
-            if max_dd < 40
-            else 0
+        # RELATIVO cuando existe el gemelo buy&hold del propio universo
+        # (mismo principio que el Sharpe relativo): la caída del MERCADO no
+        # es un demérito del diseño — la pregunta es si cayó MÁS que su
+        # universo. COVID 2020: -33% del pasivo juzgado por la banda
+        # absoluta daba 5/25 solo por existir.
+        ew_dd = (
+            float(getattr(payload, "universe_ew_max_dd_pct", 0) or 0) if payload else 0.0
         )
+        if ew_dd >= 1.0:
+            dd_ratio = max_dd / ew_dd
+            dd_pts = (
+                25
+                if dd_ratio <= 1.05
+                else 15
+                if dd_ratio <= 1.15
+                else 10
+                if dd_ratio <= 1.30
+                else 5
+                if max_dd < 40
+                else 0
+            )
+        else:
+            dd_pts = (
+                25
+                if max_dd < 20
+                else 15
+                if max_dd < 25
+                else 10
+                if max_dd < 30
+                else 5
+                if max_dd < 40
+                else 0
+            )
         feas_pts = (
             25
             if feasibility >= 2.0
@@ -1039,6 +1074,10 @@ class Capa2PipelineExecutor:
                 "score": float(ctx.recommendation.overall_score),
                 "confidence_level": ctx.recommendation.confidence_level,
                 "recommendation": ctx.recommendation.recommended_strategy,
+                # la estrategia EJECUTADA (puede ser static_ew aunque T6
+                # recomiende módulos): el veredicto distingue "capa de
+                # gestión que resta valor" de "coste real de ejecución"
+                "executed_strategy": self._resolve_strategy(ctx),
             },
             "allocation": {
                 "allocation": {

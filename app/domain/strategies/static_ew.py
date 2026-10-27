@@ -44,6 +44,7 @@ class StaticEqualWeightStrategy(BaseStrategy):
             else list(config.get("universe") or DEFAULT_UNIVERSE)
         )
         self.rebalance_days: int = int(config.get("rebalance_days", 365))
+        self.entry_retry_days: int = int(config.get("entry_retry_days", 10))
         self.min_history: int = int(config.get("min_history", 20))
         self.target_exposure: float = float(config.get("target_exposure", 0.95))
 
@@ -96,6 +97,30 @@ class StaticEqualWeightStrategy(BaseStrategy):
         """Fracción de cartera por símbolo (el motor la usa para el sizing)."""
         return signal.metadata.get("position_weight", 1.0 / max(1, len(self.universe)))
 
+    def on_fill(
+        self,
+        symbol: str,
+        side: str,
+        status: str,
+        requested_qty: Any,
+        filled_qty: Any,
+    ) -> None:
+        """D05: reconciliar con el libro EJECUTADO. Una compra rechazada
+        (p.ej. el cap de liquidez del motor — ≤10% del volumen diario)
+        dejaba el sleeve en caja PARA SIEMPRE: el hold pensaba que lo
+        tenía y jamás re-emitía (VHYL 2016-2026: sleeve entero sin
+        desplegar, -30 pp). El reintento llega por _rebalance_due."""
+        symbol = str(symbol).upper()
+        if status == "rejected":
+            if side == "buy":
+                self._holdings.discard(symbol)
+            return
+        if status == "filled":
+            if side == "buy":
+                self._holdings.add(symbol)
+            elif side == "sell":
+                self._holdings.discard(symbol)
+
     def get_required_parameters(self) -> list[str]:
         return ["rebalance_days"]
 
@@ -109,7 +134,15 @@ class StaticEqualWeightStrategy(BaseStrategy):
         if self._last_rebalance is None:
             ready = sum(1 for s in self._closes.values() if len(s) >= 1)
             return ready >= min(2, len(self.universe))
-        return (now - self._last_rebalance).days >= self.rebalance_days
+        if (now - self._last_rebalance).days >= self.rebalance_days:
+            return True
+        # Finalización de despliegue: sleeves pendientes (compras rechazadas
+        # por liquidez) reintentan en cadencia corta, no esperando un periodo
+        # entero de rebalance en caja — así una orden grande se completa en
+        # días sucesivos al ≤10% del volumen, como se ejecuta de verdad.
+        if self._holdings != self._desired_holdings():
+            return (now - self._last_rebalance).days >= self.entry_retry_days
+        return False
 
     def _desired_holdings(self) -> set[str]:
         """Todo símbolo del universo que haya cotizado al menos una vez."""

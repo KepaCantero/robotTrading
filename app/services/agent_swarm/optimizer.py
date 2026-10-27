@@ -42,9 +42,12 @@ PARAM_GRIDS: dict[str, dict[str, list[Any]]] = {
         "top_k": [3, 4, 5],
     },
     # el pasivo solo tiene UN grado de libertad honesto: la cadencia de
-    # re-balance (más frecuente = más coste sin señal que lo justifique)
+    # re-balance. En ventanas tendenciales con dispersión (SCHD +253%
+    # 2016-2026) recortar al ganador cada año COSTÓ 30 pp — el extremo
+    # "no tocarlo" (730/3650 días) debe estar en el menú, no solo cadencias
+    # más frecuentes que la anual.
     "static_ew": {
-        "rebalance_days": [126, 252, 365],
+        "rebalance_days": [252, 365, 730, 3650],
     },
     # pares: la ventana del spread y cuán extremo debe ser el z-score
     "pairs_trading": {

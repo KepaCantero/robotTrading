@@ -395,13 +395,28 @@ class BacktestOrchestrator:
         dividend_bench = self._load_dividend_benchmark(config, loader, start_dt, end_dt)
         if dividend_bench and benchmark:
             # para dividendos, el excess vs SPY es informativo pero el
-            # vs equal-weight del propio universo es el benchmark honesto
-            benchmark["universe_ew_return_pct"] = dividend_bench["return_pct"]
-            benchmark["universe_ew_sharpe"] = dividend_bench.get("sharpe")
+            # vs equal-weight del propio universo es el benchmark honesto.
+            # HONESTO = ALCANZABLE: la curva BUY&HOLD (comprar una vez y
+            # mantener) es lo que "holding this universe" significa y lo que
+            # una estrategia real puede empatar; la de rebalanceo DIARIO
+            # (return_pct/sharpe) asume coste cero y ejecución diaria y era
+            # inalcanzable HASTA PARA static_ew — el propio consejo del
+            # sistema salía REJECTED contra ella (score 41.25, gap 38 pp).
+            # La diaria se conserva como referencia informativa.
+            benchmark["universe_ew_return_pct"] = dividend_bench.get(
+                "buy_hold_return_pct", dividend_bench["return_pct"]
+            )
+            benchmark["universe_ew_sharpe"] = dividend_bench.get("buy_hold_sharpe")
+            benchmark["universe_ew_max_dd_pct"] = dividend_bench.get("buy_hold_max_dd_pct")
+            benchmark["universe_ew_daily_rebalance_return_pct"] = dividend_bench["return_pct"]
+            benchmark["universe_ew_daily_rebalance_sharpe"] = dividend_bench.get("sharpe")
             benchmark["universe_ew_symbols_used"] = dividend_bench.get("symbols_used")
-            benchmark["universe_ew_buy_hold_return_pct"] = dividend_bench.get("buy_hold_return_pct")
             benchmark["excess_vs_universe_ew"] = (
-                round(float(engine_result.total_return) - dividend_bench["return_pct"], 2)
+                round(
+                    float(engine_result.total_return)
+                    - dividend_bench.get("buy_hold_return_pct", dividend_bench["return_pct"]),
+                    2,
+                )
                 if engine_result.total_return is not None
                 else None
             )
@@ -526,6 +541,16 @@ class BacktestOrchestrator:
             prev_value = value
         bh_ret_pct = (bh_curve[-1][1] - 1.0) * 100 if bh_curve else 0.0
         bh_sharpe = self._annualized_sharpe(bh_rets)
+        #: maxDD del gemelo buy&hold: el score de DD es RELATIVO al del
+        #: propio universo (como ya lo es el Sharpe) — la caída del MERCADO
+        #: no es un demérito del diseño que simplemente lo sufrió.
+        bh_peak, bh_max_dd = -1.0, 0.0
+        for _, v in bh_curve:
+            if v > bh_peak:
+                bh_peak = v
+            elif bh_peak > 0:
+                bh_max_dd = max(bh_max_dd, (bh_peak - v) / bh_peak)
+        bh_max_dd_pct = round(bh_max_dd * 100, 2)
 
         sampled = curve[:: max(1, len(curve) // 250)]
         bh_sampled = bh_curve[:: max(1, len(bh_curve) // 250)]
@@ -537,6 +562,7 @@ class BacktestOrchestrator:
             "curve": [(ts.isoformat(), round(v, 2)) for ts, v in sampled],
             "buy_hold_return_pct": round(bh_ret_pct, 2),
             "buy_hold_sharpe": round(bh_sharpe, 4),
+            "buy_hold_max_dd_pct": bh_max_dd_pct,
             "buy_hold_curve": [(ts.isoformat(), round(v, 2)) for ts, v in bh_sampled],
         }
 
@@ -896,6 +922,13 @@ class BacktestOrchestrator:
                     Decimal("0.0001")
                 )
                 if (benchmark or {}).get("universe_ew_sharpe") is not None
+                else None
+            ),
+            universe_ew_max_dd_pct=(
+                Decimal(str((benchmark or {}).get("universe_ew_max_dd_pct"))).quantize(
+                    Decimal("0.01")
+                )
+                if (benchmark or {}).get("universe_ew_max_dd_pct") is not None
                 else None
             ),
             universe_ew_buy_hold_return_pct=(

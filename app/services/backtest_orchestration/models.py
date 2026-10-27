@@ -210,8 +210,11 @@ class BacktestResult:
     #: dividend strategy (SPY is mega-cap tech). D12 separates the two
     #: policies: `universe_ew_return_pct` rebalances DAILY, `*_buy_hold_*`
     #: buys each sleeve once at its first in-window close and holds.
+    #: Since 2026-10-27 the SCORE and the UI text use the BUY&HOLD twin
+    #: (the achievable passive) — see backtest_orchestrator.
     universe_ew_return_pct: Decimal | None = None
     universe_ew_sharpe: Decimal | None = None
+    universe_ew_max_dd_pct: Decimal | None = None
     universe_ew_buy_hold_return_pct: Decimal | None = None
     #: sorted symbols actually in the EW benchmark (composition explicit,
     #: invariant to input order — D12)
@@ -287,6 +290,9 @@ class BacktestResult:
             ),
             "universe_ew_sharpe": (
                 str(self.universe_ew_sharpe) if self.universe_ew_sharpe is not None else None
+            ),
+            "universe_ew_max_dd_pct": (
+                str(self.universe_ew_max_dd_pct) if self.universe_ew_max_dd_pct is not None else None
             ),
             "universe_ew_buy_hold_return_pct": (
                 str(self.universe_ew_buy_hold_return_pct)
