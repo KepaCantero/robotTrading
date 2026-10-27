@@ -1264,7 +1264,23 @@ def render(
                             multiple=True,
                             value=default_universe or universe_options[:3],
                             label="Universe (symbols with historical data)",
-                        ).classes("w-full")
+                        ).classes("w-full").mark("universe_select")
+                        with ui.row().classes("w-full gap-xs no-wrap"):
+                            ui.button(
+                                "Select all",
+                                on_click=lambda: universo.set_value(list(universe_options)),
+                            ).props("flat dense no-caps size=xs").mark("universe_all").tooltip(
+                                f"All {len(universe_options)} symbols with data. Honest "
+                                "warning: the run gets heavy (minutes) and the strict "
+                                "coverage gate FAILS if any symbol doesn't cover the "
+                                "whole test window — a shorter period or Automatic "
+                                "keeps this usable."
+                            )
+                            ui.button(
+                                "Clear",
+                                on_click=lambda: universo.set_value([]),
+                            ).props("flat dense no-caps size=xs").mark("universe_clear")
+
                         estrategia = ui.select(
                             {
                                 "mean_reversion": "Mean reversion",

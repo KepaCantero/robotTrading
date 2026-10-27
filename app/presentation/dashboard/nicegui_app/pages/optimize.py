@@ -96,7 +96,19 @@ def render(
                     multiple=True,
                     value=["AAPL", "MSFT", "GOOGL"],
                     label="Universe",
-                ).classes("w-full")
+                ).classes("w-full").mark("universe_select")
+                with ui.row().classes("w-full gap-xs no-wrap"):
+                    ui.button(
+                        "Select all",
+                        on_click=lambda: universo.set_value(list(universe_options)),
+                    ).props("flat dense no-caps size=xs").mark("universe_all").tooltip(
+                        f"All {len(universe_options)} symbols — each grid combination "
+                        "backtests the full universe: this can take a LONG time."
+                    )
+                    ui.button(
+                        "Clear",
+                        on_click=lambda: universo.set_value([]),
+                    ).props("flat dense no-caps size=xs").mark("universe_clear")
                 ui.label("3-5 symbols keeps optimization fast.").style(_SOFT)
 
                 # ── Optimize button ─────────────────────────────────────
