@@ -1140,7 +1140,6 @@ def render(
                             )
 
                         universe_options = available_universe()
-                        default_universe = [s for s in DEFAULT_UNIVERSE if s in universe_options]
                         with ui.column().classes("gap-xs flex-1").style("min-width: 240px"):
                             periodo = ui.select(
                                 {
@@ -1262,7 +1261,10 @@ def render(
                         universo = ui.select(
                             universe_options,
                             multiple=True,
-                            value=default_universe or universe_options[:3],
+                            # user rule 2026-10-27: Manual starts with EVERYTHING
+                            # selected — you remove what you don't want, not
+                            # hunt for what you do.
+                            value=list(universe_options),
                             label="Universe (symbols with historical data)",
                         ).classes("w-full").mark("universe_select")
                         with ui.row().classes("w-full gap-xs no-wrap"):
