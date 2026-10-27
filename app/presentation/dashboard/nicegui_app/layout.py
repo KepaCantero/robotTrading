@@ -53,6 +53,41 @@ class AppShell:
         cls._swarm_executor = swarm_executor
         cls._swarm_store = swarm_store
 
+    MOBILE_NAV = [
+        {"name": "Start", "icon": "play_circle", "route": "/start"},
+        {"name": "Mission", "icon": "hub", "route": "/"},
+        {"name": "Portfolio", "icon": "donut_small", "route": "/portfolio"},
+        {"name": "Optimize", "icon": "tune", "route": "/optimize"},
+        {"name": "Trust", "icon": "verified_user", "route": "/trust"},
+    ]
+
+    @classmethod
+    def _build_mobile_nav(cls) -> None:
+        """Bottom navigation for phones (UI-5): 44px targets, safe-area
+        padding for notched phones, hidden on desktop."""
+        ui.add_head_html(
+            '<link rel="manifest" href="/pwa/manifest.webmanifest">'
+            '<meta name="theme-color" content="#3f8f85">'
+            '<link rel="apple-touch-icon" href="/pwa/icon-192.png">'
+            "<style>"
+            ".ds-mobile-nav { display: none; }"
+            "@media (max-width: 900px) {"
+            "  .ds-mobile-nav { display: flex; position: fixed; bottom: 0; left: 0;"
+            "    right: 0; z-index: 50; background: #16213e; border-top: 1px solid #2a3b5c;"
+            "    padding-bottom: env(safe-area-inset-bottom); }"
+            "  .ds-mobile-nav button { flex: 1; min-height: 56px; color: #cfd8e6; }"
+            "  body { padding-bottom: 64px; }"
+            "}"
+            "</style>"
+        )
+        with ui.row().classes("ds-mobile-nav w-full no-wrap items-stretch"):
+            for page in cls.MOBILE_NAV:
+                ui.button(
+                    page["name"],
+                    icon=page["icon"],
+                    on_click=lambda _, r=page["route"]: ui.navigate.to(r),
+                ).props("flat no-caps stack").classes("text-caption")
+
     @classmethod
     def _build_shell(cls) -> None:
         """Drawer + header, built inside each page so the menu shows everywhere."""
@@ -77,6 +112,10 @@ class AppShell:
                     icon="dark_mode",
                     on_click=lambda: _toggle_mode(dark, mode_label),
                 ).props("flat round").tooltip("Toggle dark/light mode")
+
+        # UI-5 — mobile bottom nav: the thumb-reachable loop on small
+        # screens (drawer stays for desktop). Hidden ≥900px via CSS.
+        cls._build_mobile_nav()
 
     @classmethod
     def build_home(cls) -> None:

@@ -28,6 +28,16 @@ _DB_PATH = "backtest_results.db"
 _DOCS_SITE = Path(__file__).resolve().parents[4] / "site"
 
 
+def _mount_pwa() -> None:
+    """UI-5: manifest + icons so the dashboard installs as a PWA
+    (phone home-screen, no store)."""
+    from nicegui import app as nicegui_app
+    from starlette.staticfiles import StaticFiles
+
+    pwa_dir = Path(__file__).resolve().parent / "static" / "pwa"
+    nicegui_app.mount("/pwa", StaticFiles(directory=str(pwa_dir)), name="pwa")
+
+
 def _mount_documentation() -> None:
     """Serve the built MkDocs site at /docs so docs live inside the dashboard."""
     from nicegui import app as nicegui_app
@@ -94,5 +104,6 @@ def create_app() -> None:
         )
 
     AppShell.configure(store, runner, profitability, swarm_executor, swarm_store)
+    _mount_pwa()
     _mount_documentation()
     AppShell.setup()

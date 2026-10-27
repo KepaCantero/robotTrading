@@ -1,0 +1,14 @@
+{
+  "name": "robotTrading",
+  "short_name": "robotTrading",
+  "description": "A portfolio you can understand: validated with real history, real fees and Spanish tax rules — before any money moves.",
+  "start_url": "/start",
+  "display": "standalone",
+  "background_color": "#fffdf6",
+  "theme_color": "#3f8f85",
+  "icons": [
+    {"src": "/pwa/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "/pwa/icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "/pwa/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
