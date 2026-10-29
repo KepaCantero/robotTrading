@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from nicegui import ui
+from starlette.requests import Request
 
 from app.presentation.dashboard.nicegui_app.theme import PAGES
 
@@ -239,11 +240,19 @@ class AppShell:
             _render_swarm()
 
         @ui.page("/portfolio")
-        def page_portfolio():
+        def page_portfolio(request: Request):
             cls._build_shell()
             from app.presentation.dashboard.nicegui_app.pages.portfolio import render
 
-            render(cls._swarm_executor, cls._swarm_store)
+            # ?portfolio=<slug>&deploy=1 — the Mission Control hand-off after
+            # creating a named paper portfolio: preselect it and open the
+            # first-deployment preview (Confirm stays manual).
+            render(
+                cls._swarm_executor,
+                cls._swarm_store,
+                focus_slug=request.query_params.get("portfolio", ""),
+                autodeploy=request.query_params.get("deploy") == "1",
+            )
 
         @ui.page("/optimize")
         def page_optimize():

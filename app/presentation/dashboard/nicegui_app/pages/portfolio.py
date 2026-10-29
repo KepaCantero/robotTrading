@@ -60,10 +60,7 @@ async def _get_store() -> PortfolioManagementStore:
     cached = _stores.get(slug)
     if cached is not None:
         return cached
-    from app.services.portfolio_management.named_portfolios import (
-        open_store,
-        prepare_store,
-    )
+    from app.services.portfolio_management.named_portfolios import open_store, prepare_store
 
     engine, store = open_store(slug)
     await prepare_store(engine)
@@ -229,8 +226,16 @@ def _render_digest_card(target) -> None:
 def render(
     executor: Any = None,
     store: Any = None,
+    focus_slug: str = "",
+    autodeploy: bool = False,
 ) -> None:
-    """Render the Portfolio page (signature matches the page registry)."""
+    """Render the Portfolio page (signature matches the page registry).
+
+    ``focus_slug``/``autodeploy`` come from the Mission Control hand-off
+    (``/portfolio?portfolio=<slug>&deploy=1``): after creating a named paper
+    portfolio the owner lands HERE with it selected and the first-deployment
+    preview already open — one Confirm deploys the cash.
+    """
     install_fx()
     _inject_ds()  # UI-2: the interactive pie + symbol cards speak the design system
     ui.dark_mode(False)
@@ -250,6 +255,9 @@ def render(
 
             portfolios = list_portfolios()
             options = {p["slug"]: p["name"] for p in portfolios}
+            if focus_slug and focus_slug in options:
+                global _ACTIVE_SLUG
+                _ACTIVE_SLUG = focus_slug
 
             def _switch_portfolio(e) -> None:
                 global _ACTIVE_SLUG
@@ -418,7 +426,10 @@ def render(
                 type="info",
             )
 
-        async def _render_drift_card(target, pm_store) -> None:
+        async def _gather_account_state(target, pm_store) -> dict:
+            """One snapshot of the paper account shared by the drift card and
+            the auto-opened first-deployment preview (same numbers, no drift
+            between the two views)."""
             broker = await _get_broker()
             account = await broker.get_account_info()
             positions_map = await broker.get_positions()
@@ -428,12 +439,29 @@ def render(
                 quote = await broker.get_quote(symbol)
                 if quote is not None:
                     prices[symbol] = quote.price
-            cash = account.cash_available if account else D("0")
             lots = await pm_store.get_lots()
             lots_by_symbol: dict[str, list] = {}
             for lot in lots:
                 lots_by_symbol.setdefault(lot.symbol, []).append(lot)
-            last_rebalance = await pm_store.last_rebalance_at()
+            return {
+                "target": target,
+                "positions": positions,
+                "cash": account.cash_available if account else D("0"),
+                "prices": prices,
+                "lots_by_symbol": lots_by_symbol,
+                "last_rebalance": await pm_store.last_rebalance_at(),
+                # _preview doesn't take this; the drift card P&L columns do.
+                "positions_map": positions_map,
+            }
+
+        async def _render_drift_card(target, pm_store) -> None:
+            state = await _gather_account_state(target, pm_store)
+            positions_map = state.pop("positions_map")
+            positions = state["positions"]
+            cash = state["cash"]
+            prices = state["prices"]
+            lots_by_symbol = state["lots_by_symbol"]
+            last_rebalance = state["last_rebalance"]
 
             from app.services.portfolio_management.drift import compute_drift
 
@@ -448,12 +476,16 @@ def render(
                         ui.badge(
                             f"cooling down until {cooldown_left:%d %b %H:%M}", color="grey"
                         ).props("outline")
-                if total <= 0:
+                invested = sum(positions.values(), D("0"))
+                # "Empty" = the cash is not INVESTED yet (a fresh portfolio is
+                # 100% cash, so total>0 — the deploy step is still pending).
+                if invested <= 0:
                     ui.label(
-                        "Paper account is empty — the first rebalance will deploy the cash."
+                        "Cash not invested yet — the portfolio is saved but not "
+                        "bought. Press “Apply to paper account” to deploy it "
+                        "(you confirm the exact orders first)."
                     ).classes("text-caption")
                 else:
-                    invested = sum(positions.values(), D("0"))
                     unrealized = sum((p.unrealized_pl for p in positions_map.values()), D("0"))
                     pl_color = "var(--ds-good)" if unrealized >= 0 else "var(--ds-bad)"
                     with ui.row().classes("w-full gap-sm wrap q-mb-md"):
@@ -554,9 +586,7 @@ def render(
                     adapter.account.buying_power = adapter.initial_cash
                     adapter.account.equity = adapter.initial_cash
                     adapter.account.margin_used = D("0")
-            Path(
-                paper_state_path(_ACTIVE_SLUG)
-            ).unlink(missing_ok=True)
+            Path(paper_state_path(_ACTIVE_SLUG)).unlink(missing_ok=True)
             cleared = await pm_store.clear_lots()
             await pm_store.append_event(
                 trigger="manual",
@@ -708,7 +738,28 @@ def render(
                                         "color:var(--ds-bad);padding-left:18px"
                                     )
 
-        ui.timer(0.1, render_state, once=True)
+        async def _first_render() -> None:
+            await render_state()
+            # Mission Control hand-off: the freshly created portfolio is
+            # selected; if its account is still empty, open the deployment
+            # preview so one Confirm invests the cash. The Confirm button
+            # stays manual — nothing trades without the owner's click.
+            if not autodeploy:
+                return
+            target = target_state.get("target")
+            if target is None or target_state.get("editing"):
+                return
+            pm_store = await _get_store()
+            state = await _gather_account_state(target, pm_store)
+            state.pop("positions_map")
+            invested = sum(state["positions"].values(), D("0"))
+            cash = state["cash"]
+            # deploy=1 only auto-OPENS the preview when there is cash sitting
+            # uninvested; if positions exist it stays closed (no nagging).
+            if invested <= 0 and cash > 0:
+                await _preview(**state)
+
+        ui.timer(0.1, _first_render, once=True)
 
         ui.label(
             "Paper mode: orders go to the deterministic paper broker through the same "

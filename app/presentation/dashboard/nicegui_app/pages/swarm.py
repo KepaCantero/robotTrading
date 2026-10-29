@@ -227,7 +227,11 @@ def preset_for_goal(
     # universos manuales alternativos solo cuando el preset trae lista;
     # un preset con universo AUTOMÁTICO (None) deja que la pantalla del
     # corpus decima por ventana, que es el camino verificado.
-    if isinstance(universe, list) and horizon_months is not None and horizon_months >= LONG_HORIZON_MONTHS:
+    if (
+        isinstance(universe, list)
+        and horizon_months is not None
+        and horizon_months >= LONG_HORIZON_MONTHS
+    ):
         universe = LONG_HORIZON_UNIVERSES.get(key, universe)
     return strategy_name, universe
 
@@ -1149,8 +1153,10 @@ def render(
                         with ui.column().classes("gap-xs flex-1").style("min-width: 240px"):
                             objetivo = ui.select(
                                 # Default (user 2026-10-27): the configuration that PASSES honestly —
-                            # dividends + 10y + High + Automatic (all symbols).
-                            OBJECTIVES, value="MAXIMIZAR_DIVIDENDOS", label="Your goal"
+                                # dividends + 10y + High + Automatic (all symbols).
+                                OBJECTIVES,
+                                value="MAXIMIZAR_DIVIDENDOS",
+                                label="Your goal",
                             ).classes("w-full")
                             ui.label("What you want to achieve with this investment.").classes(
                                 "help"
@@ -1247,7 +1253,11 @@ def render(
                         ui.separator().classes("q-mb-sm")
                         ui.label("Universe").classes("lbl q-mb-xs")
                         modo_universo = ui.toggle(
-                            {"auto": "Automatic", "auto-all": "Automatic (all)", "manual": "Manual"},
+                            {
+                                "auto": "Automatic",
+                                "auto-all": "Automatic (all)",
+                                "manual": "Manual",
+                            },
                             value="auto",
                         ).classes("w-full")
                         ui.label(
@@ -1276,15 +1286,19 @@ def render(
                                 value="normal",
                                 label="Volatility",
                             ).classes("flex-1")
-                        universo = ui.select(
-                            universe_options,
-                            multiple=True,
-                            # user rule 2026-10-27: Manual starts with EVERYTHING
-                            # selected — you remove what you don't want, not
-                            # hunt for what you do.
-                            value=list(universe_options),
-                            label="Universe (symbols with historical data)",
-                        ).classes("w-full").mark("universe_select")
+                        universo = (
+                            ui.select(
+                                universe_options,
+                                multiple=True,
+                                # user rule 2026-10-27: Manual starts with EVERYTHING
+                                # selected — you remove what you don't want, not
+                                # hunt for what you do.
+                                value=list(universe_options),
+                                label="Universe (symbols with historical data)",
+                            )
+                            .classes("w-full")
+                            .mark("universe_select")
+                        )
                         with ui.row().classes("w-full gap-xs no-wrap"):
                             ui.button(
                                 "Select all",
@@ -2006,9 +2020,11 @@ def render(
                             exhaustive=modo_universo.value == "auto-all",
                         )
                         symbols = auto.symbols
-                        estimate = "HOURS — every combination over all symbols" if (
-                            modo_universo.value == "auto-all"
-                        ) else "may take a few minutes"
+                        estimate = (
+                            "HOURS — every combination over all symbols"
+                            if (modo_universo.value == "auto-all")
+                            else "may take a few minutes"
+                        )
                         optimize_status.text = (
                             f"Searching over {len(symbols)} auto-picked symbols "
                             f"(real engine, {estimate})…"
@@ -2241,15 +2257,19 @@ def render(
                 "keeps its own account, its own history and its own rebalances — "
                 "you can run several side by side."
             ).classes("help")
-            name_in = ui.input(
-                "Portfolio name", value=default_name
-            ).classes("w-full").mark("paper_name")
-            cash_in = ui.number(
-                "Starting cash (€)",
-                value=float(getattr(request, "capital_initial", 0) or 100000),
-                min=1000,
-                step=1000,
-            ).classes("w-full").mark("paper_cash")
+            name_in = (
+                ui.input("Portfolio name", value=default_name).classes("w-full").mark("paper_name")
+            )
+            cash_in = (
+                ui.number(
+                    "Starting cash (€)",
+                    value=float(getattr(request, "capital_initial", 0) or 100000),
+                    min=1000,
+                    step=1000,
+                )
+                .classes("w-full")
+                .mark("paper_cash")
+            )
             with ui.row().classes("w-full justify-end gap-sm q-mt-md"):
                 ui.button("Cancel", on_click=dialog.close).props("flat")
 
@@ -2259,20 +2279,20 @@ def render(
                     )
                     dialog.close()
 
-                ui.button(
-                    "Create paper portfolio", icon="rocket_launch", on_click=_create
-                ).props("unelevated no-caps").classes("run-btn").mark("paper_create")
+                ui.button("Create paper portfolio", icon="rocket_launch", on_click=_create).props(
+                    "unelevated no-caps"
+                ).classes("run-btn").mark("paper_create")
         dialog.open()
 
     async def _create_paper_portfolio(
         run: Any, results: dict, request: Any, name: str, cash: Decimal
     ) -> None:
+        from app.services.portfolio_management.models import ProfileAnswers
         from app.services.portfolio_management.named_portfolios import (
             create_portfolio,
             open_store,
             prepare_store,
         )
-        from app.services.portfolio_management.models import ProfileAnswers
         from app.services.portfolio_management.winner_adoption import (
             build_target,
             winner_from_results,
@@ -2306,9 +2326,12 @@ def render(
         ui.notify(
             f"Paper portfolio “{meta['name']}” created from the run's holdings "
             f"(your profile's risk rules applied) — €{cash:,.0f} starting cash. "
-            "Open the Portfolio page to manage it.",
+            "Confirm the buy orders on the next screen to invest it.",
             type="positive",
         )
+        # Creating only WRITES the target; the cash is deployed when the owner
+        # confirms the orders. Land them on that preview, not a dead end.
+        ui.navigate.to(f"/portfolio?portfolio={meta['slug']}&deploy=1")
 
     # ── View updates ──────────────────────────────────────────────────────
 
