@@ -178,8 +178,10 @@ class TestEndToEndLiveLoop:
         payload = result.backtest_result
         assert payload.metrics.total_trades > 0  # the live loop actually traded
         # D12: both EW policies with the WHOLE declared universe
+        # D12 dual curves, post-2026-10-27: universe_ew_return_pct IS the
+        # achievable buy&hold twin (the score/UI benchmark); the daily-
+        # rebalanced curve stays as an informational field.
         assert payload.universe_ew_return_pct is not None
-        assert payload.universe_ew_buy_hold_return_pct is not None
         assert payload.universe_ew_symbols_used == sorted(request.symbols)
         # D01: real collected income against the executed book
         assert payload.dividend_metrics is not None

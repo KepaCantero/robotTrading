@@ -109,6 +109,15 @@ class DeployDecisionOrchestrator:
                 sharpe_ratio=sharpe_ratio,
                 feasibility_ratio=feasibility_ratio,
                 recommendation_score=recommendation_score,
+                strategy_name=str(
+                    recommendation.get("executed_strategy")
+                    or recommendation.get("recommendation")
+                    or ""
+                ),
+                universe_ew_sharpe=self._safe_float(
+                    backtest_result.get("universe_ew_sharpe")
+                )
+                or None,
             )
 
             # Criterio 6 honesto: si el equiponderado pasivo del propio
@@ -319,8 +328,13 @@ class DeployDecisionOrchestrator:
         sharpe_ratio: float | None = None,
         feasibility_ratio: float | None = None,
         recommendation_score: float | None = None,
+        strategy_name: str = "",
+        universe_ew_sharpe: float | None = None,
     ) -> list[str]:
-        """Determine next actions based on status."""
+        """Determine next actions based on status. Copy is English (UI
+        language), data-driven, and knows whether the run WAS the passive
+        — satellite-era advice (and the old Spanish lines) made no sense
+        for a static_ew portfolio."""
         next_steps = []
 
         if status == "APPROVED":
@@ -330,30 +344,41 @@ class DeployDecisionOrchestrator:
             next_steps.append("4. Schedule weekly performance reviews")
 
         elif status == "CONDITIONAL":
-            # next steps dirigidos por datos, no plantilla
-            if sharpe_ratio is not None and sharpe_ratio < 0.5:
-                next_steps.append(
-                    f"1. Sharpe {sharpe_ratio:.2f} < 0.5: la estrategia no compensa "
-                    f"el riesgo asumido; sube el peso del núcleo global o reduce el satélite"
+            steps: list[str] = []
+            passive = strategy_name == "static_ew"
+            if passive:
+                steps.append(
+                    "This IS the passive portfolio — adopt it to paper and let "
+                    "the drift band decide when to touch it"
                 )
-            else:
-                next_steps.append(
-                    "1. Run sensitivity analysis on satellite weight and rebalance frequency"
+            if sharpe_ratio is not None and sharpe_ratio < 0.5:
+                steps.append(
+                    f"Sharpe {sharpe_ratio:.2f} < 0.5: the strategy does not yet "
+                    "pay for its risk"
+                )
+            elif not passive:
+                steps.append(
+                    "Run sensitivity analysis on weights and rebalance frequency"
                 )
             if feasibility_ratio is not None and feasibility_ratio < 1.5:
-                next_steps.append(
-                    f"2. Feasibility {feasibility_ratio:.2f} — margen delgado; "
-                    f"más capital o target más modesto lo haría robusto"
+                steps.append(
+                    f"Feasibility {feasibility_ratio:.2f} is a thin margin — more "
+                    "capital or a more modest target makes it robust"
                 )
-            else:
-                next_steps.append("2. Test with smaller position sizes before live deployment")
             if recommendation_score is not None and recommendation_score < 70:
-                next_steps.append(
-                    f"3. Score {recommendation_score:.0f}/100: falta Sharpe ≥0.5 para APPROVED "
-                    f"(hoy el score se arrastra por la relación retorno/riesgo, no por la cartera)"
+                drag = (
+                    f"Sharpe {sharpe_ratio:.2f} vs the universe's "
+                    f"{universe_ew_sharpe:.2f}"
+                    if universe_ew_sharpe
+                    else "the return-per-risk ratio"
+                )
+                steps.append(
+                    f"Score {recommendation_score:.0f}/100 — APPROVED needs 75: "
+                    f"the drag is {drag}, not the portfolio"
                 )
             else:
-                next_steps.append("3. Walk-forward validation before larger deployment")
+                steps.append("Walk-forward validation before larger deployment")
+            next_steps = [f"{i}. {s}" for i, s in enumerate(steps, start=1)]
 
         else:  # REJECTED
             next_steps.append("1. Review strategy parameters")

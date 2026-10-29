@@ -1086,6 +1086,13 @@ class Capa2PipelineExecutor:
                     if getattr(payload, "universe_ew_return_pct", None) is not None
                     else 0.0
                 ),
+                # Sharpe del gemelo pasivo: el explicador del score lo nombra
+                # (qué arrastra el score, en unidades que el usuario compara)
+                "universe_ew_sharpe": (
+                    float(payload.universe_ew_sharpe)
+                    if getattr(payload, "universe_ew_sharpe", None) is not None
+                    else None
+                ),
             },
             "recommendation": {
                 "score": float(ctx.recommendation.overall_score),
@@ -1143,7 +1150,16 @@ class Capa2PipelineExecutor:
         if data is None:
             data = {
                 k: getattr(backtest, k, None)
-                for k in ("success", "feasibility_ratio", "feasibility_status", "warnings")
+                for k in (
+                    "success",
+                    "feasibility_ratio",
+                    "feasibility_status",
+                    "warnings",
+                    # la estrategia EJECUTADA viaja con el payload: el tile
+                    # de la UI no debe decir "dividend_tracking" cuando el
+                    # motor corrió static_ew
+                    "strategy_name",
+                )
             }
         if isinstance(inner, dict):
             slim_inner = dict(inner)

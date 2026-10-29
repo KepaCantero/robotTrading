@@ -124,7 +124,7 @@ class TestMapperAttachesBenchmark:
             "curve": [("t", "1.16")],
             "universe_ew_return_pct": D("12.00"),
             "universe_ew_sharpe": D("0.8"),
-            "universe_ew_buy_hold_return_pct": D("11.00"),
+            "universe_ew_max_dd_pct": D("15.00"),
             "universe_ew_symbols_used": ["BND", "SCHD"],
             "excess_vs_universe_ew": 10.0,
         }
@@ -141,15 +141,17 @@ class TestMapperAttachesBenchmark:
         assert result.benchmark_return_pct == D("16.00")
         # total_return 10% vs SPY 16% → excess -6%
         assert result.excess_return_pct == D("-6.00")
-        # D12: las dos políticas del benchmark EW llegan al payload
+        # Post-2026-10-27: universe_ew_return_pct IS the achievable
+        # buy&hold twin (single score benchmark); max_dd rides along for
+        # the relative-DD score.
         assert result.universe_ew_return_pct == D("12.00")
-        assert result.universe_ew_buy_hold_return_pct == D("11.00")
+        assert result.universe_ew_max_dd_pct == D("15.00")
         assert result.universe_ew_symbols_used == ["BND", "SCHD"]
         assert result.excess_vs_universe_ew_pct == D("10.00")
         payload = result.to_dict()
         assert payload["benchmark_symbol"] == "SPY"
         assert payload["benchmark_curve"] == [{"ts": "t", "value": "1.16"}]
-        assert payload["universe_ew_buy_hold_return_pct"] == "11.00"
+        assert payload["universe_ew_max_dd_pct"] == "15.00"
         assert payload["universe_ew_symbols_used"] == ["BND", "SCHD"]
 
     def test_no_benchmark_leaves_neutral_fields(self):
@@ -159,7 +161,7 @@ class TestMapperAttachesBenchmark:
         assert result.benchmark_symbol == ""
         assert result.benchmark_return_pct is None
         assert result.excess_return_pct is None
-        assert result.universe_ew_buy_hold_return_pct is None
+        assert result.universe_ew_max_dd_pct is None
         assert result.universe_ew_symbols_used == []
         assert result.to_dict()["benchmark_curve"] == []
 

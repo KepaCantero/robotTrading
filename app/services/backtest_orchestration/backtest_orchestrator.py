@@ -125,6 +125,7 @@ class BacktestOrchestrator:
                 feasibility_status=feasibility_status,
                 warnings=warnings,
                 orchestration_time_ms=elapsed_ms,
+                strategy_name=request.strategy_name,
                 dividend_metrics=backtest_result.dividend_metrics,
                 data_quality=getattr(backtest_result, "data_quality", None),
             )
@@ -929,13 +930,6 @@ class BacktestOrchestrator:
                     Decimal("0.01")
                 )
                 if (benchmark or {}).get("universe_ew_max_dd_pct") is not None
-                else None
-            ),
-            universe_ew_buy_hold_return_pct=(
-                Decimal(str((benchmark or {}).get("universe_ew_buy_hold_return_pct"))).quantize(
-                    Decimal("0.01")
-                )
-                if (benchmark or {}).get("universe_ew_buy_hold_return_pct") is not None
                 else None
             ),
             universe_ew_symbols_used=list((benchmark or {}).get("universe_ew_symbols_used") or []),

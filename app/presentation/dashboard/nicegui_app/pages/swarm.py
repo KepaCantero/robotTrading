@@ -493,7 +493,14 @@ def extract_result_metrics(results: dict) -> dict:
         "sharpe": metrics.get("sharpe_ratio"),
         "drawdown": round(drawdown, 2),
         "feasibility": backtest.get("feasibility_ratio"),
-        "strategy": recommendation.get("recommended_strategy"),
+        # la estrategia EJECUTADA (static_ew aunque T6 recomiende módulos):
+        # el tile "Recommended strategy" no puede decir dividend_tracking
+        # cuando el motor corrió el pasivo
+        "strategy": (
+            backtest.get("strategy_name")
+            or inner.get("strategy_name")
+            or recommendation.get("recommended_strategy")
+        ),
         "universe_ew": inner.get("universe_ew_return_pct"),
         "excess_vs_universe_ew": inner.get("excess_vs_universe_ew_pct"),
         "tax_efficiency": inner.get("tax_efficiency"),

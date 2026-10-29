@@ -215,7 +215,6 @@ class BacktestResult:
     universe_ew_return_pct: Decimal | None = None
     universe_ew_sharpe: Decimal | None = None
     universe_ew_max_dd_pct: Decimal | None = None
-    universe_ew_buy_hold_return_pct: Decimal | None = None
     #: sorted symbols actually in the EW benchmark (composition explicit,
     #: invariant to input order — D12)
     universe_ew_symbols_used: list[str] = field(default_factory=list)
@@ -294,11 +293,6 @@ class BacktestResult:
             "universe_ew_max_dd_pct": (
                 str(self.universe_ew_max_dd_pct) if self.universe_ew_max_dd_pct is not None else None
             ),
-            "universe_ew_buy_hold_return_pct": (
-                str(self.universe_ew_buy_hold_return_pct)
-                if self.universe_ew_buy_hold_return_pct is not None
-                else None
-            ),
             "universe_ew_symbols_used": list(self.universe_ew_symbols_used),
             "excess_vs_universe_ew_pct": (
                 str(self.excess_vs_universe_ew_pct)
@@ -366,9 +360,12 @@ class BacktestOrchestrationResult:
     backtest_result: BacktestResult | None = None
     error_message: str = ""
     warnings: list[str] = field(default_factory=list)
-    feasibility_ratio: Decimal = field(default_factory=Decimal("0.0"))
+    feasibility_ratio: Decimal = field(default_factory=lambda: Decimal("0.0"))
     feasibility_status: str = "unknown"  # APPROVED, CONDITIONAL, REJECTED
     orchestration_time_ms: float = 0.0
+    #: The strategy the ENGINE actually ran — T6 recommends modules, the
+    #: dashboard tile must never say "dividend_tracking" for a static_ew run.
+    strategy_name: str = ""
     #: Income metrics from real distribution events against the executed
     #: book (Fase 4, D01): SEPARATE from total return. None when the run
     #: never reached the engine (failure) — never a fabricated income.
