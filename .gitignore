@@ -146,3 +146,7 @@ app/services/.ralph/
 
 # Portfolio-management runtime state (paper account snapshot)
 data/paper_account.json
+
+# Imported account snapshots — real positions and cost basis of the
+# owner's live money; this repo is public, these never get committed
+data/import/

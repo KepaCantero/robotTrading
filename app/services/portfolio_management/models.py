@@ -60,6 +60,7 @@ ASSET_CLASS: dict[str, str] = {
     "BIV": "bond",
     "SCHZ": "bond",
     "VBT": "bond",
+    "IBTS": "bond",  # iShares $ Treasury Bond 1-3yr UCITS ETF
 }
 
 #: Questionnaire objectives — same keys the swarm page uses, so a swarm
@@ -113,7 +114,7 @@ class TargetPortfolio(BaseModel):
     """A versioned target allocation plus its rebalancing rules."""
 
     version: int = 1
-    source: str = "seed"  # swarm_winner | seed
+    source: str = "seed"  # swarm_winner | seed | import
     source_run_id: str | None = None
     strategy_name: str | None = None
     decision_status: str | None = None  # APPROVED / CONDITIONAL of the adopted run
