@@ -458,6 +458,60 @@ class IbkrAdapter:
     # reconciliation
     # ------------------------------------------------------------------
 
+    def _marked_positions(self) -> dict[str, BrokerPosition]:
+        """Positions with broker marks, from ib.portfolio() (PortfolioItem).
+
+        Returns {} when the broker reports no portfolio items yet — the
+        caller falls back to bare positions. None-valued marks are kept at
+        zero rather than guessed.
+        """
+        portfolio = getattr(self._ib, "portfolio", None)
+        if not callable(portfolio):
+            return {}
+        try:
+            items = portfolio() or ()
+        except Exception:  # noqa: BLE001 - marks are best-effort, never fatal
+            logger.info("ib.portfolio() unavailable; using bare positions", exc_info=True)
+            return {}
+        out: dict[str, BrokerPosition] = {}
+        for item in items:
+            symbol = str(getattr(item.contract, "symbol", "") or "").upper()
+            if not symbol:
+                continue
+            market_value = getattr(item, "marketValue", None) or 0
+            price = getattr(item, "marketPrice", None) or 0
+            pl = getattr(item, "unrealizedPNL", None) or 0
+            out[symbol] = BrokerPosition(
+                symbol=symbol,
+                quantity=Decimal(str(item.position)),
+                avg_price=Decimal(str(getattr(item, "averageCost", 0) or 0)),
+                current_price=Decimal(str(price)),
+                market_value=Decimal(str(market_value)),
+                unrealized_pl=Decimal(str(pl)),
+                unrealized_pl_pct=(
+                    Decimal(str(pl)) / Decimal(str(market_value)) if market_value else Decimal("0")
+                ),
+            )
+        return out
+
+    def _bare_positions(self) -> dict[str, BrokerPosition]:
+        """Positions without marks — ib.positions() (no market data)."""
+        out: dict[str, BrokerPosition] = {}
+        for pos in self._ib.positions():
+            symbol = getattr(pos.contract, "symbol", "").upper()
+            if not symbol:
+                continue
+            out[symbol] = BrokerPosition(
+                symbol=symbol,
+                quantity=Decimal(str(pos.position)),
+                avg_price=Decimal(str(getattr(pos, "avgCost", 0) or 0)),
+                current_price=Decimal("0"),  # marks come with quotes, not positions
+                market_value=Decimal("0"),
+                unrealized_pl=Decimal("0"),
+                unrealized_pl_pct=Decimal("0"),
+            )
+        return out
+
     async def reconcile(self) -> dict[str, list[str]]:
         """Pull broker-confirmed positions/executions and report divergences.
 
@@ -470,29 +524,19 @@ class IbkrAdapter:
         if self._ib is None:
             return divergences
 
-        broker_positions: dict[str, BrokerPosition] = {}
-        for pos in self._ib.positions():
-            symbol = getattr(pos.contract, "symbol", "").upper()
-            if not symbol:
-                continue
-            qty = Decimal(str(pos.position))
-            avg_cost = Decimal(str(getattr(pos, "avgCost", 0) or 0))
-            broker_positions[symbol] = BrokerPosition(
-                symbol=symbol,
-                quantity=qty,
-                avg_price=avg_cost,
-                current_price=Decimal("0"),  # marks come with quotes, not positions
-                market_value=Decimal("0"),
-                unrealized_pl=Decimal("0"),
-                unrealized_pl_pct=Decimal("0"),
-            )
+        # ib.portfolio() carries broker MARKS (marketValue/markPrice) — use
+        # it when available and fall back to bare positions() otherwise
+        # (marks arrive asynchronously; early reads legitimately miss them).
+        broker_positions = self._marked_positions() or self._bare_positions()
 
         for symbol, pos in broker_positions.items():
             local = self.positions.get(symbol)
             if local is None:
-                divergences["positions"].append(f"{symbol}: broker {qty} vs local none")
+                divergences["positions"].append(f"{symbol}: broker {pos.quantity} vs local none")
             elif local.quantity != pos.quantity:
-                divergences["positions"].append(f"{symbol}: broker {qty} vs local {local.quantity}")
+                divergences["positions"].append(
+                    f"{symbol}: broker {pos.quantity} vs local {local.quantity}"
+                )
         for symbol in self.positions:
             if symbol not in broker_positions:
                 divergences["positions"].append(f"{symbol}: broker none vs local held")

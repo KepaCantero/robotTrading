@@ -27,10 +27,11 @@ from app.services.live_trading.broker_connector import OrderSide
 class FakeIB:
     """Trimmed stand-in for ib_insync.IB (same surface as test_ibkr_adapter_f3)."""
 
-    def __init__(self, accounts="U9876543", positions=None, executions=None):
+    def __init__(self, accounts="U9876543", positions=None, executions=None, portfolio=None):
         self._accounts = accounts
         self._positions = positions or []
         self._executions = executions or []
+        self._portfolio = portfolio  # None → attribute absent (legacy fakes)
         self.connected = False
         self.disconnected = False
         self.placed: list[tuple] = []
@@ -60,6 +61,12 @@ class FakeIB:
 
     def positions(self):
         return self._positions
+
+    def portfolio(self):
+        """PortfolioItem stand-ins with broker marks, when requested."""
+        if self._portfolio is None:
+            return ()  # marks not arrived yet → adapter falls back
+        return self._portfolio
 
     def reqExecutions(self):
         return self._executions
@@ -131,6 +138,53 @@ class TestReadOnlyConnections:
         assert [p.symbol for p in positions] == ["SCHD"]
         assert positions[0].quantity == Decimal("10")
         assert positions[0].avg_price == Decimal("50.25")
+        # bare positions carry no marks — zeros, never guesses
+        assert positions[0].market_value == Decimal("0")
+
+    async def test_reconcile_captures_broker_marks_when_available(self):
+        """ib.portfolio() marks (marketValue/markPrice/PnL) reach BrokerPosition."""
+        fake = FakeIB(
+            accounts="U9876543",
+            portfolio=[
+                SimpleNamespace(
+                    contract=SimpleNamespace(symbol="SCHD"),
+                    position=10,
+                    averageCost=50.25,
+                    marketPrice=61.40,
+                    marketValue=614.00,
+                    unrealizedPNL=111.50,
+                )
+            ],
+        )
+        adapter = _adapter(fake, read_only=True)
+        await adapter.connect()
+
+        (pos,) = await adapter.get_positions()
+        assert pos.market_value == Decimal("614.00")
+        assert pos.current_price == Decimal("61.40")
+        assert pos.unrealized_pl == Decimal("111.50")
+        assert pos.unrealized_pl_pct == Decimal("111.50") / Decimal("614.00")
+
+    async def test_marks_with_none_values_keep_zero_not_guesses(self):
+        fake = FakeIB(
+            accounts="U9876543",
+            portfolio=[
+                SimpleNamespace(
+                    contract=SimpleNamespace(symbol="SCHD"),
+                    position=10,
+                    averageCost=50.0,
+                    marketPrice=None,
+                    marketValue=None,
+                    unrealizedPNL=None,
+                )
+            ],
+        )
+        adapter = _adapter(fake, read_only=True)
+        await adapter.connect()
+
+        (pos,) = await adapter.get_positions()
+        assert pos.market_value == Decimal("0")
+        assert pos.current_price == Decimal("0")
 
 
 class TestReadOnlyOrderBlock:
