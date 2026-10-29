@@ -169,6 +169,12 @@ def download_one(ticker: str, years: int, out_dir: Path) -> tuple[str, int, str]
     # close a hair above high and trip the Quote validator (1e-16 style).
     for column in ("Open", "High", "Low", "Close"):
         frame[column] = frame[column].astype(float).round(6)
+    # Illiquid exchange lines (e.g. IBTS on AEB) report days with no trades
+    # as high == low while open/close come from a fair-value mark outside
+    # that "range". The Quote validator rejects such rows — the true day
+    # range always includes the open and the close, so widen them.
+    frame["Low"] = frame[["Open", "High", "Low", "Close"]].min(axis=1)
+    frame["High"] = frame[["Open", "High", "Low", "Close"]].max(axis=1)
     csv_path = out_dir / f"{_safe_name(ticker)}.csv"
     frame.to_csv(csv_path, date_format="%Y-%m-%d")
     first = str(frame.index[0].date())
