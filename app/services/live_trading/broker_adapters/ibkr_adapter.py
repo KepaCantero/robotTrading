@@ -5,8 +5,11 @@ state. Design rules taken from PLAN_PRODUCCION_PAPER_IBKR.md §Fase 3:
 
 - **Paper is verified by the ACCOUNT, never by the port or a local flag.**
   IBKR paper accounts carry a ``DU`` prefix; the adapter disconnects and
-  refuses to operate on any other account. Live trading is out of scope for
-  the whole plan, so there is no override switch.
+  refuses to operate on any other account. The single sanctioned exception
+  is an explicitly constructed ``read_only=True`` session: it may VIEW a
+  live (``U``-prefixed) account, and every order path — place and cancel —
+  is hard-blocked at the root for that adapter's whole lifetime. No flag
+  combination can make a read-only session send an order.
 - **Instruments resolve by contract id/market/currency with exactly one
   match** — an ambiguous or unknown symbol raises; assets are never
   silently substituted.
@@ -61,6 +64,10 @@ class AccountNotPaperError(IBKRConnectionError):
     """The connected account is not an IBKR paper account — operation refused."""
 
 
+class ReadOnlyModeError(Exception):
+    """An order was attempted on a read-only session — impossible by design."""
+
+
 class InstrumentResolutionError(Exception):
     """Symbol did not resolve to exactly one IBKR contract."""
 
@@ -94,6 +101,7 @@ class IbkrAdapter:
         port: int | None = None,
         client_id: int | None = None,
         connect_timeout: float = 8.0,
+        read_only: bool = False,
     ):
         #: injectable ib_insync.IB factory — tests pass a deterministic fake
         self._ib_factory = ib_factory or self._default_ib_factory
@@ -101,6 +109,9 @@ class IbkrAdapter:
         self._port = int(port or os.getenv("IBKR_PORT", DEFAULT_PORT))
         self._client_id = int(client_id or os.getenv("IBKR_CLIENT_ID", DEFAULT_CLIENT_ID))
         self._connect_timeout = connect_timeout
+        #: read-only sessions may VIEW any IBKR account (incl. live U-prefixed);
+        #: place_order/cancel_order raise before touching the socket, always
+        self._read_only = bool(read_only)
         self._ib: Any = None
         #: symbol → qualified IBKR contract (resolved once, reused)
         self._contracts: dict[str, Any] = {}
@@ -137,8 +148,11 @@ class IbkrAdapter:
         account_id: str | None = None,
         **kwargs: Any,
     ) -> bool:
-        """Connect, then verify the account is PAPER before enabling anything.
+        """Connect, then verify the account before enabling anything.
 
+        Default: PAPER only (DU prefix) — anything else disconnects and
+        raises. ``read_only=True`` adapters may additionally VIEW live
+        (U-prefixed) accounts; their order paths remain hard-blocked.
         api_key/api_secret are not used by IBKR's socket API (TWS holds the
         session); they exist to satisfy the shared adapter contract.
         """
@@ -160,22 +174,37 @@ class IbkrAdapter:
         self._ib = ib
 
         # PAPER VERIFICATION — the account itself decides, not the port.
+        # read_only sessions are the sanctioned exception: they may VIEW a
+        # live account; order paths stay hard-blocked regardless (see
+        # place_order/cancel_order).
         accounts = self._managed_accounts(ib)
         if not accounts:
             await self.disconnect()
             raise AccountNotPaperError(
-                "IBKR reported no managed accounts — cannot verify paper mode"
+                "IBKR reported no managed accounts — cannot verify the account"
             )
         non_paper = [a for a in accounts if not a.startswith(_PAPER_PREFIX)]
-        if non_paper:
+        if non_paper and not self._read_only:
             await self.disconnect()
             raise AccountNotPaperError(
                 f"Account(s) {non_paper} are NOT paper (expected {_PAPER_PREFIX}* prefix); "
-                "live trading is outside this plan — refusing to operate"
+                "live trading is outside this plan — refusing to operate "
+                "(read-only viewing requires an explicitly constructed read_only adapter)"
+            )
+        if non_paper:
+            logger.warning(
+                "IBKR READ-ONLY session on LIVE account(s) %s — placing and "
+                "cancelling orders is hard-blocked for this adapter's lifetime",
+                non_paper,
             )
 
         self.is_connected = True
-        logger.info("IBKR connected (paper-verified: %s, clientId %s)", accounts, client_id)
+        logger.info(
+            "IBKR connected (%s: %s, clientId %s)",
+            "read-only" if self._read_only else "paper-verified",
+            accounts,
+            client_id,
+        )
         # account/balance data arrives ASYNCHRONOUSLY after the handshake —
         # reading immediately shows a funded account as all zeros. Let the
         # event queue drain once before the first snapshot.
@@ -319,6 +348,11 @@ class IbkrAdapter:
         stop_price: Decimal | None = None,
         client_order_id: str | None = None,
     ) -> str:
+        if self._read_only:
+            raise ReadOnlyModeError(
+                "read-only session: place_order is disabled at the root — "
+                "this adapter can only view broker state"
+            )
         if not self.is_connected or self._ib is None:
             raise IBKRConnectionError("not connected")
         client_order_id = client_order_id or f"trade_{uuid4().hex}"
@@ -379,6 +413,11 @@ class IbkrAdapter:
             order.updated_at = order.executed_at
 
     async def cancel_order(self, order_id: str) -> bool:
+        if self._read_only:
+            raise ReadOnlyModeError(
+                "read-only session: cancel_order is disabled at the root — "
+                "this adapter can only view broker state"
+            )
         if self._ib is None or order_id not in self.orders:
             return False
         for trade in getattr(self._ib, "trades", ()) or ():
