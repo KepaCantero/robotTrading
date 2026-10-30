@@ -158,18 +158,18 @@ class SensitiveDataFilter(logging.Filter):
         Returns:
             True (always allows the record through, just modifies it)
         """
-        # Redact sensitive data from the message
-        record.msg = self._redact_message(str(record.msg))
-
-        # Redact sensitive data from the formatted message if already set
-        if hasattr(record, "getMessage"):
-            try:
-                original_message = record.getMessage()
-                if original_message != str(record.msg):
-                    # If the formatted message differs, update it
-                    record.args = ()  # Clear args to prevent double formatting
-            except Exception:
-                pass
+        # Redact the FINAL message: interpolate the args FIRST. The old
+        # path compared record.getMessage() (interpolated) against
+        # str(record.msg) (the raw template) — they ALWAYS differ when a
+        # call has %-args — and then wiped record.args, so every %-style
+        # log in the app printed its template forever ("Error loading
+        # subsystem %s: %s" ×3072 in one run).
+        try:
+            final_message = record.getMessage()
+        except (TypeError, ValueError):
+            final_message = str(record.msg)
+        record.msg = self._redact_message(final_message)
+        record.args = ()
 
         # Redact sensitive data from extra fields (kwargs passed to log call)
         if hasattr(record, "extra_fields"):

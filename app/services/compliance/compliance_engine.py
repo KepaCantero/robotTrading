@@ -2654,15 +2654,25 @@ class ComplianceEngine:
         max_position_value = capital * Decimal(str(max_ratio))
         position_value = max_position_value * Decimal(str(confidence_factor))
 
-        # Ensure minimum position value (1% of capital)
-        min_position_value = capital * Decimal("0.01")
-        position_value = max(position_value, min_position_value)
+        # Minimum position value (1% of capital) — ONLY for the default
+        # sizing path: an EXPLICIT max_position_ratio is the strategy's
+        # declared weight (a 500-name passive portfolio runs 0.19%
+        # sleeves) and must not be inflated — the old floor turned every
+        # wide-universe order into a cap violation (hunt 30-10).
+        if max_position_ratio is None:
+            min_position_value = capital * Decimal("0.01")
+            position_value = max(position_value, min_position_value)
 
         # Calculate number of shares
         position_size = position_value / price
 
-        # Ensure minimum shares (at least 1)
-        position_size = max(position_size, Decimal("1"))
+        # Ensure minimum shares (at least 1) — only on the default path:
+        # an explicit ratio may target a FRACTION of a high-priced share
+        # ($190 of Toyota @ ¥2,800); forcing one whole share inflated the
+        # order past the cap and the symbol NEVER entered (hunt 30-10:
+        # 7203.T/IBEX rejected ~22× each with $3,000 orders vs $1,000 cap).
+        if max_position_ratio is None:
+            position_size = max(position_size, Decimal("1"))
 
         # Round to reasonable precision
         return position_size.quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP)

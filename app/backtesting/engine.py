@@ -932,19 +932,25 @@ class BacktestEngine:
                     self.capital, self.last_known_prices
                 )
             # Peso declarado por la estrategia para ESTA señal (mangas con
-            # pesos distintos: core vs satélite); el contrato del executor
-            # (5-25%) se mantiene como clamp.
+            # pesos distintos: core vs satélite). El clamp solo limita POR
+            # ARRIBA (25%, el techo real del validador): el viejo suelo del
+            # 5% inflaba el 0.19% de una cartera exhaustiva de 500 nombres
+            # a un 5% — orden de $5.000 contra un cap de $1.000, y TODAS
+            # las compras rechazadas en bucle (cacería 30-10).
             sizing_ratio = float(self.config.max_position_size)
             declared = (signal.metadata or {}).get("position_weight")
             if declared is not None:
                 try:
-                    sizing_ratio = min(0.25, max(0.05, float(declared)))
+                    declared_ratio = float(declared)
                 except (TypeError, ValueError):
                     logger.warning(
                         "Invalid position_weight %r on %s signal; using config default",
                         declared,
                         signal.symbol,
                     )
+                else:
+                    if declared_ratio > 0:
+                        sizing_ratio = min(0.25, declared_ratio)
             estimated_quantity = self.compliance_engine.calculate_position_size(
                 symbol=signal.symbol,
                 price=current_price,

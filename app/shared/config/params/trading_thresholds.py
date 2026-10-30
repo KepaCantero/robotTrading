@@ -59,7 +59,13 @@ class TradingThresholds(BaseModel):
         default=0.25, description="Default max position as % of capital"
     )
     validator_min_position_pct: float = Field(
-        default=0.05, description="Minimum position as % of capital"
+        default=0.005,
+        description=(
+            "Sanity floor for the per-position CAP argument (catches unit "
+            "bugs like 0.001 fraction/percent mixups). NOT a portfolio "
+            "constraint: a 500-name passive portfolio legitimately runs "
+            "sub-5% positions — 0.5% floor, 30-10 exhaustive-universe hunt"
+        ),
     )
     validator_max_position_pct: float = Field(
         default=0.25, description="Maximum position limit as % of capital"

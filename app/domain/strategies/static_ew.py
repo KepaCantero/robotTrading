@@ -153,8 +153,13 @@ class StaticEqualWeightStrategy(BaseStrategy):
         return {sym for sym in self.universe if sym in self._closes}
 
     def _position_weight(self, symbol: str) -> float:
+        # peso unitario SIN suelo: en universos anchos (n>19) un suelo del
+        # 5% sobresuscribía la cartera (30×5%=150%) y chocaba con el tope
+        # del validador — todas las compras rechazadas en bucle y el run
+        # terminaba a 0 trades (ACUMULAR 2y, 30-10). El techo del 25%
+        # por posición sigue: es el cap real del motor.
         n = max(1, len(self.universe))
-        return round(min(0.25, max(0.05, self.target_exposure / n)), 4)
+        return round(min(0.25, self.target_exposure / n), 4)
 
     def _signal(self, quote: Quote, symbol: str, side: SignalType) -> Signal:
         return Signal(

@@ -185,12 +185,16 @@ class ParameterOptimizer:
             Decimal("0.01")
         )
 
-        # Validate against tier limits
-        if required_position_pct > max_position_pct:
+        # Validate against tier limits. max_position_size is a FRACTION
+        # (0-1) by contract while required_position_pct is in PERCENT
+        # POINTS (2.82 = 2.82%) — the old mixed comparison (2.82 > 0.10)
+        # ALWAYS fired and clamped the requirement to a 0.10% phantom.
+        tier_limit_pct = (max_position_pct * Decimal("100")).quantize(Decimal("0.01"))
+        if required_position_pct > tier_limit_pct:
             self.logger.warning(
-                f"⚠️ Required position size {required_position_pct}% exceeds tier limit {max_position_pct}%"
+                f"⚠️ Required position size {required_position_pct}% exceeds tier limit {tier_limit_pct}%"
             )
-            required_position_pct = max_position_pct
+            required_position_pct = tier_limit_pct
 
         # Calculate optimal number of concurrent positions
         # Diversify across multiple positions to reduce risk
