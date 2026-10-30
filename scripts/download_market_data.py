@@ -61,6 +61,14 @@ UNIVERSE: dict[str, str] = {
     "7203.T": "Toyota",
     # Index proxy (new)
     "^IBEX": "IBEX 35",
+    # ── UCITS ETFs (EUR-listed): the Spain-appropriate universes. Irish/
+    #    Luxembourg domiciled = 15% US withholding inside the fund and no
+    #    US estate-tax exposure for a Spanish resident. Deep history so
+    #    they backtest over 10y+ horizons (the Yahoo CSV import universe
+    #    VHYL/IDVY/QDIV refreshes via import_yahoo_csv.py, not here —
+    #    adding their .AS symbols here would write duplicate suffixed CSVs).
+    "EUNL.DE": "iShares Core MSCI World UCITS Acc (2009+, EUR)",
+    "IBGS.AS": "iShares Euro Govt Bond 7-10yr UCITS (2008+, EUR)",
     # ── ETFs: catálogo Vanguard completo + clásicos ──
     "BND": "Vanguard Total Bond",
     "BNDX": "Vanguard Total Intl Bond",

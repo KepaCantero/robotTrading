@@ -649,6 +649,8 @@ class Capa2PipelineExecutor:
     _GOAL_STRATEGY: dict[str, str] = {
         "MAXIMIZAR_DIVIDENDOS": "static_ew",
         "CAPITAL_PRESERVATION": "low_volatility",
+        "VIVIR_DE_LA_CARTERA": "static_ew",
+        "ACUMULAR": "static_ew",
     }
 
     def _resolve_strategy(self, ctx: _Ctx) -> str:

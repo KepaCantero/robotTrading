@@ -31,6 +31,8 @@ class ObjectivoInversion(str, Enum):
     CAPITAL_PRESERVATION = "capital_preservation"
     BALANCED_GROWTH = "balanced_growth"
     INCOME_GENERATION = "income_generation"
+    VIVIR_DE_LA_CARTERA = "vivir_de_la_cartera"
+    ACUMULAR = "acumular"
 
 
 class RiskTolerance(str, Enum):

@@ -43,6 +43,7 @@ _PROFILE_OPTIONS = [
     "capital_preservation",
     "balanced_growth",
     "income_generation",
+    "acumular",
 ]
 
 _TIME_WINDOW_OPTIONS = ["1mo", "3mo", "6mo", "1y", "2y", "5y"]

@@ -286,6 +286,7 @@ def render(
                 return
             _render_digest_card(target)
             _render_target_card(target)
+            await _render_live_card(target)
             await _render_drift_card(target, pm_store)
             await _render_history_card(pm_store)
 
@@ -454,6 +455,269 @@ def render(
                 "positions_map": positions_map,
             }
 
+        async def _render_live_card(target) -> None:
+            """Real broker account vs the adopted target (read-only).
+
+            The owner holds a live IBKR account tracked in his own
+            portfolio project. Pasting its holdings here connects the two
+            worlds: corpus-priced gap per sleeve, a buy-only path for new
+            money (dilution — the robot never proposes selling the real
+            account), and an estimated tax cost should HE choose to trim.
+            """
+            from app.services.portfolio_management import real_gap
+
+            snapshot = real_gap.load_real_holdings(_ACTIVE_SLUG)
+            with ui.element("div").classes("panel q-pa-md w-full q-mt-md"):
+                with ui.row().classes("w-full items-center justify-between no-wrap"):
+                    ui.label("3 · Your live account vs this target").classes("text-h6")
+                    if snapshot is not None:
+                        ui.button(
+                            "Re-import",
+                            icon="upload_file",
+                            on_click=lambda: (
+                                target_state.__setitem__("editing", "live"),
+                                render_state.refresh(),
+                            ),
+                        ).props("flat dense").tooltip(
+                            "Paste the broker holdings again (replaces the stored ones)."
+                        )
+                ui.label(
+                    "Real money, read-only: the robot prices your actual holdings "
+                    "from its own data and shows the gap to the target above. "
+                    "Nothing here touches your broker."
+                ).classes("text-caption")
+                if snapshot is None or target_state.get("editing") == "live":
+                    paste = ui.textarea(
+                        label="Paste holdings — ticker, quantity, avg cost € (one per line)",
+                        placeholder=(
+                            "VWCE,224.88,148.71\nVHYL,494.04,69.09\nO,138.73,51.33\n"
+                            "CASH,560.36,1.00"
+                        ),
+                    ).classes("w-full").props("autogrow")
+                    fx_input = ui.number(
+                        "USD→EUR rate (leave empty to use the ECB reference)",
+                        value=None,
+                        step="0.0001",
+                        min=0.5,
+                        max=1.5,
+                    )
+
+                    async def _import_live() -> None:
+                        positions, cash, skipped = real_gap.parse_holdings_paste(
+                            paste.value or ""
+                        )
+                        if not positions and cash <= 0:
+                            ui.notify(
+                                "Nothing readable in the paste — one 'ticker,quantity,cost' "
+                                "line per holding.",
+                                type="negative",
+                            )
+                            return
+                        snap = real_gap.RealSnapshot(
+                            cash_eur=cash,
+                            fx_usd_eur=(
+                                D(str(fx_input.value)) if fx_input.value else None
+                            ),
+                            positions=positions,
+                        )
+                        real_gap.save_real_holdings(_ACTIVE_SLUG, snap)
+                        target_state.pop("editing", None)
+                        ui.notify(
+                            f"Imported {len(positions)} live positions"
+                            + (f" (+€{cash:,.0f} cash)" if cash else "")
+                            + (
+                                f" — {len(skipped)} line(s) skipped"
+                                if skipped
+                                else ""
+                            ),
+                            type="positive",
+                        )
+                        render_state.refresh()
+
+                    with ui.row().classes("items-center gap-sm"):
+                        ui.button(
+                            "Import live holdings",
+                            icon="download",
+                            on_click=_import_live,
+                        ).props("unelevated no-caps").classes("run-btn")
+                        if snapshot is not None:
+                            ui.button(
+                                "Keep stored holdings",
+                                on_click=lambda: (
+                                    target_state.pop("editing", None),
+                                    render_state.refresh(),
+                                ),
+                            ).props("flat no-caps")
+                    return
+
+                report = real_gap.compute_gap(target.holdings, snapshot)
+                if report.total_eur <= 0:
+                    ui.label(
+                        "No imported position could be priced from the local corpus "
+                        f"({', '.join(report.unpriced) or 'none found'}). Import at "
+                        "least one symbol the robot has data for."
+                    ).classes("text-caption text-warning")
+                    return
+                outside_pct = (
+                    sum((v for _, v in report.outside_target), D("0"))
+                    / report.total_eur
+                )
+                with ui.row().classes("w-full gap-sm wrap q-mb-md"):
+                    _stat_tile("Live account", f"€{report.total_eur:,.0f}")
+                    _stat_tile(
+                        "Positions", f"€{report.total_eur - report.cash_eur:,.0f}"
+                    )
+                    _stat_tile("Cash", f"€{report.cash_eur:,.0f}")
+                    _stat_tile(
+                        "USD→EUR fx",
+                        f"{report.fx_usd_eur:.4f}" if report.fx_usd_eur else "n/a",
+                    )
+                columns = [
+                    {"name": "symbol", "label": "ETF", "field": "symbol", "align": "left"},
+                    {"name": "target", "label": "Target", "field": "target", "align": "right"},
+                    {"name": "now", "label": "Live", "field": "now", "align": "right"},
+                    {"name": "gap", "label": "Gap", "field": "gap", "align": "right"},
+                ]
+                rows = []
+                for row in report.rows:
+                    rows.append(
+                        {
+                            "symbol": row.symbol,
+                            "target": _fmt_pct(row.target_weight),
+                            "now": (
+                                _fmt_pct(row.live_weight)
+                                if row.live_weight is not None
+                                else "held — no local price"
+                            ),
+                            "gap": (
+                                f"buy €{row.gap_eur:,.0f}"
+                                if row.gap_eur is not None and row.gap_eur > 0
+                                else (
+                                    f"excess €{-row.gap_eur:,.0f}"
+                                    if row.gap_eur is not None
+                                    else "—"
+                                )
+                            ),
+                        }
+                    )
+                if report.outside_target:
+                    rows.append(
+                        {
+                            "symbol": f"Outside target ({len(report.outside_target)} more)",
+                            "target": "—",
+                            "now": _fmt_pct(outside_pct),
+                            "gap": "yours, untouched",
+                        }
+                    )
+                ui.table(columns=columns, rows=rows, row_key="symbol").classes("w-full").props(
+                    "flat bordered dense"
+                )
+                if report.unpriced:
+                    ui.label(
+                        "Not priced locally (excluded from the gap): "
+                        + ", ".join(report.unpriced)
+                    ).classes("text-caption text-warning")
+                if report.outside_target:
+                    outside = ", ".join(
+                        f"{sym} €{val:,.0f}" for sym, val in report.outside_target[:6]
+                    )
+                    ui.label(
+                        f"Held but outside this target: {outside}"
+                        + (
+                            " …"
+                            if len(report.outside_target) > 6
+                            else ""
+                        )
+                        + " — the plan below only funds the target sleeves."
+                    ).classes("text-caption")
+
+                # Buy-only path: new money closes the underweights, the
+                # dilution philosophy — the robot never sells the real
+                # account (selling is the owner's call, priced below).
+                with ui.row().classes("w-full items-end gap-sm no-wrap q-mt-md"):
+                    monthly = ui.number(
+                        "New money to invest (€)", value=3000, min=0, step=100
+                    ).style("max-width:220px")
+
+                    def _plan_buys() -> None:
+                        buys_box.clear()
+                        plan = real_gap.plan_buys(report, D(str(monthly.value or 0)))
+                        with buys_box:
+                            if not plan:
+                                ui.label(
+                                    "No underweights to fund — the live account already "
+                                    "covers every sleeve."
+                                ).classes("text-caption")
+                                return
+                            ui.label(
+                                "Buy only, no sells — new money closes the gaps:"
+                            ).classes("text-body2")
+                            for sym, amount in plan:
+                                ui.label(f"· {sym}: €{amount:,.0f}").classes(
+                                    "text-body2"
+                                ).style("padding-left:12px")
+
+                    ui.button(
+                        "Plan these buys",
+                        icon="shopping_cart",
+                        on_click=_plan_buys,
+                    ).props("unelevated no-caps").classes("run-btn")
+                buys_box = ui.column().classes("w-full gap-xs")
+
+                trims = real_gap.trim_costs(report, snapshot)
+                if trims:
+                    with ui.expansion(
+                        "If you sold the excess today (tax estimate)", icon="sell"
+                    ).classes("w-full q-mt-sm"):
+                        ui.label(
+                            "You said you would rather not sell — this is only what "
+                            "trimming back to target would cost in estimated tax "
+                            "(average-cost basis, Spain savings rates)."
+                        ).classes("text-caption")
+                        trim_rows = [
+                            {
+                                "symbol": t.symbol,
+                                "excess": f"€{t.excess_value_eur:,.0f}",
+                                "qty": f"{t.quantity:.2f} sh",
+                                "tax": (
+                                    f"€{t.est_tax_eur:,.0f} ({t.marginal_rate * 100:.0f}%)"
+                                    if t.est_tax_eur > 0
+                                    else "€0 (loss or within allowance)"
+                                ),
+                            }
+                            for t in trims
+                        ]
+                        ui.table(
+                            columns=[
+                                {
+                                    "name": "symbol",
+                                    "label": "ETF",
+                                    "field": "symbol",
+                                    "align": "left",
+                                },
+                                {
+                                    "name": "excess",
+                                    "label": "Excess",
+                                    "field": "excess",
+                                    "align": "right",
+                                },
+                                {
+                                    "name": "qty",
+                                    "label": "Shares",
+                                    "field": "qty",
+                                    "align": "right",
+                                },
+                                {
+                                    "name": "tax",
+                                    "label": "Est. tax",
+                                    "field": "tax",
+                                    "align": "right",
+                                },
+                            ],
+                            rows=trim_rows,
+                            row_key="symbol",
+                        ).props("flat bordered dense")
+
         async def _render_drift_card(target, pm_store) -> None:
             state = await _gather_account_state(target, pm_store)
             positions_map = state.pop("positions_map")
@@ -470,7 +734,7 @@ def render(
 
             with ui.element("div").classes("panel q-pa-md w-full q-mt-md"):
                 with ui.row().classes("w-full items-center justify-between no-wrap"):
-                    ui.label("3 · On track?").classes("text-h6")
+                    ui.label("4 · On track?").classes("text-h6")
                     cooldown_left = cooldown_ends_at(last_rebalance, target.cooldown_days)
                     if cooldown_left and cooldown_left > datetime.utcnow():
                         ui.badge(
@@ -695,7 +959,7 @@ def render(
         async def _render_history_card(pm_store) -> None:
             events = await pm_store.list_events(limit=20)
             with ui.element("div").classes("panel q-pa-md w-full q-mt-md"):
-                ui.label("4 · What the robot did, and why").classes("text-h6")
+                ui.label("5 · What the robot did, and why").classes("text-h6")
                 if not events:
                     ui.label("No rebalances yet — history will explain each one here.").classes(
                         "text-caption"

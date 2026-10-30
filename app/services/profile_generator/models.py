@@ -52,6 +52,8 @@ class InvestmentObjective(str, Enum):
     CAPITAL_PRESERVATION = "capital_preservation"  # Capital preservation
     BALANCED_GROWTH = "balanced_growth"  # Balanced growth
     INCOME_GENERATION = "income_generation"  # Income generation
+    VIVIR_DE_LA_CARTERA = "vivir_de_la_cartera"  # Live off it — total return
+    ACUMULAR = "acumular"  # Accumulate — total return, all-ACC UCITS
 
 
 class RiskProfile(str, Enum):

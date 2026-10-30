@@ -43,6 +43,22 @@ PROFILE_THRESHOLDS: dict[str, dict[str, Any]] = {
         "min_sharpe": 1.0,
         "min_return": 0.10,
     },
+    # Retorno total "vivir de la cartera": barra algo menor que
+    # balanced_growth — el objetivo es un horizonte de ~11 años con
+    # colchón de bonos, no un sprint de Sharpe.
+    "vivir_de_la_cartera": {
+        "primary_metric": "sharpe_ratio",
+        "min_sharpe": 0.8,
+        "min_return": 0.08,
+    },
+    # Acumulación pura (UCITS ACC): retorno total como métrica primaria
+    # con la barra honesta de un global (~7%/año histórico) y Sharpe 0.7
+    # — sin foco de dividendo: aquí no hay renta que maximizar.
+    "acumular": {
+        "primary_metric": "total_return",
+        "min_sharpe": 0.7,
+        "min_return": 0.08,
+    },
     "income_generation": {
         "primary_metric": "total_return",
         "min_sharpe": 0.7,

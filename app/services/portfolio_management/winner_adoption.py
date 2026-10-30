@@ -76,6 +76,23 @@ SEED_PORTFOLIOS: dict[str, list[tuple[str, Decimal, str]]] = {
         ("VIG", Decimal("15"), "Dividend aristocrats — income that keeps rising."),
         ("BND", Decimal("25"), "Total bond market — steady interest, low risk."),
     ],
+    # Retorno total "vivir de la cartera": acumular sin reparto fiscal y
+    # vender programado al retirar. UCITS EUR (Irlanda/Luxemburgo) porque
+    # el perfil es residente fiscal en España. Estructura espejo de la
+    # cartera real del dueño (núcleo acumulador + renta alta + colchón).
+    "VIVIR_DE_LA_CARTERA": [
+        ("VWCE", Decimal("55"), "All-world accumulator — compounds untaxed until you sell."),
+        ("VHYL", Decimal("20"), "High-dividend engine — pays out quarterly inside the wrapper."),
+        ("IBTS", Decimal("25"), "Short Treasury cushion — the stable side of living off it."),
+    ],
+    # Acumulación pura (30-10): la fase previa a vivir de la cartera.
+    # Espejo del mandato real de la cuenta (dinero nuevo → VWCE, diluir
+    # el bloque congelado): un solo acumulador global y colchón corto.
+    # Sin mangas de renta — cero reparto, cero IRPF anual.
+    "ACUMULAR": [
+        ("VWCE", Decimal("75"), "All-world accumulator — everything compounds untaxed until you sell."),
+        ("IBTS", Decimal("25"), "Short Treasury cushion — the defensive quarter while you accumulate."),
+    ],
 }
 
 

@@ -952,7 +952,10 @@ class BacktestOrchestrator:
 
     #: yield medio (anual) por símbolo de dividendo — estimación conservadora
     #: para el drag fiscal; los precios ajustados incluyen distribuciones
-    #: pero el IRPF se paga cada año, no al final
+    #: pero el IRPF se paga cada año, no al final. Los UCITS acumuladores
+    #: (EUNL.DE, IUSQ.DE, EIMI.MI, VWCE, QDIV) NO están aquí a propósito:
+    #: no reparten, su yield fiscal es 0. VHYL/IDVY reparten (trimestral/
+    #: anual — la clase ACC es otro ISIN) e IBGS.AS reparte cupones.
     _DIVIDEND_YIELDS: dict[str, float] = {
         "SCHD": 0.035,
         "VIG": 0.018,
@@ -970,7 +973,13 @@ class BacktestOrchestrator:
         "DLN": 0.020,
         "DTD": 0.030,
         "PEY": 0.045,
+        "VHYL": 0.034,  # distribuye trimestral (verificado 30-10)
+        "IDVY": 0.042,  # distribuye anual
+        "IBGS.AS": 0.028,  # bono estatal euro 7-10: reparte cupones
     }
+
+    #: clases UCITS acumuladoras del corpus — sin reparto no hay drag anual
+    _UCITS_ACCUMULATING = frozenset({"EUNL.DE", "IUSQ.DE", "EIMI.MI", "VWCE", "QDIV"})
 
     @classmethod
     def _estimate_accumulating_advantage(
@@ -987,6 +996,23 @@ class BacktestOrchestrator:
         yields = [cls._DIVIDEND_YIELDS.get(sym, 0.0) for sym in symbols]
         avg_yield = sum(yields) / len(yields)
         if avg_yield <= 0:
+            # universo 100% acumulador: no hay drag anual que estimar — el
+            # mensaje fiscal ES la ausencia de drag (0 €/año; el IRPF de la
+            # plusvalía llega solo cuando el dueño elige vender)
+            if symbols and all(
+                str(sym).upper() in cls._UCITS_ACCUMULATING for sym in symbols
+            ):
+                total_gain = float(total_return_pct) / 100 if total_return_pct else 0
+                return {
+                    "avg_portfolio_yield_pct": 0.0,
+                    "distributing_drag_total_pct": 0.0,
+                    "accumulating_tax_at_exit_pct": round(total_gain * 0.21 * 100, 2),
+                    "all_accumulating": True,
+                    "recommendation": (
+                        "all-ACC UCITS — zero yearly dividend drag, tax deferred "
+                        "until you choose to sell"
+                    ),
+                }
             return None
 
         # Escenario distribución: IRPF anual sobre el componente de dividendo
@@ -1000,9 +1026,15 @@ class BacktestOrchestrator:
         total_gain = float(total_return_pct) / 100 if total_return_pct else 0
         if total_gain > 0:
             accum_tax_at_exit = total_gain * 0.21  # 21% tramo medio
-            # en distribución, cada año pierdes el IRPF que podría componer
-            dist_effective_return = (1 + avg_yield * (1 - annual_irpf) + 0.005) ** years
-            accum_effective_return = (1 + avg_yield + 0.005) ** years * (1 - 0.21)
+            # Comparación honesta (30-10): AMBOS escenarios pagan el IRPF
+            # de la plusvalía al vender — lo que distingue la acumulación
+            # es no sangrar el drag anual. Antes se comparaba la riqueza
+            # neta de acumulación (con su impuesto a la salida) contra una
+            # distribución que no pagaba el suyo: la comparación estaba
+            # amañada a favor de repartir.
+            net_of_exit = (1 + total_gain) - accum_tax_at_exit
+            accum_effective_return = net_of_exit
+            dist_effective_return = net_of_exit / (1 + dist_total_drag)
         else:
             accum_tax_at_exit = 0
             dist_effective_return = 1.0

@@ -79,9 +79,10 @@ DIVIDEND_ETFS = {
     "QDIV",  # iShares MSCI World Quality Dividend UCITS Acc — núcleo
     # quality-global ACUMULADOR (fiscalmente superior en España); solo
     # entra en ventanas donde su historia (desde 2018) alcanza
-    "VHYL",  # Vanguard FTSE All-World High Dividend Yield UCITS Acc:
-    # acumulador irlandés ~3.6% yield, 13.4 años de historial (2013+)
-    "IDVY",  # iShares Euro Dividend UCITS Acc ~4.2% yield, 18.8 años (2008+)
+    "VHYL",  # Vanguard FTSE All-World High Dividend Yield UCITS: reparte
+    # trimestral (~3.4% yield, 13.4 años de historial, 2013+) — la clase
+    # ACC es otro ISIN; este VHYL distribuye y tributa cada año
+    "IDVY",  # iShares Euro Dividend UCITS ~4.2% yield, 18.8 años (2008+)
     "VIG",
     "VYM",
     "DGRO",
@@ -144,10 +145,40 @@ DEFENSIVE_SYMBOLS = {
     "MCD",
 }
 
+#: UCITS total-return set (EUR-listed, Irish/Luxembourg funds): the
+#: Spain-appropriate answer for "live off your portfolio" — accumulation
+#: (no yearly dividend tax drag) for the core, one high-dividend engine
+#: with deep history, and a euro-sovereign cushion. Suffix symbols match
+#: their corpus CSVs (EUNL.DE.csv / IBGS.AS.csv — Yahoo tickers).
+UCITS_TOTAL_RETURN = {
+    "EUNL.DE",  # iShares Core MSCI World Acc, 2009-09+ — the accumulator core
+    "VHYL",  # Vanguard All-World High Dividend (reparte trimestral), 2013-05+
+    "IDVY",  # iShares Euro Dividend (reparte anual), 2008-01+
+    "IBGS.AS",  # iShares Euro Govt Bond 7-10yr, 2008-10+ — the cushion
+}
+
+#: UCITS ACCUMULATORS (30-10): todo acumulador EUR — cero drag de IRPF
+#: anual. VWCE/QDIV solo cubren ventanas cortas (2019/2018): el filtro
+#: deja que el corpus decima por ventana y el gate de cobertura reporta.
+#: VHYL/IDVY entran como UCITS de historial profundo para el Automatic,
+#: aunque reparten (sus yields viven en el mapa fiscal del orquestador).
+UCITS_ACCUMULATORS = {
+    "EUNL.DE",  # iShares Core MSCI World Acc, 2009-09+
+    "IUSQ.DE",  # iShares MSCI ACWI Acc, 2011-10+ — el VWCE con historia
+    "EIMI.MI",  # iShares Core MSCI EM IMI Acc, 2014-07+
+    "VWCE",  # Vanguard FTSE All-World Acc, 2019-07+
+    "QDIV",  # iShares MSCI World Quality Dividend Acc, 2018+
+    "VHYL",  # Vanguard All-World High Dividend, 2013-05+ (distribuye)
+    "IDVY",  # iShares Euro Dividend, 2008-01+ (distribuye)
+    "IBGS.AS",  # iShares Euro Govt Bond 7-10yr, 2008-10+ — cushion
+}
+
 #: goal (as the UI sends it) → corpus filter
 GOAL_FILTERS: dict[str, set[str]] = {
     "MAXIMIZAR_DIVIDENDOS": DIVIDEND_ETFS,
     "CAPITAL_PRESERVATION": DEFENSIVE_SYMBOLS,
+    "VIVIR_DE_LA_CARTERA": UCITS_TOTAL_RETURN,
+    "ACUMULAR": UCITS_ACCUMULATORS,
 }
 
 #: overlap families inside the goal sets: funds that hold essentially the

@@ -236,6 +236,74 @@ class ProfileGenerator:
                     "rebalance_days": 7,
                 },
             },
+            # Retorno total "vivir de la cartera": sin apalancamiento (el
+            # dueño vivirá de este capital), rebalanceo perezoso — es una
+            # cartera estática UCITS con banda de deriva, no un sistema
+            # activo. Los módulos heredan el paraguas de riesgo.
+            "vivir_de_la_cartera": {
+                "micro": {
+                    "risk": "moderate",
+                    "max_leverage": 1.0,
+                    "modules": ["static_ew", "risk_monitor"],
+                    "max_position_size": 10.0,
+                    "rebalance_days": 90,
+                },
+                "small": {
+                    "risk": "moderate",
+                    "max_leverage": 1.0,
+                    "modules": ["static_ew", "risk_monitor"],
+                    "max_position_size": 10.0,
+                    "rebalance_days": 90,
+                },
+                "medium": {
+                    "risk": "moderate",
+                    "max_leverage": 1.0,
+                    "modules": ["static_ew", "risk_monitor", "drawdown_guard"],
+                    "max_position_size": 10.0,
+                    "rebalance_days": 90,
+                },
+                "large": {
+                    "risk": "moderate",
+                    "max_leverage": 1.0,
+                    "modules": ["static_ew", "risk_monitor", "drawdown_guard"],
+                    "max_position_size": 10.0,
+                    "rebalance_days": 90,
+                },
+            },
+            # Acumulación pura: misma disciplina pasiva que vivir-de-la-
+            # cartera (static_ew, sin apalancamiento, rebalanceo perezoso)
+            # — es la fase previa: comprar el acumulador global y no
+            # tocar nada hasta que toque vender por diseño, no por pánico.
+            "acumular": {
+                "micro": {
+                    "risk": "moderate",
+                    "max_leverage": 1.0,
+                    "modules": ["static_ew", "risk_monitor"],
+                    "max_position_size": 10.0,
+                    "rebalance_days": 90,
+                },
+                "small": {
+                    "risk": "moderate",
+                    "max_leverage": 1.0,
+                    "modules": ["static_ew", "risk_monitor"],
+                    "max_position_size": 10.0,
+                    "rebalance_days": 90,
+                },
+                "medium": {
+                    "risk": "moderate",
+                    "max_leverage": 1.0,
+                    "modules": ["static_ew", "risk_monitor", "drawdown_guard"],
+                    "max_position_size": 10.0,
+                    "rebalance_days": 90,
+                },
+                "large": {
+                    "risk": "moderate",
+                    "max_leverage": 1.0,
+                    "modules": ["static_ew", "risk_monitor", "drawdown_guard"],
+                    "max_position_size": 10.0,
+                    "rebalance_days": 90,
+                },
+            },
             "income_generation": {
                 "micro": {
                     "risk": "conservative",

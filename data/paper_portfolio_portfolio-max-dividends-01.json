@@ -1,0 +1,9 @@
+{
+ "slug": "portfolio-max-dividends-01",
+ "name": "portfolio_max_dividends_01",
+ "source_run_id": "swarm_e6a5ec30",
+ "strategy_name": "",
+ "decision_status": "CONDITIONAL",
+ "initial_cash": "100000.0",
+ "created_at": "2026-10-28T08:35:16.667776"
+}

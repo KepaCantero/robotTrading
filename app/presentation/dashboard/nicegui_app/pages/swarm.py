@@ -54,6 +54,8 @@ OBJECTIVES = {
     "CAPITAL_PRESERVATION": "Preserve capital",
     "BALANCED_GROWTH": "Balanced growth",
     "INCOME_GENERATION": "Generate income",
+    "VIVIR_DE_LA_CARTERA": "Live off it — total return (UCITS)",
+    "ACUMULAR": "Accumulate — total return (UCITS ACC)",
 }
 
 VERDICT_ES: dict[str, tuple[str, str, str]] = {}  # kept name for compatibility
@@ -201,6 +203,28 @@ LOW_VOL_UNIVERSE = ["VDC", "VCR", "VDE", "VFH", "VHT", "VIS", "VGT", "VAW", "VNQ
 GOAL_PRESETS: dict[str, tuple[str, list[str] | None]] = {
     "MAXIMIZAR_DIVIDENDOS": ("static_ew", None),
     "CAPITAL_PRESERVATION": ("low_volatility", LOW_VOL_UNIVERSE),
+    # Retorno total "vivir de la cartera" (29-10): universo UCITS EUR
+    # explícito — el acumulador como núcleo (EUNL.DE hace de VWCE
+    # pre-2019), VHYL/IDVY de renta y IBGS.AS de colchón. Todo con
+    # ≥13 años de histórico local, suficiente para horizontes de ~10-11
+    # años (el gate de cobertura reporta si la ventana pide más).
+    "VIVIR_DE_LA_CARTERA": (
+        "static_ew",
+        ["EUNL.DE", "VHYL", "IDVY", "IBGS.AS"],
+    ),
+    # Acumulación pura (30-10): la fase ANTES de vivir de la cartera —
+    # núcleo 100% acumulador y cero mangas de renta: sin reparto no hay
+    # IRPF anual, Hacienda espera a que el dueño venda. VWCE no puede
+    # estar en el preset (nació 2019-07 y el run por defecto de 10 años
+    # debe pasar el gate de cobertura): EUNL.DE (mundo, 2009-09) e
+    # IUSQ.DE (ACWI, 2011-10) son los acumuladores con historia, EIMI.MI
+    # (2014-07) aporta el emergente que VWCE llevaría dentro y IBGS.AS
+    # el colchón del drift band. static_ew necesita ≥4 símbolos para
+    # desplegar ~95% (cap del 25% por posición).
+    "ACUMULAR": (
+        "static_ew",
+        ["EUNL.DE", "IUSQ.DE", "EIMI.MI", "IBGS.AS"],
+    ),
 }
 
 #: objetivo → universo alternativo cuando el horizonte es largo
@@ -2198,13 +2222,19 @@ def render(
                     xs = metrics.get("excess_vs_universe_ew")
                     xs_txt = f" ({_as_float(xs):+,.1f}% vs this strategy)" if xs is not None else ""
                     ui.label(
-                        f"Dividend benchmark: holding this same universe equal-weight "
-                        f"did {ew:+,.1f}%{xs_txt} — the honest peer comparison for a "
-                        "dividend strategy."
+                        f"Peer benchmark: holding this same universe equal-weight "
+                        f"did {ew:+,.1f}%{xs_txt} — the honest passive twin of "
+                        "this portfolio."
                     ).classes("help q-mt-xs")
 
                 te = metrics.get("tax_efficiency")
-                if isinstance(te, dict) and te.get("avg_portfolio_yield_pct") is not None:
+                if isinstance(te, dict) and te.get("all_accumulating"):
+                    ui.label(
+                        f"Tax note (Spain): all positions are accumulating UCITS — "
+                        f"€0 yearly dividend drag; ~{te.get('accumulating_tax_at_exit_pct')}% "
+                        f"deferred until you choose to sell."
+                    ).classes("help")
+                elif isinstance(te, dict) and te.get("avg_portfolio_yield_pct") is not None:
                     ui.label(
                         f"Tax note (Spain): portfolio yield ~{te.get('avg_portfolio_yield_pct')}%/yr. "
                         f"Distribution ETFs pay ~{te.get('distributing_drag_total_pct')}% IRPF drag "

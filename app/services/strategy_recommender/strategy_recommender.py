@@ -65,6 +65,23 @@ class StrategyRecommender:
             return_weight=Decimal("0.30"),
             drawdown_weight=Decimal("0.30"),
         ),
+        # Retorno total para vivir de la cartera: el crecimiento manda
+        # (se venderá programado al retirar), pero la caída pesa porque
+        # el propietario vivirá de este capital.
+        "vivir_de_la_cartera": ObjectiveWeights(
+            sharpe_weight=Decimal("0.35"),
+            return_weight=Decimal("0.40"),
+            drawdown_weight=Decimal("0.25"),
+        ),
+        # Acumulación pura: el retorno total manda (el contribuyente vive
+        # de vender participaciones cuando él decide), el Sharpe pesa por
+        # la ventana larguísima y el drawdown poco — hay décadas para
+        # recuperarlo.
+        "acumular": ObjectiveWeights(
+            sharpe_weight=Decimal("0.45"),
+            return_weight=Decimal("0.45"),
+            drawdown_weight=Decimal("0.10"),
+        ),
         "income_generation": ObjectiveWeights(
             sharpe_weight=Decimal("0.20"),
             return_weight=Decimal("0.30"),
