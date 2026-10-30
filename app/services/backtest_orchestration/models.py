@@ -229,6 +229,13 @@ class BacktestResult:
 
     # Equity curve for charting (list of [iso_ts, value] pairs)
     equity_curve: list[tuple[str, str]] = field(default_factory=list)
+    #: fiabilidad (30-10) — bootstrap de la serie diaria REAL ejecutada:
+    #: abanico P5–P95, alimentación del MonteCarloValidator
+    bootstrap_analysis: dict | None = None
+    #: sequence-of-returns: retirada fija anual — la pregunta de VIVIR
+    withdrawal_analysis: dict | None = None
+    #: replay del universo en COVID-2020 y shock-de-tipos-2022
+    stress_analysis: dict | None = None
 
     # Novice-readable trade list (symbol, shares, prices, P&L per trade)
     trades_summary: list[dict] = field(default_factory=list)
@@ -291,7 +298,9 @@ class BacktestResult:
                 str(self.universe_ew_sharpe) if self.universe_ew_sharpe is not None else None
             ),
             "universe_ew_max_dd_pct": (
-                str(self.universe_ew_max_dd_pct) if self.universe_ew_max_dd_pct is not None else None
+                str(self.universe_ew_max_dd_pct)
+                if self.universe_ew_max_dd_pct is not None
+                else None
             ),
             "universe_ew_symbols_used": list(self.universe_ew_symbols_used),
             "excess_vs_universe_ew_pct": (
@@ -306,6 +315,9 @@ class BacktestResult:
             "equity_curve": [{"ts": ts, "value": val} for ts, val in self.equity_curve]
             if self.equity_curve
             else [],
+            "bootstrap_analysis": self.bootstrap_analysis,
+            "withdrawal_analysis": self.withdrawal_analysis,
+            "stress_analysis": self.stress_analysis,
             "trades_summary": self.trades_summary,
             "symbols": list(self.symbols),
             "metrics": (

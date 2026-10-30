@@ -851,19 +851,26 @@ class BacktestOrchestrator:
 
         achieved_annual = metrics.annual_return_pct
 
-        # Build a novice-readable trade summary (symbol, shares, prices, P&L)
+        # Build a novice-readable trade summary (symbol, shares, prices, P&L).
+        # Prices/P&L carry Decimal division noise (28 significant digits —
+        # "38.96945558322836811164354079"): quantize to 6dp or a 500-symbol
+        # exhaustive run's summary blows the safe_json payload limit and the
+        # WHOLE t41 result is replaced by {"__truncated__": ...} (hunt 30-10).
+        def _q6(value) -> str:
+            return str(Decimal(value).quantize(Decimal("0.000001")))
+
         trade_summary = []
         for t in trades:
             trade_summary.append(
                 {
                     "symbol": t.symbol,
                     "side": t.side,
-                    "quantity": str(t.quantity),
-                    "entry_price": str(t.entry_price),
-                    "exit_price": str(t.exit_price) if t.exit_price else None,
+                    "quantity": _q6(t.quantity),
+                    "entry_price": _q6(t.entry_price),
+                    "exit_price": _q6(t.exit_price) if t.exit_price else None,
                     "entry_time": t.entry_time.isoformat()[:10] if t.entry_time else None,
                     "exit_time": t.exit_time.isoformat()[:10] if t.exit_time else None,
-                    "pnl": str(t.pnl) if t.pnl is not None else None,
+                    "pnl": _q6(t.pnl) if t.pnl is not None else None,
                     "pnl_pct": str(t.pnl_percentage) if t.pnl_percentage is not None else None,
                     "commission": str(t.commission or 0),
                     "status": str(t.status.value) if hasattr(t.status, "value") else str(t.status),
@@ -878,6 +885,28 @@ class BacktestOrchestrator:
         gate = gate or {}
         wf_passed = gate.get("passed")
         wf_failures = [str(f) for f in gate.get("failures") or []]
+        # ── Fiabilidad (30-10): el abanico, no solo el camino ──────────
+        # Sobre la serie diaria FULL-resolution de la cartera ejecutada
+        # (correlaciones y costes ya dentro). Best-effort: un fallo aquí
+        # no puede tumbar el run.
+        bootstrap_analysis = None
+        withdrawal_analysis = None
+        stress_analysis = None
+        try:
+            from app.services.backtest_orchestration.reliability import (
+                bootstrap_portfolio,
+                daily_returns,
+                stress_windows,
+                withdrawal_sequences,
+            )
+
+            returns = daily_returns(raw_equity)
+            bootstrap_analysis = bootstrap_portfolio(returns)
+            withdrawal_analysis = withdrawal_sequences(returns)
+            stress_analysis = stress_windows(list(config.symbols or []))
+        except Exception:  # noqa: BLE001 - la fiabilidad es best-effort
+            logger.warning("reliability analysis failed", exc_info=True)
+
         return BacktestResult(
             test_id=f"test_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
             profile_id=config.profile_id,
@@ -890,6 +919,9 @@ class BacktestOrchestrator:
             achieved_annual_return_pct=achieved_annual,
             metrics=metrics,
             equity_curve=equity_points,
+            bootstrap_analysis=bootstrap_analysis,
+            withdrawal_analysis=withdrawal_analysis,
+            stress_analysis=stress_analysis,
             trades_summary=trade_summary,
             symbols=list(config.symbols or []),
             execution_duration_seconds=(end_dt - start_dt).total_seconds(),
@@ -975,11 +1007,16 @@ class BacktestOrchestrator:
         "PEY": 0.045,
         "VHYL": 0.034,  # distribuye trimestral (verificado 30-10)
         "IDVY": 0.042,  # distribuye anual
-        "IBGS.AS": 0.028,  # bono estatal euro 7-10: reparte cupones
+        "QDIV": 0.026,  # Global X S&P 500 Quality Dividend (US): distribuye
+        # MENSUAL — verificado 30-10, no es el iShares UCITS Acc
+        "IBGS.AS": 0.02,  # bono estatal euro 1-3 AÑOS (verificado 30-10):
+        # -3,8% en el shock de tipos 2022 = duration ~2; cupones más bajos
+        "AGGH.AS": 0.0,  # aggregate global Acc: reinvierte, yield fiscal 0
     }
 
     #: clases UCITS acumuladoras del corpus — sin reparto no hay drag anual
-    _UCITS_ACCUMULATING = frozenset({"EUNL.DE", "IUSQ.DE", "EIMI.MI", "VWCE", "QDIV"})
+    #: (QDIV FUERA desde 30-10: es el Global X US distribuyente)
+    _UCITS_ACCUMULATING = frozenset({"EUNL.DE", "IUSQ.DE", "EIMI.MI", "VWCE", "AGGH.AS"})
 
     @classmethod
     def _estimate_accumulating_advantage(
@@ -999,9 +1036,7 @@ class BacktestOrchestrator:
             # universo 100% acumulador: no hay drag anual que estimar — el
             # mensaje fiscal ES la ausencia de drag (0 €/año; el IRPF de la
             # plusvalía llega solo cuando el dueño elige vender)
-            if symbols and all(
-                str(sym).upper() in cls._UCITS_ACCUMULATING for sym in symbols
-            ):
+            if symbols and all(str(sym).upper() in cls._UCITS_ACCUMULATING for sym in symbols):
                 total_gain = float(total_return_pct) / 100 if total_return_pct else 0
                 return {
                     "avg_portfolio_yield_pct": 0.0,

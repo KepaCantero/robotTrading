@@ -86,12 +86,23 @@ SEED_PORTFOLIOS: dict[str, list[tuple[str, Decimal, str]]] = {
         ("IBTS", Decimal("25"), "Short Treasury cushion — the stable side of living off it."),
     ],
     # Acumulación pura (30-10): la fase previa a vivir de la cartera.
-    # Espejo del mandato real de la cuenta (dinero nuevo → VWCE, diluir
-    # el bloque congelado): un solo acumulador global y colchón corto.
-    # Sin mangas de renta — cero reparto, cero IRPF anual.
+    # EL PORTFOLIO DEFINITIVO elegido con datos (comparativa ponderada
+    # 5,4y/15y + bootstrap + retiradas): núcleo VWCE único + colchón
+    # AGGH (aggregate global EUR-hedged ACC — el bono que de verdad
+    # amortigua; IBGS 1-3 quedó para simulación de ventanas largas).
+    # Coste ~1,5pp de CAGR vs 100% bolsa; caída máx de -21% a ~-17,5%
+    # en la ventana reciente; todo ACC = 0 € de IRPF anual en Bizkaia.
     "ACUMULAR": [
-        ("VWCE", Decimal("75"), "All-world accumulator — everything compounds untaxed until you sell."),
-        ("IBTS", Decimal("25"), "Short Treasury cushion — the defensive quarter while you accumulate."),
+        (
+            "VWCE",
+            Decimal("75"),
+            "All-world accumulator — everything compounds untaxed until you sell.",
+        ),
+        (
+            "AGGH.AS",
+            Decimal("25"),
+            "Global bond aggregate, euro-hedged, accumulating — the real cushion.",
+        ),
     ],
 }
 

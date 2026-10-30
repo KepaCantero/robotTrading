@@ -76,9 +76,10 @@ DIVIDEND_ETFS = {
     # cadencia de rebalance vendió en el suelo de 2022 y re-entró tras el
     # rebote (77% vs 127% del mismo run sin él).
     "SCHD",
-    "QDIV",  # iShares MSCI World Quality Dividend UCITS Acc — núcleo
-    # quality-global ACUMULADOR (fiscalmente superior en España); solo
-    # entra en ventanas donde su historia (desde 2018) alcanza
+    "QDIV",  # Global X S&P 500 Quality Dividend (US, distribuye MENSUAL,
+    # ~2.6% — verificado 30-10: el QDIV "bare" de Yahoo es este, NO el
+    # iShares World Quality Dividend Acc; inception 2018-07-13 casa con
+    # el CSV. No-UCITS: solo simulación/paper, no comprable en la UE)
     "VHYL",  # Vanguard FTSE All-World High Dividend Yield UCITS: reparte
     # trimestral (~3.4% yield, 13.4 años de historial, 2013+) — la clase
     # ACC es otro ISIN; este VHYL distribuye y tributa cada año
@@ -154,23 +155,26 @@ UCITS_TOTAL_RETURN = {
     "EUNL.DE",  # iShares Core MSCI World Acc, 2009-09+ — the accumulator core
     "VHYL",  # Vanguard All-World High Dividend (reparte trimestral), 2013-05+
     "IDVY",  # iShares Euro Dividend (reparte anual), 2008-01+
-    "IBGS.AS",  # iShares Euro Govt Bond 7-10yr, 2008-10+ — the cushion
+    "IBGS.AS",  # iShares € Govt Bond 1-3yr (verificado 30-10), 2008-10+ — cushion
 }
 
 #: UCITS ACCUMULATORS (30-10): todo acumulador EUR — cero drag de IRPF
-#: anual. VWCE/QDIV solo cubren ventanas cortas (2019/2018): el filtro
-#: deja que el corpus decima por ventana y el gate de cobertura reporta.
-#: VHYL/IDVY entran como UCITS de historial profundo para el Automatic,
-#: aunque reparten (sus yields viven en el mapa fiscal del orquestador).
+#: anual (user + critique 30-10: VHYL/IDVY FUERA — son distribuyentes y
+#: no pintan nada en acumulación; ya no hacen falta de relleno porque el
+#: fallback curado no exige mínimo). VWCE/AGGH solo cubren ventanas
+#: cortas (2019/2021): la pantalla decima por ventana. Solape
+#: EUNL/IUSQ/VWCE = deliberado: son sustitutos con historia del mismo
+#: mundo — arnés de simulación, no lista de la compra (el target es VWCE
+#: + un solo bono). IBGS.AS es el 1-3 AÑOS (verificado 30-10: -3,8% en
+#: el shock de tipos 2022 = duration ~2); AGGH es el aggregate global
+#: cubierto EUR Acc (-14,1% en 2022) — el amortiguador de verdad.
 UCITS_ACCUMULATORS = {
     "EUNL.DE",  # iShares Core MSCI World Acc, 2009-09+
     "IUSQ.DE",  # iShares MSCI ACWI Acc, 2011-10+ — el VWCE con historia
     "EIMI.MI",  # iShares Core MSCI EM IMI Acc, 2014-07+
     "VWCE",  # Vanguard FTSE All-World Acc, 2019-07+
-    "QDIV",  # iShares MSCI World Quality Dividend Acc, 2018+
-    "VHYL",  # Vanguard All-World High Dividend, 2013-05+ (distribuye)
-    "IDVY",  # iShares Euro Dividend, 2008-01+ (distribuye)
-    "IBGS.AS",  # iShares Euro Govt Bond 7-10yr, 2008-10+ — cushion
+    "AGGH.AS",  # iShares Core Global Aggregate Bond EUR-hedged Acc, 2021-05+
+    "IBGS.AS",  # iShares € Govt Bond 1-3yr (¡1-3, no 7-10!), 2008-10+ — cushion corto
 }
 
 #: goal (as the UI sends it) → corpus filter
@@ -428,26 +432,44 @@ def auto_universe(
             dropped["stale"] += 1
         elif sym.avg_dollar_volume < MIN_DOLLAR_VOLUME:
             dropped["illiquid"] += 1
-        elif (
-            exhaustive
-            and window_start is not None
-            and sym.first_date > window_start
-        ):
-            # el gate STRICTO de cobertura rechazaría la run entera con
-            # estos símbolos dentro: fuera del universo aquí, contados.
+        elif window_start is not None and sym.first_date > window_start:
+            # un símbolo que no cubre la ventana solo puede hacer FALLAR la
+            # run entera si llega al motor: fuera del universo aquí, con
+            # su contador en el resumen que la UI muestra como aviso.
             dropped["uncovered-window"] += 1
         else:
             candidates.append(sym)
 
     if goal_filter and len(candidates) < GOAL_FILTER_MIN:
+        # Los objetivos CURADOS nunca caen en silencio a la pantalla
+        # genérica (30-10: una petición ACUMULAR testeó IBEX/Toyota/SPY
+        # porque Yahoo subestima el volumen de los ETF listados en EUR y
+        # el floor de liquidez dejó el conjunto bajo el mínimo). Segundo
+        # intento SIN el floor: son nombres curados, no micro-caps — el
+        # floor protege la pantalla genérica, no las listas del objetivo.
+        relaxed = [
+            sym
+            for sym in scan.symbols
+            if sym.symbol in goal_filter
+            and sym.bars >= MIN_BARS
+            and (effective_today - sym.last_date).days <= MAX_STALE_DAYS
+            and (window_start is None or sym.first_date <= window_start)
+        ]
+        if not relaxed:
+            raise ValueError(
+                f"Auto universe: objective {goal_key} has no viable candidates "
+                "in the corpus (history/freshness/window) — pick the universe "
+                "manually or download its data first."
+            )
+        dropped["illiquid"] += len(relaxed) - len(candidates)
         logger.warning(
-            "Auto universe: only %d %s candidates in corpus -> generic screen",
+            "Auto universe: only %d/%d %s candidates pass the liquidity floor "
+            "-> using the curated set without it (Yahoo understates EUR volume)",
             len(candidates),
+            len(relaxed),
             goal_key,
         )
-        return auto_universe(
-            data_dir=data_dir, k=k, today=today, goal=None, window_start=window_start
-        )
+        candidates = relaxed
 
     scanned = len(scan.symbols) + len(scan.unreadable)
     if not candidates:

@@ -3,6 +3,8 @@
 from datetime import date, timedelta
 from decimal import Decimal
 
+import pytest
+
 from app.services.agent_swarm import executor as executor_module
 from app.services.agent_swarm.executor import Capa2PipelineExecutor, SwarmRunRequest
 from app.services.agent_swarm.universe_selector import (
@@ -207,15 +209,54 @@ class TestGoalAwareUniverse:
         # alfabético (AGG, IEF); GLD no tiene rival en este corpus
         assert {"AGG", "IEF", "GLD"} <= set(result.symbols)
 
-    def test_goal_with_too_few_survivors_falls_back_to_generic(self, tmp_path):
-        write_csv(tmp_path, "SCHD", 700)
+    def test_goal_with_too_few_survivors_keeps_curated_set(self, tmp_path):
+        # 30-10: los objetivos curados NUNCA recaen en la pantalla
+        # genérica — una petición ACUMULAR llegó a testear IBEX/Toyota/SPY
+        # porque el floor de liquidez (Yahoo subestima el volumen de los
+        # ETF listados en EUR) dejó el conjunto bajo el mínimo. El objetivo
+        # manda: se relaja el floor y se queda con sus nombres curados.
+        write_csv(tmp_path, "SCHD", 700, volume=1_000)  # curado, volumen bajo
         write_csv(tmp_path, "SPY", 700, volume=5_000_000)
         write_csv(tmp_path, "QQQ", 700, volume=4_000_000)
 
         result = auto_universe(tmp_path, k=2, today=TODAY, goal="MAXIMIZAR_DIVIDENDOS")
 
-        assert result.goal_filter == ""  # recaída en pantalla genérica
-        assert result.symbols == ["SPY", "QQQ"]
+        assert result.goal_filter == "MAXIMIZAR_DIVIDENDOS"
+        assert result.symbols == ["SCHD"]
+        assert "SPY" not in result.symbols  # jamás un cambio silencioso de universo
+
+    def test_goal_without_any_viable_candidate_fails_loudly(self, tmp_path):
+        # sin un solo candidato viable del objetivo, la run FALLE con una
+        # razón clara — nunca prueba en silencio un universo ajeno
+        write_csv(tmp_path, "SPY", 700, volume=5_000_000)
+
+        with pytest.raises(ValueError, match="MAXIMIZAR_DIVIDENDOS"):
+            auto_universe(tmp_path, today=TODAY, goal="MAXIMIZAR_DIVIDENDOS")
+
+    def test_acumular_drops_uncovered_acc_on_long_windows(self, tmp_path):
+        # VWCE nació 2019 y AGGH cotiza desde 2021: en una ventana de 10
+        # años no pueden entrar — uncovered (avisado), no rompen la run.
+        # VHYL/IDVY ya NO son del objetivo (distribuyen — critique 30-10).
+        for sym, bars in (
+            ("EUNL.DE", 3900),
+            ("IUSQ.DE", 3900),
+            ("EIMI.MI", 3900),
+            ("VWCE", 2000),
+            ("AGGH.AS", 1000),
+            ("IBGS.AS", 3900),
+        ):
+            write_csv(tmp_path, sym, bars)
+
+        result = auto_universe(
+            tmp_path,
+            today=TODAY,
+            goal="ACUMULAR",
+            window_start=TODAY - timedelta(days=3650),
+        )
+
+        assert result.dropped["uncovered-window"] == 2
+        assert "VWCE" not in result.symbols and "AGGH.AS" not in result.symbols
+        assert {"EUNL.DE", "IUSQ.DE", "EIMI.MI", "IBGS.AS"} == set(result.symbols)
 
     def test_unknown_goal_is_generic(self, tmp_path):
         write_csv(tmp_path, "SPY", 700)
@@ -406,9 +447,7 @@ class TestExhaustiveUniverse:
         write_csv(tmp_path, "LIQ", 700, close=100.0, volume=2_000_000)
         write_csv(tmp_path, "AAA", 700, close=100.0, volume=1_000_000)
         write_csv(tmp_path, "THIN", 700, volume=100.0)  # still illiquid: out
-        result = auto_universe(
-            tmp_path, today=TODAY, goal="MAXIMIZAR_DIVIDENDOS", exhaustive=True
-        )
+        result = auto_universe(tmp_path, today=TODAY, goal="MAXIMIZAR_DIVIDENDOS", exhaustive=True)
         assert result.symbols == ["LIQ", "AAA"]  # no goal filter, no caps
 
     def test_exhaustive_drops_symbols_missing_the_window(self, tmp_path):

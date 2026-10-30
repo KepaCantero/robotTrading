@@ -61,7 +61,8 @@ ASSET_CLASS: dict[str, str] = {
     "SCHZ": "bond",
     "VBT": "bond",
     "IBTS": "bond",  # iShares $ Treasury Bond 1-3yr UCITS ETF
-    "IBGS.AS": "bond",  # iShares Euro Govt Bond 7-10yr UCITS ETF
+    "IBGS.AS": "bond",  # iShares € Govt Bond 1-3yr UCITS ETF (1-3, verificado 30-10)
+    "AGGH.AS": "bond",  # iShares Core Global Aggregate Bond EUR-hedged Acc
 }
 
 #: Questionnaire objectives — same keys the swarm page uses, so a swarm
