@@ -26,8 +26,39 @@ logger = logging.getLogger(__name__)
 
 
 def _get_backtesting_config():
-    """Helper to get backtesting config from CentralizedConfig."""
+    """Helper to get backtest config from CentralizedConfig."""
     return get_config().backtesting
+
+
+#: ADV notional floor (€/day) — Yahoo's volume column for EUR-listed UCITS
+#: ETFs is garbage: AGGH.AS (iShares Core Global Aggregate, real ADV in
+#: the tens of millions of EUR) shows a median 432 shares ≈ €2.2k/day in
+#: the corpus, and the 10%-of-recorded-volume cap turned a €49k passive
+#: sleeve into a FOUR-YEAR deployment delay (final run 31-10: VWCE
+#: 79.5/AGGH 20.5, 37% average cash — flagged by the <20-trades honesty
+#: rule as a deployment bug, and it was right). Any fund a €100k retail
+#: order can realistically buy trades at least this much per day; when
+#: the recorded volume's notional is below the floor, the floor applies
+#: and says so in the log. Large portfolios (>10% of the floor) still
+#: hit the participation cap honestly.
+#:
+#: SCOPE: European-listed symbols only (dotted suffix) — that is where
+#: Yahoo's understatement is documented (auto_universe relaxed the same
+#: floor for the same reason). US-listed symbols keep their raw volume,
+#: so genuinely thin micro-caps still partially fill honestly.
+ADV_NOTIONAL_FLOOR = Decimal("1000000")
+
+#: European exchange suffixes where Yahoo's volume column is understated
+#: (Xetra/.DE, Euronext/.AS/.PA, Borsa/.MI, Bolsa/.MC, London/.L, SIX/.SW,
+#: Toronto/.TO, Swiss/.V). A bare US ticker has no dot.
+_EU_LISTING_SUFFIXES = (
+    ".AS", ".DE", ".MI", ".PA", ".MC", ".LS", ".L", ".SW", ".TO", ".V", ".BR", ".AT", ".IR"
+)
+
+
+def yahoo_underreports_volume(symbol: str) -> bool:
+    """True for European-listed symbols, where Yahoo's volume is broken."""
+    return symbol.upper().endswith(_EU_LISTING_SUFFIXES)
 
 
 @dataclass
@@ -115,6 +146,39 @@ class LiquidityValidator:
             f"enable_partial={self.enable_partial_fills}"
         )
 
+    def _effective_daily_volume(self, current_bar, symbol: str) -> Decimal:
+        """Daily volume used for participation caps, ADV-floor aware.
+
+        For European-listed symbols (see ``yahoo_underreports_volume``)
+        whose recorded volume's notional is below the floor, assume the
+        floor — the substitution is logged so the run's evidence says
+        which bars were floored. Zero-volume bars are floored too (60
+        such days on AGGH.AS); US listings and price-less bars keep
+        their recorded value.
+        """
+        try:
+            volume = Decimal(str(current_bar.volume))
+        except ArithmeticError:
+            volume = Decimal("0")
+        price = getattr(current_bar, "close", None)
+        try:
+            price = Decimal(str(price)) if price is not None else Decimal("0")
+        except ArithmeticError:
+            price = Decimal("0")
+        if price > 0 and yahoo_underreports_volume(symbol):
+            floor_qty = ADV_NOTIONAL_FLOOR / price
+            if floor_qty > volume:
+                logger.info(
+                    "liquidity floor for %s: recorded %s shares (<%s notional) "
+                    "-> assuming %s shares (Yahoo understates EUR-listed volume)",
+                    symbol,
+                    volume,
+                    ADV_NOTIONAL_FLOOR,
+                    floor_qty.quantize(Decimal("1")),
+                )
+                return floor_qty
+        return volume
+
     def validate_order(
         self, order_quantity: Decimal, symbol: str, current_bar, order_side: str = "buy"
     ) -> tuple[bool, str]:
@@ -136,7 +200,7 @@ class LiquidityValidator:
         if not hasattr(current_bar, "volume") or current_bar.volume is None:
             return False, "No volume data available"
 
-        daily_volume = Decimal(str(current_bar.volume))
+        daily_volume = self._effective_daily_volume(current_bar, symbol)
 
         if daily_volume <= 0:
             return False, f"Invalid daily volume: {daily_volume}"
@@ -196,7 +260,7 @@ class LiquidityValidator:
                 market_impact=Decimal("0"),
             )
 
-        daily_volume = Decimal(str(current_bar.volume))
+        daily_volume = self._effective_daily_volume(current_bar, symbol)
         order_pct = order_quantity / daily_volume
 
         # Check if we need to do a partial fill

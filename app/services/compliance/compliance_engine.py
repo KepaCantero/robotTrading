@@ -1391,6 +1391,24 @@ class SystemBus:
             except (InvalidOperation, DivisionByZero, ValueError):
                 adv = Decimal("1000000")  # Default ADV
 
+            # ADV notional floor — same honesty rule as the liquidity
+            # validator: Yahoo understates EUR-listed volume by orders of
+            # magnitude (AGGH.AS median 432 shares/day on a fund that
+            # really trades tens of millions of EUR), and capping
+            # participation against that garbage fabricates deployment
+            # failures. Applies to European listings only; US symbols keep
+            # their raw ADV.
+            if price > 0:
+                from app.backtesting.liquidity_validator import (
+                    ADV_NOTIONAL_FLOOR,
+                    yahoo_underreports_volume,
+                )
+
+                if yahoo_underreports_volume(symbol):
+                    adv_floor_qty = ADV_NOTIONAL_FLOOR / price
+                    if adv_floor_qty > adv:
+                        adv = adv_floor_qty
+
             harris_check = subsystem.pre_trade_check(
                 symbol=symbol,
                 side=side,

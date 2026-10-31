@@ -368,6 +368,18 @@ class SignalProcessor:
                 total_capital=max(current_strategy_capital, self.total_portfolio_capital),
                 strategy_capital=max(current_strategy_capital, strategy_cap),
                 max_strategy_exposure_pct=max_strategy_pct,
+                # cap por SÍMBOLO: el peso DECLARADO por la estrategia en
+                # esta señal es el techo honesto (el par dos-fondos de
+                # static_ew declara 49,5% por manga y el default 30% lo
+                # bloqueaba); sin declaración, el default 30%
+                max_symbol_exposure_pct=(
+                    max(
+                        Decimal("0.30"),
+                        Decimal(str((signal.metadata or {}).get("position_weight") or 0.30)),
+                    )
+                    if signal.metadata
+                    else None
+                ),
                 # el cap de PORTFOLIO sigue al objetivo DECLARADO por la
                 # estrategia (mismo hint target_exposure): static_ew despliega
                 # al 99% (owner 31-10) y el default 95% mataba en silencio

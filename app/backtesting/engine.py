@@ -937,6 +937,9 @@ class BacktestEngine:
             # 5% inflaba el 0.19% de una cartera exhaustiva de 500 nombres
             # a un 5% — orden de $5.000 contra un cap de $1.000, y TODAS
             # las compras rechazadas en bucle (cacería 30-10).
+            # the declared weight is the ceiling (up to 95%): static_ew's
+            # TWO-fund objective needs 49.5% sleeves and the old 25% clamp
+            # left half the portfolio in cash forever (final run 31-10).
             sizing_ratio = float(self.config.max_position_size)
             declared = (signal.metadata or {}).get("position_weight")
             if declared is not None:
@@ -950,7 +953,7 @@ class BacktestEngine:
                     )
                 else:
                     if declared_ratio > 0:
-                        sizing_ratio = min(0.25, declared_ratio)
+                        sizing_ratio = min(0.95, declared_ratio)
             estimated_quantity = self.compliance_engine.calculate_position_size(
                 symbol=signal.symbol,
                 price=current_price,

@@ -122,12 +122,17 @@ class StaticEqualWeightStrategy(BaseStrategy):
     def suggested_warmup_days(self) -> int:
         return int(self.min_history * 2.5)
 
-    #: techo del validador del motor (≤25%): ceil para no quedar por debajo
-    #: del peso real (round hacia abajo rechazaba todas las compras)
+    #: techo del validador del motor. Para N≥4 el unit weight (≤24,75%)
+    #: queda bajo el 25% clásico; para el par DOS fondos de ACUMULAR
+    #: (FIX 2, 31-10) el objetivo por manga es 49,5% y un techo del 25%
+    #: dejaba MEDIA cartera en caja para siempre (final 31-10: +20,7%
+    #: ejecutado vs +42,4% del gemelo — Sharpe 0,10 vs 0,83 — con las
+    #: mangas "50/50" normalizadas escondiendo el 50% de caja). El techo
+    #: honesto es el peso que la estrategia declara por manga, hasta 95%.
     @property
     def suggested_max_position_size(self) -> float:
         unit = self.target_exposure / max(1, len(self.universe))
-        return math.ceil(min(0.25, unit) * 100) / 100
+        return math.ceil(min(0.95, unit) * 100) / 100
 
     def get_position_size(self, signal: Signal, portfolio: Any) -> Any:
         """Fracción de cartera por símbolo (el motor la usa para el sizing)."""
@@ -217,10 +222,12 @@ class StaticEqualWeightStrategy(BaseStrategy):
         # peso unitario SIN suelo: en universos anchos (n>19) un suelo del
         # 5% sobresuscribía la cartera (30×5%=150%) y chocaba con el tope
         # del validador — todas las compras rechazadas en bucle y el run
-        # terminaba a 0 trades (ACUMULAR 2y, 30-10). El techo del 25%
-        # por posición sigue: es el cap real del motor.
+        # terminaba a 0 trades (ACUMULAR 2y, 30-10). El techo por manga
+        # sube al declarado hasta 95%: el par DOS fondos de ACUMULAR
+        # necesita 49,5% por manga (con 25% media cartera quedaba en caja
+        # para siempre — final 31-10, +20,7% vs gemelo +42,4%).
         n = max(1, len(self.universe))
-        return round(min(0.25, self.target_exposure / n), 4)
+        return round(min(0.95, self.target_exposure / n), 4)
 
     def _signal(
         self,

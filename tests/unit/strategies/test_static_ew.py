@@ -92,7 +92,19 @@ class TestStaticEqualWeight:
         s = make()
         w = [s._position_weight(sym) for sym in ["AAA", "BBB", "CCC"]]
         assert w[0] == w[1] == w[2], "pesos iguales"
-        assert w[0] <= 0.25, "por debajo del techo del motor"
+        # el techo por manga es lo DECLARADO (target_exposure/N) hasta 95%:
+        # universos anchos siguen bajo el 25% clásico; el par dos-fondos de
+        # ACUMULAR necesita 49,5% (31-10) y el viejo 25% dejaba media
+        # cartera en caja para siempre
+        assert w[0] <= 0.95, "por debajo del techo declarado"
+        assert w[0] == round(0.99 / 3, 4)
+
+    def test_two_fund_universe_gets_full_sleeve_weights(self) -> None:
+        """FIX 2/31-10: el par ACUMULAR (N=2) despliega 49,5% por manga."""
+        s = make()
+        s.universe = ["VWCE", "AGGH.AS"]
+        assert s._position_weight("VWCE") == 0.495
+        assert s.suggested_max_position_size == 0.50
 
     def test_suggested_max_position_ceil_not_floor(self) -> None:
         """El techo debe quedar POR ENCIMA del peso real (ceil, no round)."""

@@ -68,7 +68,16 @@ class TradingThresholds(BaseModel):
         ),
     )
     validator_max_position_pct: float = Field(
-        default=0.25, description="Maximum position limit as % of capital"
+        default=0.95,
+        description=(
+            "Sanity ceiling for the per-position CAP argument, NOT a default "
+            "allocation. 0.95 since 31-10: the ACUMULAR objective is a "
+            "TWO-fund portfolio (FIX 2) whose sleeves legitimately run at "
+            "49.5% — a 25% ceiling left half the portfolio in cash forever "
+            "(final run 31-10: +20.7% executed vs +42.4% passive twin, "
+            "Sharpe 0.10 vs 0.83). Wide universes keep their own 1/N "
+            "weights; nothing new may exceed 95%."
+        ),
     )
     validator_stop_loss_warning_pct: float = Field(
         default=0.08, description="Stop loss warning threshold %"

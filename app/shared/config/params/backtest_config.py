@@ -296,7 +296,16 @@ class BacktestingConfig(BaseModel):
         default=Decimal("0.20"), description="Default annual volatility for calculations"
     )
     min_annual_volatility: Decimal = Field(
-        default=Decimal("0.15"), description="Minimum annual volatility threshold"
+        default=Decimal("0.02"),
+        description=(
+            "Sanity floor for annualized volatility in Sharpe/Sortino — "
+            "prevents extreme ratios on near-constant series, NOT a market "
+            "assumption. 0.15 (pre-31-10) forced every portfolio to be 'at "
+            "least as volatile as equities': a 50/50 VWCE+AGGH with real "
+            "8.1% vol got its Sharpe halved (0.31 reported vs 0.56 real, "
+            "final run 31-10) and every defensive/bond mix was punished. "
+            "2% ≈ cash volatility."
+        ),
     )
     default_daily_volatility: Decimal = Field(
         default=Decimal("0.02"), description="Default daily volatility for calculations"

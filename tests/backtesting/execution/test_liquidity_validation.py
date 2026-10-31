@@ -555,3 +555,58 @@ class TestIntegrationScenarios:
             assert result.fill_status == "FILLED", (
                 f"Scalping order should be filled, got {result.fill_status}"
             )
+
+
+class TestAdvNotionalFloorForEuropeanListings:
+    """FIX (31-10, final run): Yahoo understates EUR-listed volume by orders
+    of magnitude — AGGH.AS median 432 shares/day on a fund that really
+    trades tens of millions of EUR. The 10%-of-recorded-volume cap turned a
+    €49k passive sleeve into a FOUR-YEAR deployment delay. European-listed
+    symbols get a conservative €1M/day notional floor; US listings keep
+    their raw volume so thin micro-caps still partial-fill honestly."""
+
+    def test_eur_listed_garbage_volume_is_floored(self):
+        validator = LiquidityValidator(
+            enable_partial_fills=True,
+            max_order_pct_of_volume=Decimal("0.10"),
+            partial_fill_pct=Decimal("0.05"),
+        )
+        # AGGH.AS reality in the corpus: 432 shares at €5 ≈ €2.2k notional
+        bar = create_market_bar(symbol="AGGH.AS", close=Decimal("5"), volume=Decimal("432"))
+        # a €49k passive sleeve (≈9.800 shares) would wait YEARS for a
+        # volume spike under raw caps — with the floor it fills day one
+        result = validator.simulate_fill(
+            order_quantity=Decimal("9800"), current_bar=bar, order_side="buy", symbol="AGGH.AS"
+        )
+        assert result.fill_status == "FILLED"
+
+    def test_eur_listed_zero_volume_bar_is_floored(self):
+        validator = LiquidityValidator(
+            max_order_pct_of_volume=Decimal("0.10"),
+        )
+        bar = create_market_bar(symbol="IUSQ.DE", close=Decimal("37"), volume=Decimal("0"))
+        ok, reason = validator.validate_order(Decimal("700"), "IUSQ.DE", bar, "buy")
+        assert ok, reason
+
+    def test_us_listed_keeps_raw_volume(self):
+        validator = LiquidityValidator(
+            enable_partial_fills=True,
+            max_order_pct_of_volume=Decimal("0.10"),
+            partial_fill_pct=Decimal("0.05"),
+        )
+        # a genuinely thin US microcap: raw volume still governs
+        bar = create_market_bar(symbol="PENNY", close=Decimal("5"), volume=Decimal("10000"))
+        result = validator.simulate_fill(
+            order_quantity=Decimal("1000"), current_bar=bar, order_side="buy", symbol="PENNY"
+        )
+        assert result.fill_status == "PARTIAL"
+        assert result.filled_quantity == Decimal("500")
+
+    def test_huge_order_still_rejected_against_the_floor(self):
+        validator = LiquidityValidator(
+            max_order_pct_of_volume=Decimal("0.10"),
+        )
+        # €1M order = 100% of the €1M floor — participation cap bites
+        bar = create_market_bar(symbol="AGGH.AS", close=Decimal("5"), volume=Decimal("432"))
+        ok, _ = validator.validate_order(Decimal("200000"), "AGGH.AS", bar, "buy")
+        assert not ok
