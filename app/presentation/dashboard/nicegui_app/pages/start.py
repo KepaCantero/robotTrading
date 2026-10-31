@@ -1,27 +1,31 @@
-"""UI-1 — /start: the 5-question wizard (the master move).
+"""UI-1 — /start: the 5-question wizard that SAVES your investor profile.
 
-A complete novice goes from zero to a VALIDATED portfolio in under five
-minutes: 5 plain-English cards → proposed pie → "Validate it" runs the
-REAL pipeline (same executor as Mission Control) behind a plain-language
-narration → honest numbers with trust badges. The optimizer stays
-INVISIBLE — presets, never sliders (novice rule from the plan).
+A complete novice answers five plain-English questions ONCE; the profile
+is persisted (investor_profile.json) and becomes the default everywhere.
+Portfolio building, validation and the honest numbers live in Mission
+Control (/swarm) — owner decision 31-10: /start captures the profile,
+the swarm agents use it as their default and show the portfolio. There
+is exactly one place that shows portfolios.
 """
 
 from __future__ import annotations
 
-import asyncio
-from decimal import Decimal
-from typing import TYPE_CHECKING
+from pathlib import Path
+from typing import Any
 
 from nicegui import ui
 
 from app.presentation.dashboard.nicegui_app import design_system as ds
-from app.presentation.dashboard.nicegui_app.pages.swarm import SPANISH_PROVINCES, preset_for_goal
+from app.presentation.dashboard.nicegui_app.pages.swarm import SPANISH_PROVINCES
+from app.services.agent_swarm.investor_profile import (
+    InvestorProfile,
+    load_investor_profile,
+    save_investor_profile,
+)
 
-if TYPE_CHECKING:
-    from app.services.agent_swarm.executor import Capa2PipelineExecutor, SwarmRunStore
-
-#: plain-English narration per pipeline stage (Mission Control vocabulary)
+#: plain-English narration per pipeline stage. /start itself no longer
+#: narrates (the pipeline moved to /swarm) but /trust imports this — it
+#: is the app's shared Mission Control vocabulary.
 STAGE_LINES: dict[str, str] = {
     "t11": "Reading your answers…",
     "t21": "Shaping a profile that fits you…",
@@ -47,44 +51,37 @@ GOAL_OPTIONS = {
     "Keep my money safe": "CAPITAL_PRESERVATION",
     "Grow it over time": "BALANCED_GROWTH",
 }
-DEFAULT_CAPITAL = Decimal("10000")
+
+#: value → label, so a SAVED profile redisplays as the answers the user
+#: picked (the wizard writes values, humans read labels).
+_AGE_LABEL = {v: k for k, v in AGE_OPTIONS.items()}
+_RISK_LABEL = {v: k for k, v in RISK_OPTIONS.items()}
+_GOAL_LABEL = {v: k for k, v in GOAL_OPTIONS.items()}
+_HORIZON_LABEL = {months: label for label, (_, months) in HORIZON_WINDOWS.items()}
 
 
-def _horizon_window(label: str) -> tuple[str, int]:
-    """('10y', months) — the backtest window IS the horizon (period=horizon)."""
-    return HORIZON_WINDOWS[label]
-
-
-def _narration_for(stage_id: str) -> str:
-    return STAGE_LINES.get(stage_id, "Working…")
-
-
-def render(
-    executor: Capa2PipelineExecutor | None = None,
-    store: SwarmRunStore | None = None,
-) -> None:
+def render(profile_path: str | Path | None = None) -> None:
     """Render the wizard.
 
-    ``executor``/``store`` are the SHARED app instances (layout injects
-    them): runs launched here persist to swarm_runs.db and show up in
-    history/replay exactly like Mission Control runs. Without them every
-    wizard run was a throwaway — the user validated a portfolio and the
-    run vanished ("las ejecuciones no se guardan").
+    The five answers are PERSISTED — the saved profile is the default
+    config for Mission Control (/swarm), where portfolios are now built
+    and validated. Before 31-10 the wizard also ran the pipeline itself
+    ("Show my portfolio"); that moved to the swarm agents.
     """
     ds.inject()
     ui.add_head_html(
         "<style>body { background: var(--ds-bg); font-family: var(--ds-font); "
-        "color: var(--ds-text); } .opt-btn { width: 100%; justify-content: flex-start; "
-        "text-align: left; }</style>"
+        "color: var(--ds-text); }</style>"
     )
-    answers = {
+    saved = load_investor_profile(profile_path)
+    answers: dict[str, Any] = {
         "age": None,
         "horizon": None,
         "risk": None,
         "province": "Madrid",
         "goal": None,
     }
-    option_buttons: dict[str, list] = {}
+    option_buttons: dict[str, list[tuple[Any, ui.button]]] = {}
 
     def _option(key: str, value, label: str) -> ui.button:
         """One answer choice — the selected state glows, siblings un-glow."""
@@ -94,14 +91,15 @@ def render(
             .props("no-caps unelevated")
             .mark("opt_" + key + "_" + "".join(c for c in label if c.isalnum()))
         )
-        option_buttons.setdefault(key, []).append(b)
+        option_buttons.setdefault(key, []).append((value, b))
         return b
 
     with ui.column().classes("w-full max-w-[1040px] mx-auto p-8 gap-6"):
         ds.section_heading(
-            "Let's build your portfolio",
+            "Your investor profile",
             "Five simple questions — no jargon, nothing to install. "
-            "You'll see exactly how it would have done, fees included.",
+            "Save once: Mission Control builds and tests your portfolio "
+            "from this profile, fees included.",
         )
 
         # ── the 5 question cards ─────────────────────────────────────
@@ -129,184 +127,121 @@ def render(
             with ds.card(title="4 · Where do you pay taxes?"):
                 ui.select(
                     {p: p for p in SPANISH_PROVINCES},
-                    value="Madrid",
+                    value=(
+                        saved.tax_province
+                        if saved and saved.tax_province in SPANISH_PROVINCES
+                        else "Madrid"
+                    ),
                     label="Province",
                     on_change=lambda e: _pick("province", e.value, e.value),
                 ).classes("w-full")
             with ds.card(title="5 · What is the money for?").classes("col-span-2"):
                 with ui.row().classes("gap-4 flex-wrap"):
                     for label, goal in GOAL_OPTIONS.items():
-                        ui.button(
-                            label, on_click=lambda g=goal, t=label: _pick("goal", g, t)
-                        ).classes("ds-btn ds-btn--secondary").props(
-                            "no-caps unelevated outline"
-                        ).mark(f"goal_{goal}")
+                        _option("goal", goal, label)
 
         status = ui.label("").style("color:var(--ds-teal_deep);font-weight:600")
-        go = ds.button("Show my portfolio →", on_click=lambda: _propose()).mark("propose")
+        go = ds.button("Save my profile →", on_click=lambda: _save()).mark("save_profile")
 
-        # ── proposal + validation area ───────────────────────────────
-        proposal = ui.column().classes("w-full gap-6")
+        # ── the saved profile, always visible once it exists ─────────
+        summary = ui.column().classes("w-full gap-6")
 
         def _pick(key: str, value, _label: str, _btn=None) -> None:
             answers[key] = value
-            for b in option_buttons.get(key, []):
+            for _, b in option_buttons.get(key, []):
                 b.classes(remove="ds-option--selected")
             if _btn is not None:
                 _btn.classes(add="ds-option--selected")
+            _refresh_status()
+
+        def _refresh_status() -> None:
             filled = sum(1 for k in ("age", "horizon", "risk", "goal") if answers[k])
             status.text = (
                 f"{filled}/4 key questions answered"
                 if filled < 4
-                else "Ready — see what we'd build for you."
+                else "Ready — saving takes one click."
             )
 
-        def _propose() -> None:
+        def _save() -> None:
             missing = [k for k in ("age", "horizon", "risk", "goal") if not answers[k]]
             if missing:
                 status.text = "Answer the four key questions first (province defaults to Madrid)."
                 return
-            go.set_text("Update my portfolio →")
-            with proposal:
-                proposal.clear()
-                _render_proposal()
-
-        def _render_proposal() -> None:
-            preset = preset_for_goal(answers["goal"], HORIZON_WINDOWS[answers["horizon"]][1])
-            if preset is None:
-                # no curated preset for this goal → the executor derives it (D02)
-                strategy, universe = None, None
-                note = "The engine picks the strategy from your goal automatically."
-            else:
-                strategy, universe = preset
-                note = None
-            with ds.card(title="Your proposed portfolio").classes("w-full"):
-                if universe:
-                    _pie(universe)
-                    ui.label(
-                        note or "Built for your goal; validated next with real market history."
-                    ).style("color:var(--ds-text_soft);font-size:var(--ds-small-size)")
-                else:
-                    ds.empty_state(
-                        "A general-growth mix — the engine will pick it when validating.",
-                        icon="🌱",
-                    )
-            with ui.row().classes("gap-4"):
-                ds.button("Validate it", on_click=_validate).mark("validate_it")
-                ds.button("Customize", on_click=lambda: ui.navigate.to("/swarm"), primary=False)
-
-        def _pie(universe: list[str]) -> None:
-            n = len(universe)
-            colors = ds.CHART_CATEGORICAL
-            data = [
-                {
-                    "value": round(100 / n, 1),
-                    "name": s,
-                    "itemStyle": {"color": colors[i % len(colors)]},
-                }
-                for i, s in enumerate(universe)
-            ]
-            chart = ui.echart(
-                {
-                    "tooltip": {"trigger": "item", "formatter": "{b}: {c}%"},
-                    "series": [
-                        {
-                            "type": "pie",
-                            "radius": ["48%", "74%"],
-                            "itemStyle": {
-                                "borderRadius": 8,
-                                "borderColor": "#fffdf6",
-                                "borderWidth": 3,
-                                "shadowBlur": 12,
-                                "shadowColor": "rgba(62,58,49,0.12)",
-                            },
-                            "label": {"formatter": "{b}", "color": "#3e3a31"},
-                            "emphasis": {"scaleSize": 8},
-                            "animationType": "scale",
-                            "animationEasing": "elasticOut",
-                            "data": data,
-                        }
-                    ],
-                }
-            ).classes("w-full h-72 ds-enter")
-            del chart
-
-        # ── validation: the REAL pipeline, narrated ──────────────────
-        async def _run_pipeline() -> dict:
-            from datetime import date, timedelta
-
-            from app.services.agent_swarm.executor import Capa2PipelineExecutor, SwarmRunRequest
-
-            period, months = _horizon_window(answers["horizon"])
-            days = {"5y": 1825, "10y": 3650, "max": 7300}[period]
-            end = date.today() - timedelta(days=1)
-            start = end - timedelta(days=days)
-            request = SwarmRunRequest(
-                capital_initial=DEFAULT_CAPITAL,
-                objetivo_inversion=answers["goal"],
-                risk_tolerance=answers["risk"],
-                investment_horizon=months,
-                investor_age=answers["age"],
-                tax_province=answers["province"],
-                backtest_start=start.isoformat(),
-                backtest_end=end.isoformat(),
+            profile = InvestorProfile(
+                investor_age=int(answers["age"]),
+                investment_horizon=HORIZON_WINDOWS[answers["horizon"]][1],
+                risk_tolerance=str(answers["risk"]),
+                tax_province=str(answers["province"]),
+                objetivo_inversion=str(answers["goal"]),
             )
-            state = await (executor or Capa2PipelineExecutor(store=store)).run(request)
-            return {
-                "status": state.status,
-                "years": round(days / 365.25),
-                "payload": state.agents["t41"].output_payload
-                if state.status == "completed"
-                else None,
-            }
+            save_investor_profile(profile, profile_path)
+            status.text = "Saved — Mission Control will use this as your default."
+            go.set_text("Update my profile →")
+            summary.clear()
+            with summary:
+                _summary_card(profile)
 
-        def _validate() -> None:
-            with proposal:
-                narration_card = ds.card(title="Checking your portfolio…").classes("w-full")
-                with narration_card:
-                    line = ui.label("Starting the engine…").classes("ds-skeleton")
-                    line.style("color:var(--ds-text_soft)")
-
-                async def _task() -> None:
-                    try:
-                        result = await _run_pipeline()
-                        line.classes(remove="ds-skeleton").style("color:var(--ds-text)")
-                        narration_card.clear()
-                        with narration_card:
-                            if result["status"] != "completed" or not result["payload"]:
-                                ds.error_state(
-                                    "The engine could not validate this portfolio",
-                                    "Try a shorter horizon or Customize for more options.",
-                                )
-                                return
-                            _render_honest_numbers(result["payload"], result["years"])
-                    except Exception as exc:  # noqa: BLE001 - novice sees a plain error
-                        narration_card.clear()
-                        with narration_card:
-                            ds.error_state("Something went wrong", str(exc)[:120])
-
-                asyncio.get_event_loop().create_task(_task())
-
-        def _render_honest_numbers(payload: dict, years: int) -> None:
-            backtest = payload.get("backtest_result") or {}
-            metrics = backtest.get("metrics") or {}
-            total = metrics.get("total_return_pct")
-            dd = metrics.get("max_drawdown_pct")
-            with ds.card(title="The honest numbers").classes("w-full"):
+        def _summary_card(profile: InvestorProfile) -> None:
+            with ds.card(title="Your saved investor profile").classes("w-full ds-enter"):
+                rows = [
+                    ("Age", _AGE_LABEL.get(profile.investor_age, f"{profile.investor_age} years")),
+                    (
+                        "Horizon",
+                        _HORIZON_LABEL.get(
+                            profile.investment_horizon,
+                            f"{profile.investment_horizon // 12} years",
+                        ),
+                    ),
+                    (
+                        "Stomach for falls",
+                        _RISK_LABEL.get(profile.risk_tolerance, profile.risk_tolerance),
+                    ),
+                    ("Taxes in", profile.tax_province),
+                    (
+                        "Goal",
+                        _GOAL_LABEL.get(profile.objetivo_inversion, profile.objetivo_inversion),
+                    ),
+                ]
                 with ui.row().classes("gap-8 flex-wrap items-end"):
-                    if total is not None:
-                        ds.honest_number(f"{total}%", "total return, fees included")
-                    if dd is not None:
-                        ds.honest_number(f"{dd}%", "worst fall on the way")
-                    if years:
-                        ds.honest_number(f"{years:g}", "years of history checked")
-                with ui.row().classes("gap-2 mt-4"):
-                    ds.validation_badge("fees")
-                    if backtest.get("walk_forward_passed"):
-                        ds.validation_badge("walk_forward")
-                    ds.validation_badge("taxes")
+                    for label, value_ in rows:
+                        with ui.column().classes("gap-1"):
+                            ui.label(value_).style(
+                                "font-size:20px;font-weight:700;color:var(--ds-teal_deep)"
+                            )
+                            ui.label(label).style(
+                                "color:var(--ds-text_soft);font-size:var(--ds-small-size)"
+                            )
                 ui.label(
-                    "Past performance never guarantees the future — that's why every "
-                    "number here comes from the same engine, with costs, that will "
-                    "manage the real thing."
+                    f"Saved {profile.updated_at:%d %b %Y, %H:%M}. Mission Control (/swarm) "
+                    "builds and validates your portfolio from this profile — "
+                    "nothing to answer again."
                 ).style("color:var(--ds-text_soft);font-size:var(--ds-small-size);margin-top:12px")
+                ds.button(
+                    "Build my portfolio in Mission Control →",
+                    on_click=lambda: ui.navigate.to("/swarm"),
+                ).mark("go_swarm")
+
+        # ── first paint: a saved profile preselects its answers ──────
+        if saved is not None:
+            answers.update(
+                {
+                    "age": saved.investor_age,
+                    "horizon": _HORIZON_LABEL.get(saved.investment_horizon),
+                    "risk": saved.risk_tolerance,
+                    "province": saved.tax_province,
+                    "goal": saved.objetivo_inversion,
+                }
+            )
+            for key, pairs in option_buttons.items():
+                for value, b in pairs:
+                    if answers[key] is not None and value == answers[key]:
+                        b.classes(add="ds-option--selected")
+            if all(answers[k] for k in ("age", "horizon", "risk", "goal")):
+                status.text = "Profile loaded — change anything and save again."
+                go.set_text("Update my profile →")
+                with summary:
+                    _summary_card(saved)
+            else:  # saved outside the wizard's options → answer what's missing
+                _refresh_status()
+        else:
+            _refresh_status()

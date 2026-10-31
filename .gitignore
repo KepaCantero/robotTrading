@@ -150,3 +150,6 @@ data/paper_account.json
 # Imported account snapshots — real positions and cost basis of the
 # owner's live money; this repo is public, these never get committed
 data/import/
+
+# Investor profile saved by the /start wizard (user answers, runtime)
+investor_profile.json

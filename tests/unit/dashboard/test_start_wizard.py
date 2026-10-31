@@ -1,9 +1,15 @@
-"""UI-1 — the /start wizard's logic: horizon→window and preset reuse."""
+"""UI-1 — the /start wizard: it SAVES the investor profile (owner 31-10).
+
+The wizard no longer builds or validates portfolios (that moved to
+Mission Control); its one job is persisting the five answers so /swarm
+can use them as the default.
+"""
 
 from __future__ import annotations
 
+import json
+
 from app.presentation.dashboard.nicegui_app.pages.start import GOAL_OPTIONS, HORIZON_WINDOWS
-from app.presentation.dashboard.nicegui_app.pages.swarm import preset_for_goal
 
 
 class TestHorizonWindows:
@@ -11,13 +17,6 @@ class TestHorizonWindows:
         for label, (period, months) in HORIZON_WINDOWS.items():
             assert period in ("5y", "10y", "max"), label
             assert months >= 60, label
-
-    def test_long_horizon_uses_deep_dividend_universe(self):
-        """10+ years + dividends → the deep-history universe (the preset
-        rule the wizard reuses instead of its own logic)."""
-        strategy, universe = preset_for_goal("MAXIMIZAR_DIVIDENDOS", 240)
-        assert strategy == "dividend_tracking"
-        assert "SDY" in universe  # deep corpus
 
 
 class TestGoals:
@@ -29,60 +28,84 @@ class TestGoals:
         }
 
 
-class TestWizardRunsPersist:
-    """The wizard must run on the SHARED executor (with the store) — a
-    throwaway executor meant every /start run vanished from history
-    ("las ejecuciones no se guardan")."""
+class TestProfileSave:
+    """The 5 answers must land in investor_profile.json — before 31-10
+    they lived only in the page and vanished on refresh."""
 
-    async def test_validate_uses_injected_executor(self, user):
-        from types import SimpleNamespace
-
+    async def test_save_writes_profile_and_shows_summary(self, user, tmp_path):
         from nicegui import ui
 
         from app.presentation.dashboard.nicegui_app.pages import start
 
-        class SpyExecutor:
-            def __init__(self) -> None:
-                self.calls: list = []
+        path = tmp_path / "investor_profile.json"
 
-            async def run(self, request, run_id=None, on_event=None):
-                self.calls.append(request)
-                return SimpleNamespace(
-                    status="completed",
-                    agents={
-                        "t41": SimpleNamespace(
-                            output_payload={
-                                "backtest_result": {
-                                    "metrics": {
-                                        "total_return_pct": 5.0,
-                                        "max_drawdown_pct": -2.0,
-                                    },
-                                    "walk_forward_passed": True,
-                                }
-                            }
-                        )
-                    },
-                )
-
-        spy = SpyExecutor()
-
-        @ui.page("/start-wiring-test")
+        @ui.page("/start-save-test")
         def page():
-            start.render(spy, None)  # type: ignore[arg-type]
+            start.render(str(path))
 
-        await user.open("/start-wiring-test")
+        await user.open("/start-save-test")
         user.find(marker="opt_age_Under35").click()
-        user.find(marker="opt_horizon_35years").click()
+        user.find(marker="opt_horizon_510years").click()
         user.find(marker="opt_risk_Balanced").click()
-        user.find(marker="goal_MAXIMIZAR_DIVIDENDOS").click()
-        user.find(marker="propose").click()
-        await user.should_see("Validate it")
-        user.find(marker="validate_it").click()
-        await user.should_see("The honest numbers")
+        user.find(marker="opt_goal_Growitovertime").click()
+        user.find(marker="save_profile").click()
+        await user.should_see("Your saved investor profile")
 
-        assert len(spy.calls) == 1
-        req = spy.calls[0]
-        assert req.objetivo_inversion == "MAXIMIZAR_DIVIDENDOS"
-        assert req.risk_tolerance == "MEDIO"
-        assert req.investor_age == 30
-        assert req.tax_province == "Madrid"
+        data = json.loads(path.read_text(encoding="utf-8"))
+        assert data["investor_age"] == 30
+        assert data["investment_horizon"] == 120  # '5–10 years'
+        assert data["risk_tolerance"] == "MEDIO"
+        assert data["tax_province"] == "Madrid"
+        assert data["objetivo_inversion"] == "BALANCED_GROWTH"
+
+    async def test_incomplete_answers_write_nothing(self, user, tmp_path):
+        from nicegui import ui
+
+        from app.presentation.dashboard.nicegui_app.pages import start
+
+        path = tmp_path / "investor_profile.json"
+
+        @ui.page("/start-incomplete-test")
+        def page():
+            start.render(str(path))
+
+        await user.open("/start-incomplete-test")
+        user.find(marker="save_profile").click()
+        await user.should_see("Answer the four key questions")
+        assert not path.exists()
+
+    async def test_saved_profile_is_preselected_and_resavable(self, user, tmp_path):
+        """Reopening /start shows the saved profile and one click re-saves
+        it — the user never answers the same question twice."""
+        from nicegui import ui
+
+        from app.presentation.dashboard.nicegui_app.pages import start
+        from app.services.agent_swarm.investor_profile import InvestorProfile, save_investor_profile
+
+        path = tmp_path / "investor_profile.json"
+        save_investor_profile(
+            InvestorProfile(
+                investor_age=42,
+                investment_horizon=240,
+                risk_tolerance="ALTO",
+                tax_province="Bizkaia",
+                objetivo_inversion="MAXIMIZAR_DIVIDENDOS",
+            ),
+            path,
+        )
+
+        @ui.page("/start-preselect-test")
+        def page():
+            start.render(str(path))
+
+        await user.open("/start-preselect-test")
+        await user.should_see("Profile loaded")
+        await user.should_see("Your saved investor profile")
+
+        user.find(marker="save_profile").click()
+        data = json.loads(path.read_text(encoding="utf-8"))
+        assert data["investor_age"] == 42
+        assert data["investment_horizon"] == 240
+        assert data["risk_tolerance"] == "ALTO"
+        assert data["tax_province"] == "Bizkaia"
+        assert data["objetivo_inversion"] == "MAXIMIZAR_DIVIDENDOS"
