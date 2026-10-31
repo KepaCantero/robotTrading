@@ -210,11 +210,19 @@ class DeployDecisionOrchestrator:
         if not validation_passed:
             return "REJECTED", "LOW"
 
+        # Sharpe gate (owner 31-10: "el umbral de Sharpe debería ser un gate
+        # duro, no compensable por score"): bajo 0.5 no hay APPROVED —
+        # degrada a CONDITIONAL en vez de REJECT para no romper la regla de
+        # que el run por defecto pasa.
+        sharpe_gate = sharpe_ratio >= 0.5
+
         # Feasibility and recommendation matrix
         if (
             feasibility_ratio >= self.APPROVAL_THRESHOLDS["feasibility_ratio_approved"]
             and recommendation_score >= self.APPROVAL_THRESHOLDS["recommendation_score_approved"]
         ):
+            if not sharpe_gate:
+                return "CONDITIONAL", "LOW"
             confidence = "HIGH" if sharpe_ratio > 1.0 else "MODERATE"
             return "APPROVED", confidence
 

@@ -50,7 +50,9 @@ class StaticEqualWeightStrategy(BaseStrategy):
         self.rebalance_days: int = int(config.get("rebalance_days", 3650))
         self.entry_retry_days: int = int(config.get("entry_retry_days", 10))
         self.min_history: int = int(config.get("min_history", 20))
-        self.target_exposure: float = float(config.get("target_exposure", 0.95))
+        #: 99% desplegado (31-10, owner): el 5% de caja permanente costaba
+        #: ~7 pp en 10 años sin comprar nada — 1% de colchón de rebalanceo
+        self.target_exposure: float = float(config.get("target_exposure", 0.99))
 
         self._closes: dict[str, list[tuple[datetime, float]]] = {}
         self._holdings: set[str] = set()
