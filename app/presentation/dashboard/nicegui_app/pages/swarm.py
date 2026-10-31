@@ -1220,10 +1220,12 @@ def render(
 
                         with ui.column().classes("gap-xs flex-1").style("min-width: 240px"):
                             objetivo = ui.select(
-                                # Default (user 2026-10-27): the configuration that PASSES honestly —
-                                # dividends + 10y + High + Automatic (all symbols).
+                                # Default (user 31-10: "accumulate es el default"): the
+                                # owner's real mandate — total-return accumulation over
+                                # UCITS ACC (target VWCE75/AGGH25). Verified APPROVED
+                                # headless on the 10y automatic universe.
                                 OBJECTIVES,
-                                value="MAXIMIZAR_DIVIDENDOS",
+                                value="ACUMULAR",
                                 label="Your goal",
                             ).classes("w-full")
                             ui.label("What you want to achieve with this investment.").classes(
