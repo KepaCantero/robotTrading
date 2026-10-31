@@ -1681,52 +1681,6 @@ def render(
                                 ).on_click(_replay_clicked)
                         ui.timer(0.1, refresh_history, once=True)
 
-            # ── Help & docs — a quiet footer band, out of the action zone.
-            # Help belongs at the end of the journey (and in the header "?"),
-            # never inside the configuration form.
-            ui.separator().classes("q-mt-lg q-mb-md")
-            ui.label("HELP & DOCS").classes("lbl q-mb-xs")
-            with ui.element("div").classes("doc-grid"):
-                for icon, name, sub, href in (
-                    ("📖", "All documentation", "Browse every guide", "/docs/"),
-                    (
-                        "🧩",
-                        "How the system works",
-                        "ELI5, with pictures",
-                        "/docs/eli5/01-how-the-system-works/",
-                    ),
-                    (
-                        "🖥️",
-                        "About this dashboard",
-                        "What you are looking at",
-                        "/docs/eli5/11-dashboard/",
-                    ),
-                    (
-                        "🚀",
-                        "Getting started",
-                        "Install and first steps",
-                        "/docs/quickstart/",
-                    ),
-                    (
-                        "🔤",
-                        "Plain-English glossary",
-                        "Every term, one breath",
-                        "/glossary",
-                    ),
-                    (
-                        "🛟",
-                        "Trust & risk",
-                        "What can go wrong",
-                        "/trust",
-                    ),
-                ):
-                    with (
-                        ui.link(target=href).classes("doc-tile").props("target=_blank rel=noopener")
-                    ):
-                        ui.label(icon).classes("dt-icon")
-                        ui.label(name).classes("dt-name")
-                        ui.label(sub).classes("dt-sub")
-
     # ── Details dialog ────────────────────────────────────────────────────
     detail_dialog = ui.dialog().props("full-width")
     with detail_dialog, ui.element("div").classes("panel q-pa-lg w-full"):

@@ -74,20 +74,24 @@ async def test_swarm_page_has_period_and_tax_inputs(user: User, register_page):
     await user.should_not_see("Time frame (months)")
 
 
-async def test_swarm_page_links_to_docs(user: User, register_page):
-    """The HELP & DOCS panel exposes the built documentation site."""
+async def test_swarm_page_has_no_docs_band(user: User, register_page):
+    """The HELP & DOCS band was removed from the run page (owner 31-10:
+    useless clutter under the mission); docs stay in the nav's
+    Documentation entry."""
     await user.open("/swarm-test")
 
-    await user.should_see("HELP & DOCS")
-    await user.should_see("All documentation")
-    await user.should_see("How the system works")
-
-    links = [
-        link
-        for link in user.find(ui.link).elements
-        if (link.props.get("href") or "").startswith("/docs")
-    ]
-    assert len(links) == 4
+    await user.should_not_see("HELP & DOCS")
+    await user.should_not_see("All documentation")
+    doc_links: list[ui.link] = []
+    try:
+        doc_links = [
+            link
+            for link in user.find(ui.link).elements
+            if (link.props.get("href") or "").startswith("/docs")
+        ]
+    except AssertionError:
+        pass  # no links at all on the page — even better
+    assert doc_links == []
 
 
 async def test_swarm_pipeline_runs_end_to_end_from_ui(user: User, register_page):
