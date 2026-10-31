@@ -10,8 +10,6 @@ from __future__ import annotations
 from decimal import Decimal as D
 
 from app.presentation.dashboard.nicegui_app.pages.swarm import (
-    DEEP_DIVIDEND_ETF_UNIVERSE,
-    DIVIDEND_ETF_UNIVERSE,
     LONG_HORIZON_MONTHS,
     LOW_VOL_UNIVERSE,
     OBJECTIVES,
@@ -45,22 +43,21 @@ def test_goals_without_preset_return_none():
     assert preset_for_goal("") is None
 
 
-def test_acumular_preset_is_the_acc_ucits_core():
-    """ACUMULAR (30-10): acumulación pura — núcleo 100% acumulador, sin
-    mangas de renta. ≥4 símbolos para que static_ew despliegue ~95% (cap
-    del 25% por posición) y todos con histórico que cubre la ventana de
-    10 años del run por defecto: VWCE no puede estar (nació 2019-07),
-    EUNL.DE/IUSQ.DE son los acumuladores con historia y EIMI.MI aporta
-    el emergente que VWCE llevaría dentro."""
+def test_acumular_preset_is_automatic_whole_goal_universe():
+    """ACUMULAR (30-10): regla del dueño — por defecto TODO el universo
+    del objetivo vía pantalla AUTOMÁTICA (None), como dividends. La
+    pantalla del corpus decide por ventana: en 10y entran los UCITS que
+    cubren (EUNL/IUSQ/EIMI/VHYL/IDVY + IBGS), en ventanas cortas también
+    VWCE/QDIV. Nada de listas clavadas por defecto."""
     assert "ACUMULAR" in OBJECTIVES
-    assert preset_for_goal("ACUMULAR") == (
-        "static_ew",
-        ["EUNL.DE", "IUSQ.DE", "EIMI.MI", "IBGS.AS"],
-    )
+    assert preset_for_goal("ACUMULAR") == ("static_ew", None)
     assert preset_for_goal("acumular") == preset_for_goal("ACUMULAR")
-    # sin horizonte largo alternativo: a 15+ años el gate de cobertura
-    # reporta honestamente (no hay acumuladores UCITS con tal historia)
-    assert preset_for_goal("ACUMULAR", 240)[1] == preset_for_goal("ACUMULAR")[1]
+
+
+def test_vivir_preset_is_automatic_too():
+    """Mismo principio para VIVIR_DE_LA_CARTERA: el conjunto UCITS lo
+    decide la pantalla del objetivo por ventana, no una lista fija."""
+    assert preset_for_goal("VIVIR_DE_LA_CARTERA") == ("static_ew", None)
 
 
 class TestLongHorizonUniverse:

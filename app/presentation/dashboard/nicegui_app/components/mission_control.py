@@ -20,7 +20,9 @@ from nicegui import ui
 STAGES: list[tuple[str, str, str]] = [
     ("Design", "/start", "edit_note"),
     ("Backtest", "/results", "history_edu"),
-    ("Optimize", "/optimize", "tune"),
+    # 30-10: optimization runs INSIDE every backtest (T4.1) — the stage
+    # lives on the run page, not a separate one
+    ("Optimize", "/", "tune"),
     ("Paper", "/portfolio", "science"),
     ("Live", "/trust", "lock"),  # the locked door leads to its explanation (UI-4)
 ]

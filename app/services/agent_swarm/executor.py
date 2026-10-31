@@ -330,6 +330,7 @@ class _Ctx:
     param_result: Any = None  # ParameterizationResult (T3)
     param_set_id: str = ""
     backtest: Any = None  # BacktestOrchestrationResult (T4)
+    optimization: dict | None = None  # in-backtest grid search summary (T4)
     validation: Any = None  # ValidationResult (T5)
     recommendation: Any = None  # recommendation (T6)
     portfolio: Any = None  # PortfolioAllocation (T7)
@@ -399,7 +400,6 @@ class Capa2PipelineExecutor:
             # que PASA en ~40s). ``exhaustive_universe`` (UI: "Automatic
             # (all symbols)") lo quita: todos los símbolos que cubren la
             # ventana — 395 en 10y — con el coste honesto: 25+ min/run.
-            goal_key = str(request.objetivo_inversion or "").upper()
             auto = await asyncio.to_thread(
                 auto_universe,
                 goal=request.objetivo_inversion,
@@ -486,7 +486,7 @@ class Capa2PipelineExecutor:
 
         if ctx.decision is not None:
             state.decision = safe_json(ctx.decision)
-        state.results = self._build_results(state)
+        state.results = self._build_results(state, ctx)
 
         if failed:
             state.status = "failed"
@@ -653,6 +653,11 @@ class Capa2PipelineExecutor:
         "ACUMULAR": "static_ew",
     }
 
+    #: tope de combinaciones extra que un run explora dentro de T4.1
+    #: (además del baseline con los parámetros que trae). El coste es
+    #: honesto y visible: cada combinación es un backtest completo.
+    IN_RUN_MAX_TRIALS = 6
+
     def _resolve_strategy(self, ctx: _Ctx) -> str:
         """Effective strategy. Priority (user 2026-10-27: "dejalo por
         default la que pasa"): explicit request override > the GOAL's
@@ -718,11 +723,12 @@ class Capa2PipelineExecutor:
             else {}
         )
         overrides = _strategy_overrides_from(modules, strategy)
-        # ADOPTED params close the loop: "Adopt best parameters" (optimizer)
-        # saved a set per strategy — applying it here is the only way the
-        # adoption changes the NEXT run (before, the button was decorative).
-        # Adopted values WIN over the profile's generic ones: they were
-        # explicitly chosen for this strategy on real engine results.
+        # ADOPTED params close the loop: a saved default param set (per
+        # strategy) is the only way adoption changes the NEXT run (before,
+        # the button was decorative). Adopted values WIN over the profile's
+        # generic ones: they were explicitly chosen for this strategy on
+        # real engine results.
+        adopted_params: dict = {}
         if self.store is not None and self.store.is_initialized:
             try:
                 adopted = await self.store.get_active_param_set(strategy)
@@ -730,11 +736,66 @@ class Capa2PipelineExecutor:
                 logger.warning("Could not read adopted params for %s", strategy, exc_info=True)
                 adopted = None
             if adopted and adopted.get("params"):
-                overrides.update({k: v for k, v in adopted["params"].items()})
+                adopted_params = dict(adopted["params"])
+                overrides.update(adopted_params)
         if overrides:
             orchestrator._strategy_param_overrides = overrides  # noqa: SLF001
 
         ctx.backtest = await orchestrator.orchestrate(request)
+
+        # 30-10 (user: "se tiene que optimizar solo en el backtesting"):
+        # the grid search lives HERE now — every run explores its
+        # strategy's grid over the same window/universe/capital. When a
+        # combination beats what this run actually used, the run re-runs
+        # with it so every downstream gate judges the BEST backtest, and
+        # results carry an `optimization` block for the save-as-default
+        # prompt. Best-effort by design: an optimizer failure must never
+        # kill the run. NOTE: trials use the engine's default costs — with
+        # custom commission/slippage the comparison is approximate.
+        ctx.optimization = None
+        from app.services.agent_swarm.optimizer import PARAM_GRIDS, optimize
+
+        combos = 1
+        for values in (PARAM_GRIDS.get(strategy) or {}).values():
+            combos *= len(values)
+        if combos > 1:
+            try:
+                result = await asyncio.to_thread(
+                    optimize,
+                    strategy,
+                    list(request.symbols or []),
+                    request.start_date.isoformat(),
+                    request.end_date.isoformat(),
+                    request.initial_capital,
+                    self.IN_RUN_MAX_TRIALS,
+                    True,
+                    overrides,
+                )
+            except Exception:  # noqa: BLE001 - optimization is best-effort
+                logger.warning("In-backtest optimization failed", exc_info=True)
+                result = None
+            if result is not None:
+                summary = {
+                    "baseline": result.baseline,
+                    "best": result.best,
+                    "best_params": result.best_params,
+                    "trials": len(result.trials),
+                    "improved": bool(result.improved),
+                }
+                if result.improved:
+                    best_full = {**overrides, **result.best_params}
+                    orchestrator._strategy_param_overrides = best_full  # noqa: SLF001
+                    rerun = await orchestrator.orchestrate(request)
+                    if rerun.success:
+                        ctx.backtest = rerun
+                    # prompt ONLY when saving would actually change the
+                    # saved default (an equal active set needs no prompt)
+                    summary["params_changed"] = (
+                        bool(result.best_params) and result.best_params != adopted_params
+                    )
+                else:
+                    summary["params_changed"] = False
+                ctx.optimization = summary
         return ctx.backtest
 
     # ── T5.1 Validation Engine ───────────────────────────────────────────────
@@ -837,9 +898,7 @@ class Capa2PipelineExecutor:
         # es un demérito del diseño — la pregunta es si cayó MÁS que su
         # universo. COVID 2020: -33% del pasivo juzgado por la banda
         # absoluta daba 5/25 solo por existir.
-        ew_dd = (
-            float(getattr(payload, "universe_ew_max_dd_pct", 0) or 0) if payload else 0.0
-        )
+        ew_dd = float(getattr(payload, "universe_ew_max_dd_pct", 0) or 0) if payload else 0.0
         if ew_dd >= 1.0:
             dd_ratio = max_dd / ew_dd
             dd_pts = (
@@ -1267,7 +1326,7 @@ class Capa2PipelineExecutor:
         except Exception:  # noqa: BLE001
             logger.exception("Failed to persist swarm run finish")
 
-    def _build_results(self, state: RunState) -> dict:
+    def _build_results(self, state: RunState, ctx: _Ctx | None = None) -> dict:
         """JSON-ready aggregated results, compatible with /capa2 workflow-status."""
         results: dict[str, Any] = {}
         keys = [
@@ -1286,6 +1345,11 @@ class Capa2PipelineExecutor:
             payload = state.agents[agent_id].output_payload
             if payload is not None:
                 results[key] = payload
+
+        # in-backtest grid search (T4.1, 30-10): baseline vs best and the
+        # params_changed flag that drives the save-as-default prompt
+        if ctx is not None and getattr(ctx, "optimization", None):
+            results["optimization"] = ctx.optimization
 
         if isinstance(results.get("report"), dict) and results["report"].get("report_id"):
             results["report_id"] = results["report"]["report_id"]

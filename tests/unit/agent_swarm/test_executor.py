@@ -416,3 +416,63 @@ class TestT61IncomeAwareScoring:
             net_by_year={2023: Decimal("3000"), 2024: Decimal("3000")},
         )
         assert self._score(self._ctx("maximizar_dividendos", div)) == Decimal("95")
+
+
+class TestInBacktestOptimization:
+    """30-10 (user: "se tiene que optimizar solo en el backtesting"): la
+    rejilla vive DENTRO del run — T4.1 la explora, y si mejora re-corre
+    con los mejores parámetros para que los gates juzguen lo mejor."""
+
+    async def test_optimization_block_and_params_changed(self, monkeypatch):
+        from types import SimpleNamespace
+
+        import app.services.agent_swarm.optimizer as optimizer_module
+
+        fake = SimpleNamespace(
+            strategy="momentum_modular",
+            symbols=["SPY"],
+            start="2025-01-01",
+            end="2025-12-31",
+            baseline={"sharpe": "0.50", "return_pct": "10.0", "trades": 3},
+            trials=[{"params": {"lookback": 30}, "sharpe": "0.90"}],
+            best_params={"lookback": 30},
+            best={"sharpe": "0.90", "return_pct": "20.0", "trades": 4},
+            improved=True,
+        )
+        calls: list[tuple] = []
+
+        def fake_optimize(*args, **kwargs):
+            calls.append((args, kwargs))
+            return fake
+
+        monkeypatch.setattr(optimizer_module, "PARAM_GRIDS", {"momentum_modular": {"x": [1, 2]}})
+        monkeypatch.setattr(optimizer_module, "optimize", fake_optimize)
+
+        state = await Capa2PipelineExecutor().run(make_request(strategy="momentum_modular"))
+
+        assert state.status == "completed"
+        assert calls, "the in-backtest grid search must actually run"
+        # the search received the params THIS run used as its baseline
+        baseline_params = calls[0][0][7] if len(calls[0][0]) > 7 else calls[0][1]["baseline_params"]
+        assert isinstance(baseline_params, dict)
+
+        opt = state.results.get("optimization")
+        assert opt is not None
+        assert opt["improved"] is True
+        assert opt["best_params"] == {"lookback": 30}
+        # best ≠ saved default (none) → the UI must offer to save it
+        assert opt["params_changed"] is True
+
+    async def test_no_grid_means_no_optimization_block(self, monkeypatch):
+        import app.services.agent_swarm.optimizer as optimizer_module
+
+        def fail_optimize(*args, **kwargs):  # pragma: no cover - must not run
+            raise AssertionError("optimize must not run without a grid")
+
+        monkeypatch.setattr(optimizer_module, "PARAM_GRIDS", {})
+        monkeypatch.setattr(optimizer_module, "optimize", fail_optimize)
+
+        state = await Capa2PipelineExecutor().run(make_request(strategy="momentum_modular"))
+
+        assert state.status == "completed"
+        assert state.results.get("optimization") is None

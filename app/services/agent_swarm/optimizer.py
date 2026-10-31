@@ -191,6 +191,7 @@ def optimize(
     capital: Decimal = Decimal("100000"),
     max_trials: int = 12,
     parallel: bool = True,
+    baseline_params: dict[str, Any] | None = None,
 ) -> OptimizationResult:
     """Grid-search the strategy's tunable params with the real engine.
 
@@ -198,6 +199,11 @@ def optimize(
     combos)) with a sequential fallback — one engine, same results, just
     less wall time. The engine is deterministic, so the best trial's RAW
     metrics are reused instead of re-running the best combo a 13th time.
+
+    ``baseline_params`` (30-10): the params the run ACTUALLY used (T3.1
+    overrides + the adopted default) — the baseline backtest runs with
+    them so "current" is the truth, not the YAML defaults. Trials still
+    explore the full grid on top of ``default_params``.
     """
     grid = PARAM_GRIDS.get(strategy)
     if not grid:
@@ -205,10 +211,11 @@ def optimize(
 
     start_date = date.fromisoformat(start)
     end_date = date.fromisoformat(end)
-    _base = default_params(strategy)
 
-    # baseline with current/default params
-    baseline_metrics = _run_one_backtest(strategy, {}, symbols, start_date, end_date, capital)
+    # baseline with the params the run really used (or YAML defaults)
+    baseline_metrics = _run_one_backtest(
+        strategy, dict(baseline_params or {}), symbols, start_date, end_date, capital
+    )
 
     combos = list(itertools.product(*grid.values()))
     combos = _stratified_combos(combos, max_trials)

@@ -187,30 +187,80 @@ class TestBacktestResultsPage:
 
 
 class TestHistoryComparePage:
-    """E2E tests for the history and compare page render function."""
+    """E2E + unit: history reads the REAL swarm run store (swarm_runs.db) —
+    the old BacktestResultStore wiring froze the page at two orphaned
+    rows. The render path is smoke-tested without a store; the data path
+    is tested against a seeded store via the pure summarizer (the NiceGUI
+    User simulation is too heavy/flaky for it)."""
 
-    async def test_history_renders_with_services(
-        self, store: BacktestResultStore, profitability: ProfitabilityEngine
-    ) -> None:
-        """The history page should render the table and comparison section."""
+    async def test_summarize_extracts_real_run_row(self, tmp_path) -> None:
+        from app.presentation.dashboard.nicegui_app.pages.history_compare import (
+            _load_runs,
+            _summarize,
+        )
+        from app.services.agent_swarm.store import SwarmRunStore
+
+        swarm = SwarmRunStore(str(tmp_path / "swarm_runs.db"))
+        await swarm.initialize()
+        await swarm.create_run(
+            "run_real",
+            {"objetivo_inversion": "ACUMULAR", "strategy": "static_ew"},
+            "2026-10-29T10:00:00",
+        )
+        await swarm.finish_run(
+            "run_real",
+            "completed",
+            "2026-10-29T10:01:00",
+            600,
+            [],
+            {
+                "deployment_decision": {"status": "APPROVED"},
+                "backtest_result": {
+                    "strategy_name": "static_ew",
+                    "backtest_result": {
+                        "metrics": {
+                            "total_return_pct": "50.00",
+                            "sharpe_ratio": "1.00",
+                            "max_drawdown_pct": "-10.00",
+                        },
+                        "symbols": ["EUNL.DE", "IBGS.AS"],
+                    },
+                },
+            },
+        )
+        await swarm.set_saved("run_real", True)
+
+        runs = await _load_runs(swarm)
+        assert len(runs) == 1
+        row = _summarize(runs[0])
+        assert row["goal"] == "ACUMULAR"
+        assert row["strategy"] == "static_ew"
+        assert row["universe"] == "2 symbols"
+        assert row["return"] == "+50.00%"
+        assert row["sharpe"] == "+1.00"
+        assert row["verdict"] == "APPROVED"
+        assert row["_passing"] is True
+        assert row["saved"] == "★"  # pinned via set_saved
+        await swarm.close()
+
+    def test_summarize_marks_failed_and_running(self) -> None:
+        from app.presentation.dashboard.nicegui_app.pages.history_compare import _summarize
+
+        failed = _summarize({"status": "failed", "request": {}, "results": {}})
+        assert failed["verdict"] == "FAILED"
+        assert failed["_passing"] is False
+
+        running = _summarize({"status": "running", "request": {}, "results": {}})
+        assert running["verdict"] == "RUNNING"
+
+    async def test_history_renders_without_store(self) -> None:
+        """No store in the session → an explicit message, never a crash."""
         from app.presentation.dashboard.nicegui_app.pages.history_compare import render
 
-        async with user_simulation(lambda: render(store, profitability)) as user:
+        async with user_simulation(lambda: render(None)) as user:
             await user.open("/")
             await user.should_see("History & Compare")
-            await user.should_see("Run History")
-            await user.should_see("Compare Runs")
-            await user.should_see("Run A")
-            await user.should_see("Run B")
-            await user.should_see("Compare")
-
-    async def test_history_renders_with_none_services(self) -> None:
-        """The history page should render even with None services."""
-        from app.presentation.dashboard.nicegui_app.pages.history_compare import render
-
-        async with user_simulation(lambda: render(None, None)) as user:
-            await user.open("/")
-            await user.should_see("History & Compare")
+            await user.should_see("Run storage is not available")
 
 
 class TestConfigViewerPage:
@@ -567,34 +617,23 @@ class TestFormatters:
 
 
 class TestHistoryFormatters:
-    """Tests for the history_compare page formatters."""
+    """Tests for the history_compare page formatters (30-10 rewrite:
+    signed 2-decimal display over the real swarm-run values)."""
 
-    def test_fmt_val_with_value(self) -> None:
-        """_fmt_val should format a float with 4 decimal places."""
-        from app.presentation.dashboard.nicegui_app.pages.history_compare import _fmt_val
+    def test_fmt_signed_value(self) -> None:
+        from app.presentation.dashboard.nicegui_app.pages.history_compare import _fmt
 
-        assert _fmt_val(1.5) == "1.5000"
+        assert _fmt(12.3456) == "+12.35"
+        assert _fmt(-4.0) == "-4.00"
 
-    def test_fmt_val_with_none(self) -> None:
-        """_fmt_val should return 'N/A' for None."""
-        from app.presentation.dashboard.nicegui_app.pages.history_compare import _fmt_val
+    def test_fmt_with_suffix(self) -> None:
+        from app.presentation.dashboard.nicegui_app.pages.history_compare import _fmt
 
-        assert _fmt_val(None) == "N/A"
+        assert _fmt(12.3456, "%") == "+12.35%"
 
-    def test_fmt_val_with_suffix(self) -> None:
-        """_fmt_val should append a suffix."""
-        from app.presentation.dashboard.nicegui_app.pages.history_compare import _fmt_val
+    def test_fmt_none_is_a_dash(self) -> None:
+        from app.presentation.dashboard.nicegui_app.pages.history_compare import _fmt
 
-        assert _fmt_val(1.5, "%") == "1.5000%"
-
-    def test_fmt_pct_with_value(self) -> None:
-        """_fmt_pct should format as percentage."""
-        from app.presentation.dashboard.nicegui_app.pages.history_compare import _fmt_pct
-
-        assert _fmt_pct(0.25) == "25.00%"
-
-    def test_fmt_pct_with_none(self) -> None:
-        """_fmt_pct should return 'N/A' for None."""
-        from app.presentation.dashboard.nicegui_app.pages.history_compare import _fmt_pct
-
-        assert _fmt_pct(None) == "N/A"
+        assert _fmt(None) == "—"
+        assert _fmt("") == "—"
+        assert _fmt("n/a-string") == "n/a-string"  # non-numeric text passes through

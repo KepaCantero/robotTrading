@@ -83,7 +83,6 @@ PAGES = [
     {"name": "Agent Swarm", "icon": "smart_toy", "route": "/"},
     {"name": "Start", "icon": "flag", "route": "/start"},
     {"name": "Portfolio", "icon": "account_balance", "route": "/portfolio"},
-    {"name": "Optimize", "icon": "tune", "route": "/optimize"},
     {"name": "Results", "icon": "analytics", "route": "/results"},
     {"name": "History & Compare", "icon": "history", "route": "/history"},
     {"name": "Objectives", "icon": "fact_check", "route": "/objectives"},

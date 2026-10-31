@@ -31,7 +31,8 @@ CREATE TABLE IF NOT EXISTS swarm_runs (
     finished_at     TEXT,
     total_xp        INTEGER NOT NULL DEFAULT 0,
     achievements_json TEXT NOT NULL DEFAULT '[]',
-    results_json    TEXT
+    results_json    TEXT,
+    saved           INTEGER NOT NULL DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS swarm_events (
     id           INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -72,6 +73,15 @@ class SwarmRunStore:
         self._db = await aiosqlite.connect(self.db_path)
         await self._db.execute("PRAGMA journal_mode=WAL")
         await self._db.executescript(_SCHEMA)
+        # 30-10: runs que pasan se pueden fijar (★) — migración aditiva,
+        # idempotente sobre bases que ya tienen la columna
+        try:
+            await self._db.execute(
+                "ALTER TABLE swarm_runs ADD COLUMN saved INTEGER NOT NULL DEFAULT 0"
+            )
+        except aiosqlite.OperationalError as exc:
+            if "duplicate column" not in str(exc).lower():
+                raise
         await self._db.commit()
         logger.info("SwarmRunStore initialized at %s", self.db_path)
 
@@ -130,7 +140,7 @@ class SwarmRunStore:
         db = self._require_db()
         cursor = await db.execute(
             "SELECT workflow_id, status, request_json, started_at, finished_at, "
-            "total_xp, achievements_json FROM swarm_runs "
+            "total_xp, achievements_json, saved FROM swarm_runs "
             "ORDER BY started_at DESC LIMIT ?",
             (limit,),
         )
@@ -146,9 +156,44 @@ class SwarmRunStore:
                     "finished_at": row[4],
                     "total_xp": row[5],
                     "achievements": _load_json(row[6]),
+                    "saved": bool(row[7]),
                 }
             )
         return runs
+
+    async def get_run(self, workflow_id: str) -> dict[str, Any] | None:
+        """One full run — request, status AND results (history / compare)."""
+        db = self._require_db()
+        cursor = await db.execute(
+            "SELECT workflow_id, status, request_json, started_at, finished_at, "
+            "total_xp, achievements_json, results_json, saved FROM swarm_runs "
+            "WHERE workflow_id = ?",
+            (workflow_id,),
+        )
+        row = await cursor.fetchone()
+        if not row:
+            return None
+        return {
+            "workflow_id": row[0],
+            "status": row[1],
+            "request": _load_json(row[2]),
+            "started_at": row[3],
+            "finished_at": row[4],
+            "total_xp": row[5],
+            "achievements": _load_json(row[6]),
+            "results": _load_json(row[7]),
+            "saved": bool(row[8]),
+        }
+
+    async def set_saved(self, workflow_id: str, saved: bool) -> bool:
+        """Fija (★) o libera un run — la lista corta de backtests guardados."""
+        db = self._require_db()
+        cursor = await db.execute(
+            "UPDATE swarm_runs SET saved = ? WHERE workflow_id = ?",
+            (1 if saved else 0, workflow_id),
+        )
+        await db.commit()
+        return cursor.rowcount > 0
 
     # ── Parameter sets (optimizer) ─────────────────────────────────────────
 

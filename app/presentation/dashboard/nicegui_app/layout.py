@@ -58,7 +58,6 @@ class AppShell:
         {"name": "Start", "icon": "play_circle", "route": "/start"},
         {"name": "Mission", "icon": "hub", "route": "/"},
         {"name": "Portfolio", "icon": "donut_small", "route": "/portfolio"},
-        {"name": "Optimize", "icon": "tune", "route": "/optimize"},
         {"name": "Trust", "icon": "verified_user", "route": "/trust"},
     ]
 
@@ -167,7 +166,7 @@ class AppShell:
             # under Library.
             by_route = {page["route"]: page for page in PAGES}
             nav_groups: list[tuple[str, list[str]]] = [
-                ("Run", ["/", "/portfolio", "/optimize"]),
+                ("Run", ["/", "/portfolio"]),
                 ("Understand", ["/trust", "/start", "/glossary", "/docs/"]),
                 (
                     "Library",
@@ -254,13 +253,6 @@ class AppShell:
                 autodeploy=request.query_params.get("deploy") == "1",
             )
 
-        @ui.page("/optimize")
-        def page_optimize():
-            cls._build_shell()
-            from app.presentation.dashboard.nicegui_app.pages.optimize import render
-
-            render(cls._swarm_executor, cls._swarm_store)
-
         @ui.page("/results")
         def page_results():
             cls._build_shell()
@@ -302,7 +294,10 @@ class AppShell:
             cls._build_shell()
             from app.presentation.dashboard.nicegui_app.pages.history_compare import render
 
-            render(cls._store, cls._profitability)
+            # 30-10: la memoria real son los runs del swarm (swarm_runs.db);
+            # el BacktestResultStore quedó huérfano el 18-10 y congeló la
+            # página en dos filas antiguas
+            render(cls._swarm_store)
 
         @ui.page("/objectives")
         def page_objectives():

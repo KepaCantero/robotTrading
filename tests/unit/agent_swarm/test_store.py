@@ -55,6 +55,60 @@ class TestLifecycle:
         assert len(runs) == 3
 
 
+class TestRunDetailAndSaved:
+    """get_run (history/compare) + the ★ saved flag (30-10)."""
+
+    async def test_get_run_returns_request_and_results(self, store):
+        await store.create_run("run_1", {"objetivo": "ACUMULAR"}, "t0")
+        await store.finish_run(
+            "run_1", "completed", "t1", results={"deployment_decision": {"status": "APPROVED"}}
+        )
+
+        run = await store.get_run("run_1")
+        assert run is not None
+        assert run["request"] == {"objetivo": "ACUMULAR"}
+        assert run["results"]["deployment_decision"]["status"] == "APPROVED"
+        assert run["saved"] is False
+        assert await store.get_run("missing") is None
+
+    async def test_set_saved_pins_and_unpins(self, store):
+        await store.create_run("run_1", {}, "t0")
+
+        assert await store.set_saved("run_1", True) is True
+        assert (await store.list_runs())[0]["saved"] is True
+        assert (await store.get_run("run_1"))["saved"] is True
+
+        assert await store.set_saved("run_1", False) is True
+        assert (await store.list_runs())[0]["saved"] is False
+        # pinning a run that does not exist changes nothing
+        assert await store.set_saved("nope", True) is False
+
+    async def test_saved_column_migrates_on_existing_db(self, tmp_path):
+        """A database created BEFORE the saved column must migrate on
+        initialize (the live swarm_runs.db is exactly that case)."""
+        import aiosqlite
+
+        db_path = str(tmp_path / "legacy.db")
+        async with aiosqlite.connect(db_path) as db:
+            await db.execute(
+                "CREATE TABLE swarm_runs (workflow_id TEXT PRIMARY KEY, status TEXT NOT NULL, "
+                "request_json TEXT NOT NULL, started_at TEXT NOT NULL, finished_at TEXT, "
+                "total_xp INTEGER NOT NULL DEFAULT 0, achievements_json TEXT NOT NULL DEFAULT '[]', "
+                "results_json TEXT)"
+            )
+            await db.execute(
+                "INSERT INTO swarm_runs (workflow_id, status, request_json, started_at) "
+                "VALUES ('legacy', 'completed', '{}', 't0')"
+            )
+            await db.commit()
+
+        legacy = SwarmRunStore(db_path)
+        await legacy.initialize()  # runs the ALTER TABLE migration
+        assert (await legacy.list_runs())[0]["saved"] is False
+        assert await legacy.set_saved("legacy", True) is True
+        await legacy.close()
+
+
 class TestEvents:
     async def test_append_and_fetch_events_in_order(self, store):
         await store.create_run("run_1", {}, "t0")

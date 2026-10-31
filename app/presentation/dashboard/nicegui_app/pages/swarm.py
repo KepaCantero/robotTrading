@@ -38,7 +38,6 @@ from app.services.agent_swarm.executor import (
 from app.services.agent_swarm.universe_selector import (
     DEFAULT_DATA_DIR,
     DEFAULT_UNIVERSE,
-    auto_universe,
     corpus_symbol_names,
 )
 
@@ -208,23 +207,19 @@ GOAL_PRESETS: dict[str, tuple[str, list[str] | None]] = {
     # pre-2019), VHYL/IDVY de renta y IBGS.AS de colchón. Todo con
     # ≥13 años de histórico local, suficiente para horizontes de ~10-11
     # años (el gate de cobertura reporta si la ventana pide más).
-    "VIVIR_DE_LA_CARTERA": (
-        "static_ew",
-        ["EUNL.DE", "VHYL", "IDVY", "IBGS.AS"],
-    ),
+    # Retorno total "vivir de la cartera" (29-10): universo UCITS EUR por
+    # pantalla AUTOMÁTICA (regla 30-10 del dueño: por defecto TODO el
+    # universo del objetivo, decidido por ventana — nada de listas
+    # clavadas). El acumulador de núcleo (EUNL.DE hace de VWCE pre-2019),
+    # VHYL/IDVY de renta y IBGS.AS de colchón.
+    "VIVIR_DE_LA_CARTERA": ("static_ew", None),
     # Acumulación pura (30-10): la fase ANTES de vivir de la cartera —
-    # núcleo 100% acumulador y cero mangas de renta: sin reparto no hay
-    # IRPF anual, Hacienda espera a que el dueño venda. VWCE no puede
-    # estar en el preset (nació 2019-07 y el run por defecto de 10 años
-    # debe pasar el gate de cobertura): EUNL.DE (mundo, 2009-09) e
-    # IUSQ.DE (ACWI, 2011-10) son los acumuladores con historia, EIMI.MI
-    # (2014-07) aporta el emergente que VWCE llevaría dentro y IBGS.AS
-    # el colchón del drift band. static_ew necesita ≥4 símbolos para
-    # desplegar ~95% (cap del 25% por posición).
-    "ACUMULAR": (
-        "static_ew",
-        ["EUNL.DE", "IUSQ.DE", "EIMI.MI", "IBGS.AS"],
-    ),
+    # mismo principio, TODO el universo del objetivo vía AUTOMÁTICO: la
+    # pantalla decide por ventana quién cubre. En 10 años: EUNL/IUSQ/
+    # EIMI/VHYL/IDVY + IBGS de colchón; en ventanas cortas entran también
+    # VWCE y QDIV (nacen 2019/2018 y sí cubren). Sin reparto no hay IRPF
+    # anual — Hacienda espera a que el dueño venda.
+    "ACUMULAR": ("static_ew", None),
 }
 
 #: objetivo → universo alternativo cuando el horizonte es largo
@@ -539,6 +534,95 @@ def extract_result_metrics(results: dict) -> dict:
         "benchmark_return": inner.get("benchmark_return_pct"),
         "excess_return": inner.get("excess_return_pct"),
         "symbols": [str(s) for s in inner.get("symbols") or []],
+    }
+
+
+def build_fan_chart_option(boot: dict, equity_curve: list | None = None) -> dict:
+    """ECharts fan chart: P5–P95 band, P25–P75 band, median, and the run's
+    REAL path (dashed) — no JS functions (NiceGUI renders them as text),
+    only "{value}" templates."""
+    bands = boot.get("bands") or []
+    if len(bands) != 5:
+        return {}
+    p5, p25, p50, p75, p95 = [[round(float(v), 3) for v in band] for band in bands]
+    n = len(p5)
+    outer = [round(p95[i] - p5[i], 3) for i in range(n)]
+    inner = [round(p75[i] - p25[i], 3) for i in range(n)]
+    years = float(boot.get("horizon_years") or 1)
+    x = [f"{years * i / max(n - 1, 1):.0f}y" for i in range(n)]
+    series = [
+        {
+            "name": "P5",
+            "type": "line",
+            "data": p5,
+            "stack": "outer",
+            "symbol": "none",
+            "lineStyle": {"opacity": 0},
+            "silent": True,
+        },
+        {
+            "name": "Range P5–P95",
+            "type": "line",
+            "data": outer,
+            "stack": "outer",
+            "symbol": "none",
+            "lineStyle": {"opacity": 0},
+            "areaStyle": {"opacity": 0.15},
+            "color": "#3e7d4f",
+        },
+        {
+            "name": "P25",
+            "type": "line",
+            "data": p25,
+            "stack": "inner",
+            "symbol": "none",
+            "lineStyle": {"opacity": 0},
+            "silent": True,
+        },
+        {
+            "name": "Range P25–P75",
+            "type": "line",
+            "data": inner,
+            "stack": "inner",
+            "symbol": "none",
+            "lineStyle": {"opacity": 0},
+            "areaStyle": {"opacity": 0.35},
+            "color": "#3e7d4f",
+        },
+        {
+            "name": "Median",
+            "type": "line",
+            "data": p50,
+            "symbol": "none",
+            "lineStyle": {"width": 2, "color": "#3e7d4f"},
+            "color": "#3e7d4f",
+        },
+    ]
+    if equity_curve:
+        try:
+            vals = [float(p["value"]) if isinstance(p, dict) else float(p[1]) for p in equity_curve]
+            if vals and vals[0] > 0:
+                step = max(1, len(vals) // n)
+                actual = [round(v / vals[0], 3) for v in vals[::step]][:n]
+                series.append(
+                    {
+                        "name": "This run",
+                        "type": "line",
+                        "data": actual,
+                        "symbol": "none",
+                        "lineStyle": {"width": 2, "type": "dashed", "color": "#ab4f3f"},
+                        "color": "#ab4f3f",
+                    }
+                )
+        except (TypeError, ValueError, KeyError, IndexError):
+            pass
+    return {
+        "tooltip": {"trigger": "axis"},
+        "legend": {"top": 0},
+        "grid": {"left": 48, "right": 16, "top": 32, "bottom": 24},
+        "xAxis": {"type": "category", "data": x, "boundaryGap": False},
+        "yAxis": {"type": "value", "scale": True, "axisLabel": {"formatter": "{value}×"}},
+        "series": series,
     }
 
 
@@ -1534,7 +1618,7 @@ def render(
 
                     result_container = ui.column().classes("w-full gap-md")
                     portfolio_container = ui.column().classes("w-full gap-md")
-                    optimizer_container = ui.column().classes("w-full gap-md")
+                    parameters_container = ui.column().classes("w-full gap-md")
 
                     with ui.expansion("Technical detail", icon="terminal").classes("w-full panel"):
                         log = MissionLog()
@@ -1970,28 +2054,23 @@ def render(
                         "No risk adjustment was needed for the selected market conditions."
                     ).classes("help q-mt-sm")
 
-    def render_optimizer_panel() -> None:
-        """4 · TUNE PARAMETERS: optimize, compare, adopt, restore."""
-        optimizer_container.clear()
-        with optimizer_container:
-            with ui.element("div").classes("panel q-pa-md w-full"):
-                ui.label("4 · TUNE PARAMETERS").classes("lbl q-mb-xs")
+    def render_parameters_section() -> None:
+        """Parameter default & history (30-10, user: "quita el optimizador,
+        se tiene que optimizar solo en el backtesting"). The grid search
+        now runs INSIDE every backtest (T4.1) and offers to save better
+        parameters as the default; this section only shows the saved
+        history and lets you restore a previous set."""
+        parameters_container.clear()
+        with parameters_container:
+            with ui.expansion("Parameters — default & history", icon="tune").classes(
+                "w-full panel"
+            ):
                 ui.label(
-                    "Run a grid search over the strategy's parameters with the real "
-                    "engine. If a combination beats the current one, adopt it with "
-                    "one click — every change is saved and reversible."
+                    "Every run searches the strategy's parameter grid inside the "
+                    "backtest itself and offers to save better ones as the default. "
+                    "This is the saved history — restore any previous set."
                 ).classes("help q-mb-sm")
-
-                with ui.row().classes("w-full items-center gap-md no-wrap"):
-                    optimize_button = (
-                        ui.button("Optimize parameters", icon="tune")
-                        .props("color=teal outline dense")
-                        .mark("optimize_button")
-                        .tooltip("Runs a grid search (~1-2 min) on your current config")
-                    )
-                    optimize_status = ui.label("").classes("help")
-                optimize_results = ui.column().classes("w-full gap-sm q-mt-sm")
-                param_history = ui.column().classes("w-full gap-xs q-mt-md")
+                param_history = ui.column().classes("w-full gap-xs")
 
                 async def refresh_param_history() -> None:
                     if store is None:
@@ -2002,9 +2081,13 @@ def render(
                         return
                     param_history.clear()
                     if not sets:
+                        with param_history:
+                            ui.label(
+                                "No saved parameter sets yet — the first run that "
+                                "finds an improvement will offer to save it."
+                            ).classes("help")
                         return
                     with param_history:
-                        ui.label("PARAMETER HISTORY").classes("lbl q-mb-xs")
                         for entry in sets[:8]:
                             with ui.row().classes("w-full items-center no-wrap gap-sm"):
                                 active = "●" if entry["is_active"] else "○"
@@ -2019,120 +2102,16 @@ def render(
                                     restore_btn = ui.button("Restore", icon="history").props(
                                         "flat dense color=teal size=xs"
                                     )
-                                    restore_btn.on_click(
-                                        lambda _, pid=entry["id"]: activate_param_set(pid)
-                                    )
 
-                async def activate_param_set(param_set_id: int) -> None:
-                    if store is None:
-                        return
-                    await store.activate_param_set(param_set_id)
-                    ui.notify("Parameter set restored", type="positive")
-                    await refresh_param_history()
+                                    async def _restore(param_set_id: int = entry["id"]) -> None:
+                                        if store is None:
+                                            return
+                                        await store.activate_param_set(param_set_id)
+                                        ui.notify("Parameter set restored", type="positive")
+                                        await refresh_param_history()
 
-                async def run_optimize() -> None:
-                    if executor is None:
-                        ui.notify("Executor not available.", type="negative")
-                        return
-                    from app.services.agent_swarm.optimizer import optimize as run_grid
+                                    restore_btn.on_click(_restore)
 
-                    optimize_button.disable()
-                    if modo_universo.value in ("auto", "auto-all"):
-                        auto = await asyncio.to_thread(
-                            auto_universe,
-                            goal=objetivo.value,
-                            exhaustive=modo_universo.value == "auto-all",
-                        )
-                        symbols = auto.symbols
-                        estimate = (
-                            "HOURS — every combination over all symbols"
-                            if (modo_universo.value == "auto-all")
-                            else "may take a few minutes"
-                        )
-                        optimize_status.text = (
-                            f"Searching over {len(symbols)} auto-picked symbols "
-                            f"(real engine, {estimate})…"
-                        )
-                    else:
-                        symbols = [str(s).upper() for s in (universo.value or [])] or list(
-                            DEFAULT_UNIVERSE
-                        )
-                        optimize_status.text = (
-                            "Searching… (uses the real engine, may take 1-2 minutes)"
-                        )
-                    start_iso, end_iso = resolve_period(
-                        periodo.value,
-                        custom_start.value,
-                        custom_end.value,
-                        data_window(symbols),
-                    )
-                    try:
-                        result = await asyncio.to_thread(
-                            run_grid,
-                            estrategia.value,
-                            symbols,
-                            start_iso,
-                            end_iso,
-                            Decimal(str(capital.value or 100000)),
-                            12,
-                        )
-                    except Exception as exc:
-                        optimize_button.enable()
-                        optimize_status.text = f"Optimization failed: {exc}"
-                        return
-                    optimize_button.enable()
-                    optimize_status.text = ""
-
-                    optimize_results.clear()
-                    with optimize_results:
-                        with ui.row().classes("w-full gap-md no-wrap items-center"):
-                            _metric_tile("Current return %", result.baseline.get("return_pct"), 0)
-                            _metric_tile("Current Sharpe", result.baseline.get("sharpe"), 0.05)
-                            _metric_tile("Best return %", result.best.get("return_pct"), 0.1)
-                            _metric_tile("Best Sharpe", result.best.get("sharpe"), 0.15)
-                        ui.label(f"Best parameters: {result.best_params}").classes("help")
-                        if result.improved:
-                            ui.label(
-                                "The best combination improves on your current "
-                                "parameters — adopt it?"
-                            ).classes("pstep-name")
-                            adopt_btn = (
-                                ui.button("Adopt best parameters", icon="check_circle")
-                                .props("color=teal dense")
-                                .classes("q-mt-xs")
-                            )
-
-                            async def adopt() -> None:
-                                if store is None:
-                                    ui.notify("Store not available.", type="warning")
-                                    return
-                                await store.save_param_set(
-                                    strategy=result.strategy,
-                                    params=result.best_params,
-                                    metrics={
-                                        "return_pct": str(result.best.get("return_pct", "")),
-                                        "sharpe": str(result.best.get("sharpe", "")),
-                                        "trades": result.best.get("trades"),
-                                    },
-                                    source="optimizer",
-                                    note=f"grid search {result.start}→{result.end}",
-                                    activate=True,
-                                )
-                                ui.notify(
-                                    "Parameters adopted — future runs will use them",
-                                    type="positive",
-                                )
-                                await refresh_param_history()
-
-                            adopt_btn.on_click(adopt)
-                        else:
-                            ui.label(
-                                "Your current parameters are already the best in "
-                                "this search grid — nothing to change."
-                            ).classes("help")
-                    await refresh_param_history()
-
-                optimize_button.on_click(run_optimize)
                 ui.timer(0.1, refresh_param_history, once=True)
 
     def render_result(run: Any) -> None:
@@ -2252,6 +2231,144 @@ def render(
                 if context_bits:
                     ui.label(f"Investor: {' · '.join(context_bits)}").classes("help q-mt-sm")
 
+                # ── RELIABILITY (30-10): the fan, not just the path ─────
+                inner_bt = (results.get("backtest_result") or {}).get("backtest_result") or {}
+                boot = inner_bt.get("bootstrap_analysis")
+                if isinstance(boot, dict) and boot.get("bands"):
+                    ui.label("Reliability — 1,000 alternative histories").classes(
+                        "lbl q-mt-md q-mb-xs"
+                    )
+                    ui.label(
+                        f"We re-shuffled this portfolio's own daily returns "
+                        f"({boot.get('n_paths')} times, one-month blocks) — same market, "
+                        f"different order of events — to see the range of "
+                        f"{boot.get('horizon_years')}-year outcomes."
+                    ).classes("help q-mb-xs")
+                    with ui.row().classes("w-full gap-lg wrap"):
+                        for tile_label, tile_value in (
+                            ("Worst 5% ends at", f"{boot.get('final_p05', 0):.2f}×"),
+                            ("Median ends at", f"{boot.get('final_p50', 0):.2f}×"),
+                            ("Best 5% ends at", f"{boot.get('final_p95', 0):.2f}×"),
+                            ("Chance of loss", f"{boot.get('prob_loss', 0) * 100:.0f}%"),
+                            ("Worst-5% max fall", f"{boot.get('max_dd_p05', 0) * 100:.0f}%"),
+                        ):
+                            with ui.column().classes("gap-xs"):
+                                ui.label(tile_value).classes("help").style(
+                                    "font-size:1.3rem;font-weight:600"
+                                )
+                                ui.label(tile_label).classes("help")
+                    ui.echart(build_fan_chart_option(boot, inner_bt.get("equity_curve"))).props(
+                        "role=img aria-label='Fan chart of bootstrap outcome bands with "
+                        "the median line and this run path'"
+                    ).classes("w-full").style("height: 260px")
+                    # the existing MonteCarloValidator finally judges real data
+                    from app.backtesting.acceptance.monte_carlo_validator import MonteCarloValidator
+
+                    criterion = MonteCarloValidator().validate(boot.get("p5_return"))
+                    ui.label(
+                        f"{'✅' if criterion.passed else '⚠️'} Monte Carlo gate: worst-5% "
+                        f"return {boot.get('p5_return', 0) * 100:+.1f}% vs "
+                        f"{criterion.threshold * 100:.0f}% floor → "
+                        f"{'PASS' if criterion.passed else 'below the floor'}"
+                    ).classes("help q-mt-xs")
+
+                wd = inner_bt.get("withdrawal_analysis")
+                if isinstance(wd, dict):
+                    rate = float(wd.get("withdrawal_rate_annual", 0)) * 100
+                    ui.label(f"If you lived off it — {rate:.0f}% a year").classes(
+                        "lbl q-mt-md q-mb-xs"
+                    )
+                    ui.label(
+                        f"Withdrawing {rate:.0f}% of the starting capital every year for "
+                        f"{wd.get('horizon_years')} years, across {boot.get('n_paths', 1000) if isinstance(boot, dict) else 1000} "
+                        f"alternative sequences: the money runs out before the end in "
+                        f"{float(wd.get('prob_exhausted', 0)) * 100:.0f}% of them; the "
+                        f"median path finishes at {float(wd.get('final_p50', 0)):.2f}× "
+                        f"and the worst 5% at {float(wd.get('final_p05', 0)):.2f}×."
+                    ).classes("help")
+
+                stress = inner_bt.get("stress_analysis")
+                if isinstance(stress, dict) and any(v for v in stress.values()):
+                    ui.label("Stress test — real crashes, this universe").classes(
+                        "lbl q-mt-md q-mb-xs"
+                    )
+                    for stress_label, info in stress.items():
+                        if isinstance(info, dict):
+                            ui.label(
+                                f"{stress_label}: {float(info.get('max_drawdown', 0)) * 100:+.1f}% "
+                                f"worst fall ({float(info.get('total_return', 0)) * 100:+.1f}% "
+                                f"over the episode · {info.get('symbols_used')} symbols with data)"
+                            ).classes("help")
+
+                # ── The REAL portfolio in this same simulation ──────────
+                real_holder = ui.column().classes("w-full")
+
+                async def _load_real_portfolio_card() -> None:
+                    start = getattr(request, "backtest_start", None)
+                    end = getattr(request, "backtest_end", None)
+                    if not start or not end:
+                        real_holder.clear()
+                        return
+                    try:
+                        from app.services.portfolio_management.named_portfolios import (
+                            open_store,
+                            store_path,
+                        )
+
+                        if not store_path("live-ibkr").exists():
+                            real_holder.clear()
+                            return
+                        _engine, real_store = open_store("live-ibkr")
+                        try:
+                            target = await real_store.get_active_target()
+                        finally:
+                            await _engine.dispose()
+                        if not target or not target.holdings:
+                            real_holder.clear()
+                            return
+                        weights = {
+                            h.symbol: float(h.weight) for h in target.holdings if h.weight > 0
+                        }
+                        if not weights:
+                            real_holder.clear()
+                            return
+                        from app.services.backtest_orchestration.reliability import (
+                            portfolio_buyhold,
+                        )
+
+                        sim = await asyncio.to_thread(
+                            portfolio_buyhold, weights, str(start)[:10], str(end)[:10]
+                        )
+                    except Exception:  # noqa: BLE001 - la tarjeta es best-effort
+                        logger.warning("real-portfolio card failed", exc_info=True)
+                        real_holder.clear()
+                        return
+                    if sim is None:
+                        real_holder.clear()
+                        return
+                    real_holder.clear()
+                    with real_holder:
+                        ui.label("Your real portfolio (live-ibkr), same window").classes(
+                            "lbl q-mt-md q-mb-xs"
+                        )
+                        coverage = float(sim.get("weight_covered", 0)) * 100
+                        missing = sim.get("symbols_missing") or []
+                        missing_note = (
+                            f" · {len(missing)} position(s) lack data for this window and stay out"
+                            if missing
+                            else ""
+                        )
+                        ui.label(
+                            f"Buy & hold of your real account weights over "
+                            f"{sim.get('years')} years: "
+                            f"{float(sim.get('total_return', 0)) * 100:+.1f}% "
+                            f"({float(sim.get('cagr', 0)) * 100:+.1f}%/yr) · "
+                            f"worst fall {float(sim.get('max_drawdown', 0)) * 100:.1f}% · "
+                            f"covers {coverage:.0f}% of the portfolio's weight{missing_note}."
+                        ).classes("help")
+
+                ui.timer(0.1, _load_real_portfolio_card, once=True)
+
                 if metrics.get("reasons"):
                     ui.label("Why").classes("lbl q-mt-md q-mb-xs")
                     for reason in metrics["reasons"]:
@@ -2264,16 +2381,58 @@ def render(
                 # A validated run is SENDABLE: named paper portfolio, its own
                 # account, managed and rebalanced on the Portfolio page.
                 if verdict in ("APPROVED", "CONDITIONAL"):
-                    ui.button(
-                        "Send to paper trading…",
-                        icon="rocket_launch",
-                        on_click=lambda: _send_to_paper_dialog(run, results, request),
-                    ).props("unelevated no-caps").classes("run-btn q-mt-md").mark(
-                        "send_to_paper"
-                    ).tooltip(
-                        "Creates a NAMED paper portfolio with these holdings and its "
-                        "own starting cash — your other portfolios are untouched."
+                    with ui.row().classes("q-mt-md gap-sm wrap"):
+                        ui.button(
+                            "Send to paper trading…",
+                            icon="rocket_launch",
+                            on_click=lambda: _send_to_paper_dialog(run, results, request),
+                        ).props("unelevated no-caps").classes("run-btn").mark(
+                            "send_to_paper"
+                        ).tooltip(
+                            "Creates a NAMED paper portfolio with these holdings and its "
+                            "own starting cash — your other portfolios are untouched."
+                        )
+
+                        async def _toggle_saved(r=run) -> None:
+                            if store is None:
+                                return
+                            new_value = not bool(getattr(r, "saved", False))
+                            await store.set_saved(r.run_id, new_value)
+                            r.saved = new_value  # type: ignore[attr-defined]
+                            ui.notify(
+                                "Backtest saved ★ — History & Compare → Saved only"
+                                if new_value
+                                else "Backtest unpinned",
+                                type="positive",
+                            )
+
+                        ui.button(
+                            "★ Save backtest",
+                            icon="star",
+                            on_click=lambda: _toggle_saved(),
+                        ).props("outline no-caps").classes("run-btn").mark("save_backtest").tooltip(
+                            "Pin this passing run — History & Compare filters by saved."
+                        )
+
+                # In-backtest optimization (30-10): the grid search the run
+                # itself performed over this same window and universe.
+                opt = results.get("optimization")
+                if isinstance(opt, dict):
+                    base = opt.get("baseline") or {}
+                    best = opt.get("best") or {}
+                    line = (
+                        f"In-backtest optimization: {opt.get('trials')} parameter "
+                        f"combinations tried on this window — Sharpe "
+                        f"{_as_float(base.get('sharpe')):.2f} with your current "
+                        f"parameters vs {_as_float(best.get('sharpe')):.2f} with the best."
                     )
+                    if opt.get("params_changed"):
+                        line += " The numbers above already use the best combination."
+                    elif opt.get("improved"):
+                        line += " Your saved default already IS the best."
+                    else:
+                        line += " Your current parameters were the best — nothing to change."
+                    ui.label(line).classes("help q-mt-sm")
 
     def _send_to_paper_dialog(run: Any, results: dict, request: Any) -> None:
         from decimal import Decimal as _D
@@ -2381,7 +2540,7 @@ def render(
         chart_container.clear()
         result_container.clear()
         portfolio_container.clear()
-        optimizer_container.clear()
+        parameters_container.clear()
         update_state(None)
 
     def drain_log(events: list, start: int) -> int:
@@ -2391,6 +2550,64 @@ def render(
             index += 1
             log.append(event.timestamp, event.type, format_log_line(event))
         return index
+
+    def _save_params_dialog(run: RunState) -> None:
+        """30-10: the backtest optimized itself and found BETTER
+        parameters than the saved default — ask once whether to make
+        them the default for future runs of this strategy."""
+        opt = (run.results or {}).get("optimization") or {}
+        base = opt.get("baseline") or {}
+        best = opt.get("best") or {}
+        metrics = extract_result_metrics(run.results or {})
+        strategy = str(metrics.get("strategy") or getattr(run, "strategy", "") or "")
+        with ui.dialog() as dialog, ui.card().classes("min-w-[520px]"):
+            ui.label("Better parameters found").classes("text-h6")
+            ui.label(
+                f"Every backtest now searches its parameter grid internally. On this "
+                f"window, {strategy} did better with:"
+            ).classes("help")
+            ui.label(f"{opt.get('best_params')}").classes("term-good")
+            with ui.row().classes("w-full gap-md"):
+                ui.label(
+                    f"Current → Sharpe {_as_float(base.get('sharpe')):.2f}, "
+                    f"return {_as_float(base.get('return_pct')):+,.1f}%"
+                ).classes("help")
+                ui.label(
+                    f"Best → Sharpe {_as_float(best.get('sharpe')):.2f}, "
+                    f"return {_as_float(best.get('return_pct')):+,.1f}%"
+                ).classes("term-good")
+            ui.label(
+                "Save them as the default? Future runs of this strategy start from "
+                "them (and keep optimizing). The full history stays restorable under "
+                "Parameters."
+            ).classes("help")
+            with ui.row().classes("w-full justify-end gap-sm q-mt-md"):
+                ui.button("Keep current", on_click=dialog.close).props("flat no-caps")
+
+                async def _save() -> None:
+                    if store is None:
+                        ui.notify("Store not available.", type="warning")
+                        return
+                    await store.save_param_set(
+                        strategy=strategy,
+                        params=dict(opt.get("best_params") or {}),
+                        metrics={
+                            "return_pct": str(best.get("return_pct", "")),
+                            "sharpe": str(best.get("sharpe", "")),
+                            "trades": best.get("trades"),
+                        },
+                        source="auto-backtest",
+                        note=f"run {run.run_id[-8:]}",
+                        activate=True,
+                    )
+                    ui.notify("Saved as default — future runs will use them", type="positive")
+                    dialog.close()
+                    render_parameters_section()
+
+                ui.button("Save as default", icon="check_circle", on_click=_save).props(
+                    "unelevated no-caps"
+                ).classes("run-btn").mark("save_params_default")
+        dialog.open()
 
     def on_run_finished(run: RunState) -> None:
         good = run.status == "completed"
@@ -2407,7 +2624,12 @@ def render(
         if good:
             render_result(run)
             render_portfolio(run)
-            render_optimizer_panel()
+            render_parameters_section()
+            # in-backtest optimization found better parameters than the
+            # saved default → ask ONCE whether to make them the default
+            opt = (run.results or {}).get("optimization") or {}
+            if opt.get("params_changed"):
+                _save_params_dialog(run)
             option = build_duration_chart_option(run.agents)
             chart_container.clear()
             if option is not None:
@@ -2508,7 +2730,7 @@ def render(
             snapshot.results = rebuilt
             render_result(snapshot)
             render_portfolio(snapshot)
-            render_optimizer_panel()
+            render_parameters_section()
             fx("swarmFX.sounds.complete()")
 
     # ── Keyboard shortcuts ────────────────────────────────────────────────
