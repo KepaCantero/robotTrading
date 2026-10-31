@@ -34,6 +34,7 @@ from app.services.agent_swarm.executor import (
     AgentState,
     SwarmRunRequest,
 )
+from app.services.agent_swarm.investor_profile import active_profile, list_profiles, set_active
 from app.services.agent_swarm.universe_selector import (
     DEFAULT_DATA_DIR,
     DEFAULT_UNIVERSE,
@@ -252,6 +253,15 @@ def preset_for_goal(
     ):
         universe = LONG_HORIZON_UNIVERSES.get(key, universe)
     return strategy_name, universe
+
+
+def period_for_horizon(months: int) -> str:
+    """Wizard horizon (months) → the backtest period key it means."""
+    if months <= 72:
+        return "5y"
+    if months <= 180:
+        return "10y"
+    return "max"
 
 
 DATA_DIR = DEFAULT_DATA_DIR
@@ -1138,8 +1148,13 @@ def _render_step_visual(agent_id: str, payload: Any) -> None:
 def render(
     executor: Capa2PipelineExecutor | None,
     store: SwarmRunStore | None,
+    profiles_path: str | Path | None = None,
 ) -> None:
-    """Render the Agent Swarm pipeline-control page."""
+    """Render the Agent Swarm pipeline-control page.
+
+    ``profiles_path``: where the named investor profiles live (defaults
+    to the app store); pages pass their own for tests.
+    """
     install_fx()
     ui.dark_mode(False)  # light page inside the dark shell
 
@@ -1208,6 +1223,26 @@ def render(
 
                     # ── The three essentials, inline across the page ──
                     with ui.row().classes("w-full items-start gap-lg wrap"):
+                        # Investor profile FIRST: picking one fills the
+                        # rest (goal, period, risk, age, taxes) — profiles
+                        # are created in /start and stored by name.
+                        with ui.column().classes("gap-xs flex-1").style("min-width: 220px"):
+                            _profiles = list_profiles(profiles_path)
+                            profile_select = (
+                                ui.select(
+                                    {"": "None — manual settings"}
+                                    | {p.name: p.name for p in _profiles},
+                                    value="",
+                                    label="Investor profile",
+                                )
+                                .classes("w-full")
+                                .mark("profile_picker")
+                            )
+                            ui.label(
+                                "A saved profile fills everything below with its "
+                                "answers. Create or edit profiles in Start."
+                            ).classes("help")
+
                         with ui.column().classes("gap-xs flex-1").style("min-width: 200px"):
                             capital = ui.number(
                                 "Initial capital (€)",
@@ -1530,6 +1565,33 @@ def render(
                         asyncio.create_task(_run_pipeline(request, run_id))
 
                     run_button.on_click(run_pipeline)
+
+                    def _apply_profile(name: str, notify: bool = True) -> None:
+                        """One saved profile → the whole configuration strip."""
+                        if not name:
+                            set_active(None, profiles_path)
+                            return
+                        profile = next((p for p in _profiles if p.name == name), None)
+                        if profile is None:
+                            return
+                        objetivo.value = profile.objetivo_inversion
+                        periodo.value = period_for_horizon(profile.investment_horizon)
+                        riesgo.value = profile.risk_tolerance.lower()
+                        edad.value = profile.investor_age
+                        provincia.value = profile.tax_province
+                        _apply_goal_preset()
+                        set_active(profile.name, profiles_path)
+                        if notify:
+                            ui.notify(f"Profile “{name}” applied.")
+
+                    profile_select.on_value_change(lambda e: _apply_profile(e.value))
+
+                    # The ACTIVE profile (chosen last) is the default
+                    # configuration — the app remembers the owner's pick.
+                    _active = active_profile(profiles_path)
+                    if _active is not None and any(p.name == _active.name for p in _profiles):
+                        profile_select.value = _active.name
+                        _apply_profile(_active.name, notify=False)
 
                 # ── 2 · What is happening + result ───────────────────────
                 with ui.column().classes("w-full gap-md"):
@@ -2286,7 +2348,9 @@ def render(
 
                 # A validated run is SENDABLE: named paper portfolio, its own
                 # account, managed and rebalanced on the Portfolio page.
-                if verdict in ("APPROVED", "CONDITIONAL"):
+                # FIX 3 (31-10): binary verdicts — only APPROVED is sendable;
+                # CONDITIONAL is retired as a status.
+                if verdict == "APPROVED":
                     with ui.row().classes("q-mt-md gap-sm wrap"):
                         ui.button(
                             "Send to paper trading…",

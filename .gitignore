@@ -153,3 +153,6 @@ data/import/
 
 # Investor profile saved by the /start wizard (user answers, runtime)
 investor_profile.json
+
+# Named investor profiles (wizard runtime state)
+investor_profiles.json

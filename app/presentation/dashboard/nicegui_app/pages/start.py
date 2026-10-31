@@ -1,11 +1,10 @@
-"""UI-1 — /start: the 5-question wizard that SAVES your investor profile.
+"""UI-1 — /start: the 5-question wizard behind NAMED investor profiles.
 
-A complete novice answers five plain-English questions ONCE; the profile
-is persisted (investor_profile.json) and becomes the default everywhere.
-Portfolio building, validation and the honest numbers live in Mission
-Control (/swarm) — owner decision 31-10: /start captures the profile,
-the swarm agents use it as their default and show the portfolio. There
-is exactly one place that shows portfolios.
+The owner answers five plain questions once per profile and names it
+("Conservative", "Retirement", …) — several can coexist (product rule:
+anything account-like is plural and user-named). Mission Control (/swarm)
+lists the saved profiles and applies the chosen one as the run
+configuration; /start is only where profiles are created and edited.
 """
 
 from __future__ import annotations
@@ -16,11 +15,14 @@ from typing import Any
 from nicegui import ui
 
 from app.presentation.dashboard.nicegui_app import design_system as ds
-from app.presentation.dashboard.nicegui_app.pages.swarm import SPANISH_PROVINCES
+from app.presentation.dashboard.nicegui_app.pages.swarm import OBJECTIVES, SPANISH_PROVINCES
 from app.services.agent_swarm.investor_profile import (
     InvestorProfile,
-    load_investor_profile,
-    save_investor_profile,
+    delete_profile,
+    get_profile,
+    list_profiles,
+    save_profile,
+    set_active,
 )
 
 #: plain-English narration per pipeline stage. /start itself no longer
@@ -44,43 +46,57 @@ HORIZON_WINDOWS = {
     "5–10 years": ("10y", 120),
     "10+ years": ("max", 240),
 }
-RISK_OPTIONS = {"Cautious": "BAJO", "Balanced": "MEDIO", "Adventurous": "ALTO"}
+RISK_OPTIONS = {"Low": "BAJO", "Medium": "MEDIO", "High": "ALTO"}
 AGE_OPTIONS = {"Under 35": 30, "35–50": 42, "50–65": 57, "Over 65": 70}
-#: every objective Mission Control can run, in novice words — ACUMULAR
-#: first because it is the owner-decreed default (31-10). The wizard
-#: must never offer less than /swarm ("faltan opciones", 31-10).
-GOAL_OPTIONS = {
-    "Accumulate — reinvest everything": "ACUMULAR",
-    "Live off it one day": "VIVIR_DE_LA_CARTERA",
-    "Grow it over time": "BALANCED_GROWTH",
-    "Grow capital as much as possible": "MAXIMIZAR_CAPITAL",
-    "Monthly income (dividends)": "MAXIMIZAR_DIVIDENDOS",
-    "Generate income": "INCOME_GENERATION",
-    "Keep my money safe": "CAPITAL_PRESERVATION",
-}
+
+#: the SAME objectives Mission Control runs, same labels (no drift), with
+#: the owner-decreed default first (31-10). The wizard must never offer
+#: less than /swarm ("faltan opciones", 31-10).
+_GOAL_ORDER = (
+    "ACUMULAR",
+    "VIVIR_DE_LA_CARTERA",
+    "BALANCED_GROWTH",
+    "MAXIMIZAR_CAPITAL",
+    "MAXIMIZAR_DIVIDENDOS",
+    "INCOME_GENERATION",
+    "CAPITAL_PRESERVATION",
+)
+GOAL_OPTIONS = {key: OBJECTIVES[key] for key in _GOAL_ORDER}
 
 #: value → label, so a SAVED profile redisplays as the answers the user
 #: picked (the wizard writes values, humans read labels).
 _AGE_LABEL = {v: k for k, v in AGE_OPTIONS.items()}
-_RISK_LABEL = {v: k for k, v in RISK_OPTIONS.items()}
-_GOAL_LABEL = {v: k for k, v in GOAL_OPTIONS.items()}
 _HORIZON_LABEL = {months: label for label, (_, months) in HORIZON_WINDOWS.items()}
 
 
-def render(profile_path: str | Path | None = None) -> None:
-    """Render the wizard.
+def _profile_summary(profile: InvestorProfile) -> str:
+    """One sober line per profile: what Mission Control would run."""
+    return " · ".join(
+        (
+            GOAL_OPTIONS.get(profile.objetivo_inversion, profile.objetivo_inversion),
+            _HORIZON_LABEL.get(profile.investment_horizon, f"{profile.investment_horizon // 12}y"),
+            {v: k for k, v in RISK_OPTIONS.items()}.get(
+                profile.risk_tolerance, profile.risk_tolerance
+            ),
+            profile.tax_province,
+            f"age {profile.investor_age}",
+        )
+    )
 
-    The five answers are PERSISTED — the saved profile is the default
-    config for Mission Control (/swarm), where portfolios are now built
-    and validated. Before 31-10 the wizard also ran the pipeline itself
-    ("Show my portfolio"); that moved to the swarm agents.
+
+def render(profiles_path: str | Path | None = None) -> None:
+    """Render the profile manager + wizard.
+
+    The five answers are persisted under a NAME — Mission Control lists
+    the saved profiles and applies the chosen one. Before 31-10 the page
+    also ran the pipeline itself ("Show my portfolio"); that lives in
+    /swarm now, one single place that shows portfolios.
     """
     ds.inject()
     ui.add_head_html(
         "<style>body { background: var(--ds-bg); font-family: var(--ds-font); "
         "color: var(--ds-text); }</style>"
     )
-    saved = load_investor_profile(profile_path)
     answers: dict[str, Any] = {
         "age": None,
         "horizon": None,
@@ -103,55 +119,113 @@ def render(profile_path: str | Path | None = None) -> None:
 
     with ui.column().classes("w-full max-w-[1040px] mx-auto p-8 gap-6"):
         ds.section_heading(
-            "Your investor profile",
-            "Five simple questions — no jargon, nothing to install. "
-            "Save once: Mission Control builds and tests your portfolio "
-            "from this profile, fees included.",
+            "Investor profiles",
+            "Answer five questions, name the profile, save. Keep as many as "
+            "you need — Mission Control runs any of them.",
         )
 
-        # ── the 5 question cards ─────────────────────────────────────
-        with ui.grid(columns=2).classes("gap-4 w-full"):
-            with ds.card(title="1 · How old are you?").classes("ds-card--hover ds-enter"):
-                for label, age in AGE_OPTIONS.items():
-                    _option("age", age, label)
-            with ds.card(title="2 · How long until you need it?").classes(
-                "ds-card--hover ds-enter"
-            ):
-                for label in HORIZON_WINDOWS:
-                    _option("horizon", label, label)
-            with ds.card(title="3 · How do you feel about falls?"):
-                t3 = ds.eli5_tooltip(
-                    ui.label(
-                        "A fall means your portfolio temporarily loses value before it recovers."
-                    ).style("font-size:var(--ds-small-size);color:var(--ds-text_soft)"),
-                    "Market fall",
-                    "Prices go down sometimes. Cautious portfolios fall less but "
-                    "grow slower; adventurous ones fall harder but usually grow more.",
-                )
-                del t3
-                for label, value in RISK_OPTIONS.items():
-                    _option("risk", value, label)
-            with ds.card(title="4 · Where do you pay taxes?"):
-                ui.select(
-                    {p: p for p in SPANISH_PROVINCES},
-                    value=(
-                        saved.tax_province
-                        if saved and saved.tax_province in SPANISH_PROVINCES
-                        else "Madrid"
-                    ),
-                    label="Province",
-                    on_change=lambda e: _pick("province", e.value, e.value),
-                ).classes("w-full")
-            with ds.card(title="5 · What is the money for?").classes("col-span-2"):
-                with ui.row().classes("gap-4 flex-wrap"):
-                    for label, goal in GOAL_OPTIONS.items():
-                        _option("goal", goal, label)
+        # ── saved profiles ───────────────────────────────────────────
+        with ds.card(title="Saved profiles").classes("w-full"):
+            profiles_holder = ui.column().classes("w-full gap-2")
+
+        def _refresh_profiles() -> None:
+            profiles_holder.clear()
+            with profiles_holder:
+                profiles = list_profiles(profiles_path)
+                if not profiles:
+                    ds.empty_state(
+                        "No profiles yet — answer the questions below and save your first one.",
+                        icon="🗂",
+                    )
+                    return
+                for p in profiles:
+                    with ui.row().classes("w-full items-center gap-4 no-wrap"):
+                        with ui.column().classes("gap-1 flex-1").style("min-width:0"):
+                            ui.label(p.name).style(
+                                "font-size:15px;font-weight:600;color:var(--ds-text)"
+                            )
+                            ui.label(_profile_summary(p)).style(
+                                "color:var(--ds-text_soft);font-size:var(--ds-small-size)"
+                            )
+                        ui.button(
+                            "Load",
+                            on_click=lambda name=p.name: _load(name),
+                        ).props("flat dense no-caps").mark(f"load_{p.name}")
+                        ui.button(
+                            icon="delete",
+                            on_click=lambda name=p.name: _confirm_delete(name),
+                        ).props("flat dense round").mark(f"delete_{p.name}").tooltip(
+                            "Delete this profile"
+                        )
+
+        pending_delete: dict[str, str | None] = {"name": None}
+        delete_dialog = ui.dialog()
+        with delete_dialog:
+            with ui.card().classes("p-6"):
+                delete_label = ui.label("Delete this profile?")
+                with ui.row().classes("gap-4"):
+                    ui.button("Cancel", on_click=delete_dialog.close).props("flat no-caps")
+                    ui.button("Delete", on_click=lambda: _do_delete()).mark("confirm_delete")
+
+        def _confirm_delete(name: str) -> None:
+            pending_delete["name"] = name
+            delete_label.text = f"Delete profile “{name}”?"
+            delete_dialog.open()
+
+        def _do_delete() -> None:
+            delete_dialog.close()
+            name = pending_delete.get("name")
+            pending_delete["name"] = None
+            if not name:
+                return
+            delete_profile(name, profiles_path)
+            status.text = f"Profile “{name}” deleted."
+            _refresh_profiles()
+
+        # ── the wizard: five questions + name + save ─────────────────
+        with ds.card(title="Your answers").classes("w-full"):
+            name_input = (
+                ui.input("Profile name", validation={"Too long": lambda v: len(v) <= 40})
+                .props("dense outlined clearable")
+                .mark("profile_name")
+            )
+            ui.label("A name you will recognise in Mission Control.").style(
+                "color:var(--ds-text_soft);font-size:var(--ds-small-size)"
+            )
+            with ui.grid(columns=2).classes("gap-4 w-full q-mt-md"):
+                with ds.card(title="1 · Age", alt=True):
+                    for label, age in AGE_OPTIONS.items():
+                        _option("age", age, label)
+                with ds.card(title="2 · Time horizon", alt=True):
+                    for label in HORIZON_WINDOWS:
+                        _option("horizon", label, label)
+                with ds.card(title="3 · Risk tolerance", alt=True):
+                    t3 = ds.eli5_tooltip(
+                        ui.label(
+                            "A fall means the portfolio temporarily loses value before it recovers."
+                        ).style("font-size:var(--ds-small-size);color:var(--ds-text_soft)"),
+                        "Market fall",
+                        "Prices go down sometimes. Low-risk portfolios fall less "
+                        "but grow slower; high-risk ones fall harder but usually "
+                        "grow more.",
+                    )
+                    del t3
+                    for label, value in RISK_OPTIONS.items():
+                        _option("risk", value, label)
+                with ds.card(title="4 · Tax residence", alt=True):
+                    ui.select(
+                        {p: p for p in SPANISH_PROVINCES},
+                        value="Madrid",
+                        label="Province",
+                        on_change=lambda e: _pick("province", e.value, e.value),
+                    ).classes("w-full")
+                with ds.card(title="5 · Objective", alt=True).classes("col-span-2"):
+                    with ui.row().classes("gap-4 flex-wrap"):
+                        for value, label in GOAL_OPTIONS.items():
+                            _option("goal", value, label)
 
         status = ui.label("").style("color:var(--ds-teal_deep);font-weight:600")
-        go = ds.button("Save my profile →", on_click=lambda: _save()).mark("save_profile")
-
-        # ── the saved profile, always visible once it exists ─────────
-        summary = ui.column().classes("w-full gap-6")
+        ds.button("Save profile", on_click=lambda: _save()).mark("save_profile")
 
         def _pick(key: str, value, _label: str, _btn=None) -> None:
             answers[key] = value
@@ -164,91 +238,54 @@ def render(profile_path: str | Path | None = None) -> None:
         def _refresh_status() -> None:
             filled = sum(1 for k in ("age", "horizon", "risk", "goal") if answers[k])
             status.text = (
-                f"{filled}/4 key questions answered"
-                if filled < 4
-                else "Ready — saving takes one click."
+                f"{filled}/4 key questions answered" if filled < 4 else "All questions answered."
             )
 
-        def _save() -> None:
-            missing = [k for k in ("age", "horizon", "risk", "goal") if not answers[k]]
-            if missing:
-                status.text = "Answer the four key questions first (province defaults to Madrid)."
+        def _load(name: str) -> None:
+            profile = get_profile(name, profiles_path)
+            if profile is None:
+                status.text = f"Profile “{name}” no longer exists."
+                _refresh_profiles()
                 return
-            profile = InvestorProfile(
-                investor_age=int(answers["age"]),
-                investment_horizon=HORIZON_WINDOWS[answers["horizon"]][1],
-                risk_tolerance=str(answers["risk"]),
-                tax_province=str(answers["province"]),
-                objetivo_inversion=str(answers["goal"]),
-            )
-            save_investor_profile(profile, profile_path)
-            status.text = "Saved — Mission Control will use this as your default."
-            go.set_text("Update my profile →")
-            summary.clear()
-            with summary:
-                _summary_card(profile)
-
-        def _summary_card(profile: InvestorProfile) -> None:
-            with ds.card(title="Your saved investor profile").classes("w-full ds-enter"):
-                rows = [
-                    ("Age", _AGE_LABEL.get(profile.investor_age, f"{profile.investor_age} years")),
-                    (
-                        "Horizon",
-                        _HORIZON_LABEL.get(
-                            profile.investment_horizon,
-                            f"{profile.investment_horizon // 12} years",
-                        ),
-                    ),
-                    (
-                        "Stomach for falls",
-                        _RISK_LABEL.get(profile.risk_tolerance, profile.risk_tolerance),
-                    ),
-                    ("Taxes in", profile.tax_province),
-                    (
-                        "Goal",
-                        _GOAL_LABEL.get(profile.objetivo_inversion, profile.objetivo_inversion),
-                    ),
-                ]
-                with ui.row().classes("gap-8 flex-wrap items-end"):
-                    for label, value_ in rows:
-                        with ui.column().classes("gap-1"):
-                            ui.label(value_).style(
-                                "font-size:20px;font-weight:700;color:var(--ds-teal_deep)"
-                            )
-                            ui.label(label).style(
-                                "color:var(--ds-text_soft);font-size:var(--ds-small-size)"
-                            )
-                ui.label(
-                    f"Saved {profile.updated_at:%d %b %Y, %H:%M}. Mission Control (/swarm) "
-                    "builds and validates your portfolio from this profile — "
-                    "nothing to answer again."
-                ).style("color:var(--ds-text_soft);font-size:var(--ds-small-size);margin-top:12px")
-                ds.button(
-                    "Build my portfolio in Mission Control →",
-                    on_click=lambda: ui.navigate.to("/swarm"),
-                ).mark("go_swarm")
-
-        # ── first paint: a saved profile preselects its answers ──────
-        if saved is not None:
             answers.update(
                 {
-                    "age": saved.investor_age,
-                    "horizon": _HORIZON_LABEL.get(saved.investment_horizon),
-                    "risk": saved.risk_tolerance,
-                    "province": saved.tax_province,
-                    "goal": saved.objetivo_inversion,
+                    "age": profile.investor_age,
+                    "horizon": _HORIZON_LABEL.get(profile.investment_horizon),
+                    "risk": profile.risk_tolerance,
+                    "province": profile.tax_province,
+                    "goal": profile.objetivo_inversion,
                 }
             )
             for key, pairs in option_buttons.items():
                 for value, b in pairs:
                     if answers[key] is not None and value == answers[key]:
                         b.classes(add="ds-option--selected")
-            if all(answers[k] for k in ("age", "horizon", "risk", "goal")):
-                status.text = "Profile loaded — change anything and save again."
-                go.set_text("Update my profile →")
-                with summary:
-                    _summary_card(saved)
-            else:  # saved outside the wizard's options → answer what's missing
-                _refresh_status()
-        else:
-            _refresh_status()
+                    else:
+                        b.classes(remove="ds-option--selected")
+            name_input.value = profile.name
+            status.text = f"Editing “{profile.name}” — all questions pre-filled."
+
+        def _save() -> None:
+            missing = [k for k in ("age", "horizon", "risk", "goal") if not answers[k]]
+            if missing:
+                status.text = "Answer the four key questions first (province defaults to Madrid)."
+                return
+            name = (name_input.value or "").strip()
+            if not name:
+                status.text = "Give the profile a name before saving."
+                return
+            profile = InvestorProfile(
+                name=name,
+                investor_age=int(answers["age"]),
+                investment_horizon=HORIZON_WINDOWS[answers["horizon"]][1],
+                risk_tolerance=str(answers["risk"]),
+                tax_province=str(answers["province"]),
+                objetivo_inversion=str(answers["goal"]),
+            )
+            save_profile(profile, profiles_path)
+            set_active(profile.name, profiles_path)  # newest intent wins in /swarm
+            status.text = f"Profile “{name}” saved."
+            _refresh_profiles()
+
+        _refresh_profiles()
+        _refresh_status()
