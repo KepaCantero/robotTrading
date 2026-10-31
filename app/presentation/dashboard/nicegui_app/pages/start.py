@@ -47,7 +47,11 @@ HORIZON_WINDOWS = {
     "10+ years": ("max", 240),
 }
 RISK_OPTIONS = {"Low": "BAJO", "Medium": "MEDIO", "High": "ALTO"}
-AGE_OPTIONS = {"Under 35": 30, "35–50": 42, "50–65": 57, "Over 65": 70}
+#: FIX 5 (owner 31-10): PERFIL 45 — la edad por defecto del wizard. La banda
+#: 35–50 lleva 45 como representante y viene PRESELECCIONADA: quien no toca
+#: nada guarda el perfil del owner (45 años).
+AGE_OPTIONS = {"Under 35": 30, "35–50": 45, "50–65": 57, "Over 65": 70}
+DEFAULT_AGE = 45
 
 #: the SAME objectives Mission Control runs, same labels (no drift), with
 #: the owner-decreed default first (31-10). The wizard must never offer
@@ -98,7 +102,7 @@ def render(profiles_path: str | Path | None = None) -> None:
         "color: var(--ds-text); }</style>"
     )
     answers: dict[str, Any] = {
-        "age": None,
+        "age": DEFAULT_AGE,  # PERFIL 45: preselected, changeable in one click
         "horizon": None,
         "risk": None,
         "province": "Madrid",
@@ -195,7 +199,9 @@ def render(profiles_path: str | Path | None = None) -> None:
             with ui.grid(columns=2).classes("gap-4 w-full q-mt-md"):
                 with ds.card(title="1 · Age", alt=True):
                     for label, age in AGE_OPTIONS.items():
-                        _option("age", age, label)
+                        b = _option("age", age, label)
+                        if age == DEFAULT_AGE:
+                            b.classes(add="ds-option--selected")
                 with ds.card(title="2 · Time horizon", alt=True):
                     for label in HORIZON_WINDOWS:
                         _option("horizon", label, label)
