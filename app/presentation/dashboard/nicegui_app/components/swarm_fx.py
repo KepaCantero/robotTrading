@@ -252,7 +252,7 @@ body:has(.light-sheet) .q-separator { background: var(--line); }
   outline-offset: 2px;
   border-radius: 6px;
 }
-.doc-tile:focus-visible, .desk-hit:focus-visible, .pnode:focus-visible {
+.doc-tile:focus-visible, .pnode:focus-visible {
   outline: 2px solid var(--run);
   outline-offset: 2px;
 }

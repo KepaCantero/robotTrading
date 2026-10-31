@@ -15,7 +15,6 @@ from nicegui.testing import User
 
 from app.presentation.dashboard.nicegui_app.pages import swarm
 from app.services.agent_swarm import Capa2PipelineExecutor
-from app.services.agent_swarm.executor import AGENT_SPECS
 
 
 @pytest.fixture
@@ -171,16 +170,5 @@ async def test_accessibility_basics(user: User, register_page):
 
     await user.should_see("Replay last")
 
-    desk = next(iter(user.find(marker="office_desk_t41").elements))
-    assert "Simulate the strategy" in str(desk.props.get("aria-label", ""))
-
-
-async def test_office_scene_has_ten_clickable_desks(user: User, register_page):
-    """The animated office floor exposes one clickable hit-area per worker."""
-    await user.open("/swarm-test")
-
-    desks = [user.find(marker=f"office_desk_{spec.agent_id}").elements for spec in AGENT_SPECS]
-    assert all(len(elements) == 1 for elements in desks)
-
-    user.find(marker="office_desk_t41").click()
-    await user.should_see("Step T4.1 Backtest Orchestrator")
+    # Theme v2 (31-10): the office scene is gone; the mission rail nodes
+    # carry the same keyboard/aria contract (covered above).

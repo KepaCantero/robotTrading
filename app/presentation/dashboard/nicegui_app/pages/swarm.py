@@ -25,8 +25,7 @@ from typing import TYPE_CHECKING, Any
 from nicegui import ui
 
 from app.presentation.dashboard.nicegui_app import design_system as ds
-from app.presentation.dashboard.nicegui_app.components.agent_card import StepTrack
-from app.presentation.dashboard.nicegui_app.components.office_scene import OfficeScene
+from app.presentation.dashboard.nicegui_app.components.mission_flow import MissionFlow
 from app.presentation.dashboard.nicegui_app.components.swarm_fx import install as install_fx
 from app.services.agent_swarm.executor import (
     AGENT_SPECS,
@@ -1175,7 +1174,7 @@ def render(
         except Exception:  # noqa: BLE001 - FX must never break the page
             logger.debug("FX script failed", exc_info=True)
 
-    track: StepTrack | None = None
+    track: MissionFlow | None = None
 
     with ui.column().classes("w-full"):
         with ui.element("div").classes("light-sheet w-full"):
@@ -1627,9 +1626,9 @@ def render(
                     with ui.element("div").classes("panel q-pa-md"):
                         ui.label("2 · WHAT IS HAPPENING").classes("lbl q-mb-xs")
                         ui.label(
-                            "Each step runs a real component of the system — the team "
-                            "below executes it live. Click any worker or step to see "
-                            "exactly what went in and what came out."
+                            "Watch the pipeline work in real time — every step is a real "
+                            "component of the system. Click any step to see exactly what "
+                            "went in and what came out."
                         ).classes("help q-mb-sm")
                         with ui.row().classes("gap-xs wrap q-mb-sm"):
                             for chip in (
@@ -1638,8 +1637,9 @@ def render(
                                 "€0 — nothing is bought",
                             ):
                                 ui.label(chip).classes("hotkey-hint")
-                        office = OfficeScene(on_click=lambda aid: open_details(aid))
-                        track = StepTrack(on_click=lambda aid: open_details(aid))
+                        # Theme v2 (owner 31-10: 'lo veo aburrido'): the live
+                        # mission strip replaces the office scene + plain rail.
+                        track = MissionFlow(on_click=lambda aid: open_details(aid))
 
                     result_container = ui.column().classes("w-full gap-md")
                     portfolio_container = ui.column().classes("w-full gap-md")
@@ -1663,13 +1663,12 @@ def render(
                                     except Exception:
                                         logger.exception("Failed to list swarm runs")
                                         return
-                                    replay_select.options = [
-                                        {
-                                            "label": (f"{r['started_at'][:16]} · {r['status']}"),
-                                            "value": r["workflow_id"],
-                                        }
+                                    # dict options — a list of dicts renders
+                                    # "[object Object]" in the dropdown (31-10)
+                                    replay_select.options = {
+                                        r["workflow_id"]: f"{r['started_at'][:16]} · {r['status']}"
                                         for r in runs
-                                    ]
+                                    }
                                     replay_select.update()
                                     if runs:
                                         view["last_run_id"] = runs[0]["workflow_id"]
@@ -2496,7 +2495,6 @@ def render(
     # ── View updates ──────────────────────────────────────────────────────
 
     def refresh_cards() -> None:
-        office.update(view["states"])
         if track is not None:
             track.update(view["states"])
 
@@ -2504,7 +2502,6 @@ def render(
         view["states"] = fresh_states()
         view["finished_shown"] = False
         view["failure"] = None
-        office.update(view["states"])
         if track is not None:
             track.update(view["states"])
         result_container.clear()
