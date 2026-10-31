@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING, Any
 from nicegui import ui
 
 from app.presentation.dashboard.nicegui_app import design_system as ds
+from app.presentation.dashboard.nicegui_app.components.swarm_fx import install as install_fx
 from app.presentation.dashboard.nicegui_app.pages.swarm import extract_result_metrics
 from app.presentation.dashboard.nicegui_app.theme import COLORS
 
@@ -131,9 +132,27 @@ def _build_runs_table(store: SwarmRunStore | None) -> tuple[ui.table, ui.switch,
         {"name": "goal", "label": "Goal", "field": "goal", "align": "left"},
         {"name": "strategy", "label": "Strategy", "field": "strategy", "align": "left"},
         {"name": "universe", "label": "Universe", "field": "universe", "align": "left"},
-        {"name": "return", "label": "Return", "field": "return", "align": "right"},
-        {"name": "sharpe", "label": "Sharpe", "field": "sharpe", "align": "right"},
-        {"name": "drawdown", "label": "Max DD", "field": "drawdown", "align": "right"},
+        {
+            "name": "return",
+            "label": "Return",
+            "field": "return",
+            "align": "right",
+            "classes": "text-weight-medium",
+        },
+        {
+            "name": "sharpe",
+            "label": "Sharpe",
+            "field": "sharpe",
+            "align": "right",
+            "classes": "text-weight-medium",
+        },
+        {
+            "name": "drawdown",
+            "label": "Max DD",
+            "field": "drawdown",
+            "align": "right",
+            "classes": "text-weight-medium",
+        },
         {"name": "verdict", "label": "Verdict", "field": "verdict", "align": "center"},
     ]
     only_passing = ui.switch("Only passing (APPROVED / CONDITIONAL)", value=False)
@@ -145,6 +164,20 @@ def _build_runs_table(store: SwarmRunStore | None) -> tuple[ui.table, ui.switch,
         row_key="run_id",
         pagination={"rowsPerPage": 15},
     ).classes("w-full")
+    # Verdict as a quiet badge: sage pass / honey conditional / terracotta
+    # fail — the page's one glance of state, consistent with Mission Control.
+    table.add_slot(
+        "body-cell-verdict",
+        """
+        <q-badge
+            outline
+            :color="props.row.verdict === 'APPROVED' ? 'positive'
+                  : (props.row.verdict === 'CONDITIONAL' ? 'warning'
+                  : (props.row.verdict === 'RUNNING' ? 'grey-6' : 'negative'))"
+            :label="props.row.verdict"
+        />
+        """,
+    )
 
     async def _refresh() -> None:
         if store is None or not store.is_initialized:
@@ -196,8 +229,17 @@ def _build_comparison_section(store: SwarmRunStore | None) -> None:
     ui.label("Compare Runs").classes("text-h6 q-mt-lg q-mb-md")
 
     diff_container: ui.column = ui.column().classes("w-full q-mt-md")
-    select_a = ui.select(options=[], with_input=True, label="Run A").classes("min-w-[300px]")
-    select_b = ui.select(options=[], with_input=True, label="Run B").classes("min-w-[300px]")
+    with ui.row().classes("w-full items-start gap-md wrap"):
+        select_a = (
+            ui.select(options={}, with_input=True, label="Run A")
+            .classes("min-w-[300px] flex-1")
+            .mark("compare_run_a")
+        )
+        select_b = (
+            ui.select(options={}, with_input=True, label="Run B")
+            .classes("min-w-[300px] flex-1")
+            .mark("compare_run_b")
+        )
 
     async def _load_options() -> None:
         if store is None or not store.is_initialized:
@@ -207,17 +249,19 @@ def _build_comparison_section(store: SwarmRunStore | None) -> None:
         except Exception:
             logger.exception("Failed to load runs for comparison")
             return
-        options = []
+        # Options as a value→label DICT: a list of {label, value} dicts
+        # renders "[object Object]" in the dropdown (31-10).
+        options: dict[str, str] = {}
         for run in runs:
             s = _summarize(run)
-            options.append(
-                {
-                    "label": f"{s['date']} · {s['goal']} · {s['strategy']} · {s['verdict']}",
-                    "value": s["run_id"],
-                }
-            )
+            options[s["run_id"]] = f"{s['date']} · {s['goal']} · {s['strategy']} · {s['verdict']}"
         select_a.options = options
         select_b.options = options
+        # Zero-config compare: the two most recent runs preselected, so
+        # "Compare" works on arrival.
+        ids = list(options)
+        if len(ids) >= 2 and not select_a.value and not select_b.value:
+            select_a.value, select_b.value = ids[0], ids[1]
         select_a.update()
         select_b.update()
 
@@ -240,7 +284,7 @@ def _build_comparison_section(store: SwarmRunStore | None) -> None:
         with diff_container:
             with ui.element("div").classes("panel q-pa-md w-full"):
                 ui.label("Comparison Results").classes("text-h6 q-mb-md")
-                ui.table(
+                compare_table = ui.table(
                     columns=[
                         {"name": "metric", "label": "Metric", "field": "metric", "align": "left"},
                         {"name": "run_a", "label": "Run A", "field": "run_a", "align": "right"},
@@ -250,10 +294,19 @@ def _build_comparison_section(store: SwarmRunStore | None) -> None:
                             "label": "Delta (B−A)",
                             "field": "delta",
                             "align": "right",
+                            "classes": "text-weight-medium",
                         },
                     ],
                     rows=_compare_rows(run_a, run_b),
                 ).classes("w-full")
+                # Delta in the row's own profit/loss colour — the number
+                # that answers "which one won?" at a glance.
+                compare_table.add_slot(
+                    "body-cell-delta",
+                    """
+                    <span :style="{ color: props.row.color }">{{ props.row.delta }}</span>
+                    """,
+                )
 
     with ui.row().classes("w-full items-center gap-lg"):
         ui.button("Compare", icon="compare").props("unelevated no-caps").classes("run-btn").mark(
@@ -288,7 +341,7 @@ def _build_portfolio_lab() -> None:
         "load one of your saved portfolios, choose a window, and simulate it: "
         "buy & hold with real local data, 1,000 alternative orderings, "
         "withdrawal survival and real-crash replays."
-    ).classes("text-grey q-mb-md")
+    ).classes("help q-mb-md")
 
     periods = {"6m": 183, "1y": 365, "2y": 730, "5y": 1825, "10y": 3650}
     presets: dict[str, str] = {}
@@ -482,30 +535,36 @@ def _build_portfolio_lab() -> None:
 
 def render(store: SwarmRunStore | None) -> None:
     """Render the History & Compare page over the swarm run store."""
-    with ui.column().classes("w-full q-pa-lg"):
-        ds.section_heading(
-            "History & Compare", "Every past run, side by side — the honest memory of the robot."
-        )
-        ui.label(
-            "Every run you make lands here automatically. Click a passing run to "
-            "pin it ★ as a saved backtest; compare any two below."
-        ).classes("text-grey q-mb-lg")
-
-        if store is None:
+    # The page borrows the Mission Control skin (panel/run-btn/help): without
+    # this inject every class fell back to bare Quasar — the 'penosa' look.
+    install_fx()
+    ui.dark_mode(False)
+    with ui.element("div").classes("light-sheet w-full"):
+        with ui.column().classes("w-full"):
+            ds.section_heading(
+                "History & Compare",
+                "Every past run, side by side — the honest memory of the robot.",
+            )
             ui.label(
-                "Run storage is not available in this session — restart the dashboard."
-            ).classes("help")
-            return
+                "Every run you make lands here automatically. Click a passing run to "
+                "pin it ★ as a saved backtest; compare any two below."
+            ).classes("help q-mb-lg")
 
-        with ui.element("div").classes("panel q-pa-md w-full"):
-            _build_runs_table(store)
+            if store is None:
+                ui.label(
+                    "Run storage is not available in this session — restart the dashboard."
+                ).classes("help")
+                return
 
-        ui.separator().classes("q-mt-lg q-mb-lg")
+            with ui.element("div").classes("panel q-pa-md w-full"):
+                _build_runs_table(store)
 
-        with ui.element("div").classes("panel q-pa-md w-full"):
-            _build_comparison_section(store)
+            ui.separator().classes("q-mt-lg q-mb-lg")
 
-        ui.separator().classes("q-mt-lg q-mb-lg")
+            with ui.element("div").classes("panel q-pa-md w-full"):
+                _build_comparison_section(store)
 
-        with ui.element("div").classes("panel q-pa-md w-full"):
-            _build_portfolio_lab()
+            ui.separator().classes("q-mt-lg q-mb-lg")
+
+            with ui.element("div").classes("panel q-pa-md w-full"):
+                _build_portfolio_lab()
