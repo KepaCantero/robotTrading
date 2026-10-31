@@ -170,7 +170,7 @@ class AppShell:
                 ("Understand", ["/trust", "/start", "/glossary", "/docs/"]),
                 (
                     "Library",
-                    ["/results", "/history", "/objectives", "/config", "/profitability", "/design"],
+                    ["/results", "/history", "/objectives", "/config", "/profitability"],
                 ),
             ]
             with ui.column().classes("w-full gap-0"):
@@ -282,13 +282,6 @@ class AppShell:
 
             render(cls._swarm_executor, cls._swarm_store)
 
-        @ui.page("/design")
-        def page_design():
-            cls._build_shell()
-            from app.presentation.dashboard.nicegui_app.pages.design import render
-
-            render()
-
         @ui.page("/history")
         def page_history():
             cls._build_shell()
@@ -318,4 +311,5 @@ class AppShell:
             cls._build_shell()
             from app.presentation.dashboard.nicegui_app.pages.profitability import render
 
-            render(cls._store, cls._profitability)
+            # 31-10: la memoria real son los runs del swarm (swarm_runs.db)
+            render(cls._swarm_store)

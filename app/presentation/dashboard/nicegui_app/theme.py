@@ -89,7 +89,6 @@ PAGES = [
     {"name": "Config Viewer", "icon": "settings", "route": "/config"},
     {"name": "Profitability", "icon": "trending_up", "route": "/profitability"},
     {"name": "Documentation", "icon": "menu_book", "route": "/docs/"},
-    {"name": "Design System", "icon": "palette", "route": "/design"},
     {"name": "Trust & Risk", "icon": "verified_user", "route": "/trust"},
     {"name": "Glossary", "icon": "menu_book", "route": "/glossary"},
 ]

@@ -277,24 +277,41 @@ class TestConfigViewerPage:
 
 
 class TestProfitabilityPage:
-    """E2E tests for the profitability analysis page render function."""
+    """E2E for the profitability page — now over the REAL swarm run store
+    (the old BacktestResultStore wiring froze it at two orphaned rows)."""
 
-    async def test_profitability_renders_with_services(
-        self, store: BacktestResultStore, profitability: ProfitabilityEngine
-    ) -> None:
-        """The profitability page should render verdict table and summary."""
+    async def test_profitability_renders_with_seeded_swarm_store(self, tmp_path) -> None:
         from app.presentation.dashboard.nicegui_app.pages.profitability import render
+        from app.services.agent_swarm.store import SwarmRunStore
 
-        async with user_simulation(lambda: render(store, profitability)) as user:
+        swarm = SwarmRunStore(str(tmp_path / "swarm_runs.db"))
+        await swarm.initialize()
+        await swarm.create_run("run_ok", {"objetivo_inversion": "ACUMULAR"}, "2026-10-29T10:00:00")
+        await swarm.finish_run(
+            "run_ok",
+            "completed",
+            "2026-10-29T10:01:00",
+            600,
+            [],
+            {
+                "deployment_decision": {
+                    "status": "APPROVED",
+                    "recommendation_score": 75.0,
+                },
+                "backtest_result": {"strategy_name": "static_ew", "backtest_result": {}},
+            },
+        )
+
+        async with user_simulation(lambda: render(swarm)) as user:
             await user.open("/")
             await user.should_see("Profitability Analysis")
             await user.should_see("Verdict Table")
+        await swarm.close()
 
-    async def test_profitability_renders_with_none_services(self) -> None:
-        """The profitability page should render even with None services."""
+    async def test_profitability_renders_without_store(self) -> None:
         from app.presentation.dashboard.nicegui_app.pages.profitability import render
 
-        async with user_simulation(lambda: render(None, None)) as user:
+        async with user_simulation(lambda: render(None)) as user:
             await user.open("/")
             await user.should_see("Profitability Analysis")
 

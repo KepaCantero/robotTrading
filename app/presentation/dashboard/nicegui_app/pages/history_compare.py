@@ -9,6 +9,7 @@ two stale rows. Click a passing run to pin/unpin it as a saved backtest.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -160,7 +161,16 @@ def _build_runs_table(store: SwarmRunStore | None) -> tuple[ui.table, ui.switch,
         table.update()
 
     async def _on_row_click(e: Any) -> None:
-        row = dict(e.args.get("row") or {})
+        # Quasar emite rowClick como (row, index) → NiceGUI entrega e.args
+        # como LISTA; también toleramos el dict {"row": ...} de versiones
+        # previas. Antes: e.args.get sobre una lista → AttributeError en
+        # cada click (el "no funciona" reportado 31-10).
+        args = e.args
+        row: dict = {}
+        if isinstance(args, dict):
+            row = dict(args.get("row") or {})
+        elif isinstance(args, list) and args and isinstance(args[0], dict):
+            row = dict(args[0].get("row") or args[0])
         run_id = str(row.get("run_id") or "")
         if not run_id or store is None:
             return
@@ -251,6 +261,220 @@ def _build_comparison_section(store: SwarmRunStore | None) -> None:
     ui.timer(0.2, _load_options, once=True)
 
 
+def _build_portfolio_lab() -> None:
+    """Backtest ANY portfolio (31-10, user: 'se tiene que poder cargar el
+    portfolio que quieras y darle backtesting'): paste one SYMBOL WEIGHT
+    line per position (or load a saved portfolio), pick a window, and get
+    the same honest machinery as any run — weighted buy&hold over real
+    local data, bootstrap fan, 4% withdrawals and stress replays."""
+    from datetime import date, timedelta
+
+    import numpy as np
+    import pandas as pd
+
+    from app.presentation.dashboard.nicegui_app.pages.swarm import build_fan_chart_option
+    from app.services.backtest_orchestration.reliability import (
+        DEFAULT_DATA_DIR,
+        bootstrap_portfolio,
+        stress_windows,
+        withdrawal_sequences,
+    )
+
+    ui.label("Backtest any portfolio").classes("text-h6 q-mt-lg q-mb-md")
+    ui.label(
+        "Paste any portfolio — one position per line as SYMBOL WEIGHT (%) — or "
+        "load one of your saved portfolios, choose a window, and simulate it: "
+        "buy & hold with real local data, 1,000 alternative orderings, "
+        "withdrawal survival and real-crash replays."
+    ).classes("text-grey q-mb-md")
+
+    periods = {"6m": 183, "1y": 365, "2y": 730, "5y": 1825, "10y": 3650}
+    presets: dict[str, str] = {}
+    try:
+        from app.services.portfolio_management.named_portfolios import list_portfolios
+
+        for portfolio in list_portfolios() or []:
+            slug = str(portfolio.get("slug") or "")
+            if slug:
+                presets[slug] = str(portfolio.get("name") or slug)
+    except Exception:  # noqa: BLE001 - presets are a convenience, not a requirement
+        logger.warning("portfolio lab: no named portfolios", exc_info=True)
+
+    with ui.row().classes("w-full items-center gap-md no-wrap"):
+        period = ui.select(periods, value="10y", label="Window").classes("min-w-[110px]")
+        if presets:
+            preset_select = (
+                ui.select(presets, value=next(iter(presets)), label="Load a saved portfolio")
+                .classes("min-w-[260px]")
+                .mark("lab_preset")
+            )
+        else:
+            preset_select = None
+
+    text = (
+        ui.textarea(
+            "Portfolio — one position per line: SYMBOL WEIGHT (%)", value="VWCE 75\nAGGH.AS 25"
+        )
+        .classes("w-full")
+        .style("min-height: 110px")
+        .mark("lab_portfolio")
+    )
+
+    async def _fill_from_preset() -> None:
+        if preset_select is None:
+            return
+        slug = str(preset_select.value or "")
+        if not slug:
+            return
+        try:
+            from app.services.portfolio_management.named_portfolios import open_store
+
+            engine, portfolio_store = open_store(slug)
+            try:
+                target = await portfolio_store.get_active_target()
+            finally:
+                await engine.dispose()
+            if target and target.holdings:
+                text.value = "\n".join(
+                    f"{h.symbol} {float(h.weight) * 100:g}" for h in target.holdings if h.weight > 0
+                )
+                ui.notify(f"Loaded {slug}", type="positive")
+        except Exception:  # noqa: BLE001 - a failed preset load must not break the lab
+            logger.warning("portfolio lab: preset load failed", exc_info=True)
+            ui.notify("Could not load that portfolio's target.", type="warning")
+
+    if preset_select is not None:
+        preset_select.on_value_change(lambda _e: _fill_from_preset())
+
+    result_box = ui.column().classes("w-full")
+
+    def _weighted_series(weights: dict[str, float], start: str, end: str):
+        parts: list[pd.Series] = []
+        used: list[str] = []
+        for sym, weight in weights.items():
+            path = DEFAULT_DATA_DIR / f"{sym}.csv"
+            if not path.exists():
+                continue
+            try:
+                frame = pd.read_csv(
+                    path, usecols=["date", "Close"], parse_dates=["date"], index_col="date"
+                )
+                window = frame.loc[start:end, "Close"].dropna()
+            except Exception:  # noqa: BLE001 - one bad CSV never kills the lab
+                continue
+            if len(window) < 5:
+                continue
+            parts.append(float(weight) * (window / float(window.iloc[0])))
+            used.append(sym)
+        if not parts:
+            return None, used
+        covered = sum(weights[s] for s in used)
+        return (sum(parts) / covered).dropna(), used
+
+    async def _run_lab() -> None:
+        weights: dict[str, float] = {}
+        unparsed: list[str] = []
+        for line in (text.value or "").splitlines():
+            line = line.strip().replace(",", " ")
+            if not line or line.startswith("#"):
+                continue
+            bits = line.split()
+            if len(bits) < 2:
+                unparsed.append(line)
+                continue
+            try:
+                weight = float(bits[1])
+            except ValueError:
+                unparsed.append(line)
+                continue
+            if weight <= 0:
+                continue
+            # "75" = por ciento; "0.75" = fracción
+            weight = weight / 100.0 if weight > 1.5 else weight
+            symbol = bits[0].upper()
+            weights[symbol] = weights.get(symbol, 0.0) + weight
+        if unparsed:
+            ui.notify(f"Ignored unparseable lines: {unparsed[:3]}", type="warning")
+        if not weights:
+            ui.notify("Write at least one SYMBOL WEIGHT line.", type="warning")
+            return
+
+        days = periods.get(str(period.value), 3650)
+        end = date.today().isoformat()
+        start = (date.today() - timedelta(days=days)).isoformat()
+        series, used = await asyncio.to_thread(_weighted_series, weights, start, end)
+
+        result_box.clear()
+        with result_box:
+            if series is None or len(series) < 30:
+                ui.label(
+                    "No local data covers that window for any of those symbols — "
+                    "check the tickers or use a shorter window."
+                ).classes("help q-mt-md")
+                return
+            returns = series.pct_change().dropna().values
+            years = (series.index[-1] - series.index[0]).days / 365.25
+            total = float(series.iloc[-1] / series.iloc[0] - 1)
+            cagr = (1.0 + total) ** (1.0 / years) - 1.0 if total > -1 else -1.0
+            max_dd = float((series / series.cummax() - 1.0).min())
+            sharpe = (
+                float(np.mean(returns) / np.std(returns, ddof=1) * np.sqrt(252))
+                if len(returns) > 2
+                else 0.0
+            )
+            missing = [s for s in weights if s not in used]
+
+            with ui.row().classes("w-full gap-lg wrap q-mt-md"):
+                for tile_label, tile_value in (
+                    ("Total return", f"{total * 100:+.1f}%"),
+                    ("CAGR", f"{cagr * 100:+.1f}%"),
+                    ("Max drawdown", f"{max_dd * 100:.1f}%"),
+                    ("Sharpe", f"{sharpe:.2f}"),
+                    ("Years", f"{years:.1f}"),
+                    ("Positions with data", f"{len(used)}/{len(weights)}"),
+                ):
+                    with ui.column().classes("gap-xs"):
+                        ui.label(tile_value).classes("help").style(
+                            "font-size:1.25rem;font-weight:600"
+                        )
+                        ui.label(tile_label).classes("help")
+            if missing:
+                ui.label(
+                    f"No local data for: {', '.join(missing)} — excluded, weights "
+                    "renormalized over the rest."
+                ).classes("help q-mt-xs")
+
+            boot = bootstrap_portfolio(returns)
+            if boot:
+                ui.echart(build_fan_chart_option(boot)).props(
+                    "role=img aria-label='Portfolio lab bootstrap fan chart'"
+                ).classes("w-full").style("height: 240px")
+                ui.label(
+                    f"1,000 alternative orderings: worst 5% ends at "
+                    f"{boot['final_p05']:.2f}×, median {boot['final_p50']:.2f}×, "
+                    f"chance of loss {boot['prob_loss'] * 100:.0f}%."
+                ).classes("help q-mt-xs")
+            withdrawal = withdrawal_sequences(returns)
+            if withdrawal:
+                ui.label(
+                    f"Living off it at 4%/yr for {withdrawal['horizon_years']}y: the money "
+                    f"runs out in {withdrawal['prob_exhausted'] * 100:.0f}% of sequences "
+                    f"(median ends at {withdrawal['final_p50']:.2f}×)."
+                ).classes("help")
+            stress = stress_windows(used)
+            stress_bits = [
+                f"{label}: {info['max_drawdown'] * 100:+.1f}% worst fall"
+                for label, info in (stress or {}).items()
+                if info
+            ]
+            if stress_bits:
+                ui.label("Stress: " + " · ".join(stress_bits)).classes("help")
+
+    ui.button("Backtest this portfolio", icon="science").props("unelevated no-caps").classes(
+        "run-btn"
+    ).mark("lab_run").on_click(lambda: _run_lab())
+
+
 # ── Page Render ───────────────────────────────────────────────────────────────
 
 
@@ -278,3 +502,8 @@ def render(store: SwarmRunStore | None) -> None:
 
         with ui.element("div").classes("panel q-pa-md w-full"):
             _build_comparison_section(store)
+
+        ui.separator().classes("q-mt-lg q-mb-lg")
+
+        with ui.element("div").classes("panel q-pa-md w-full"):
+            _build_portfolio_lab()
