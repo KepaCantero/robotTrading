@@ -1941,8 +1941,9 @@ def render(
                     if risk_chart is not None:
                         ui.label("RISK ADJUSTMENT").classes("lbl q-mt-md q-mb-xs")
                         ui.label(
-                            "Weights after adapting to the market regime and "
-                            "volatility you selected."
+                            "Deployment guidance AFTER the backtest — how the weights "
+                            "would be sized to ship this portfolio at your risk level. "
+                            "This does NOT change the simulated result above."
                         ).classes("help q-mb-sm")
                         ui.echart(risk_chart).props(
                             "role=img aria-label='Bar chart comparing base and risk-adjusted weights'"
@@ -2097,7 +2098,12 @@ def render(
                 if metrics.get("universe_ew") is not None:
                     ew = _as_float(metrics.get("universe_ew"))
                     xs = metrics.get("excess_vs_universe_ew")
-                    xs_txt = f" ({_as_float(xs):+,.1f}% vs this strategy)" if xs is not None else ""
+                    xs_txt = (
+                        f" — the strategy lands {abs(_as_float(xs)):,.1f} pp "
+                        f"{'below' if _as_float(xs) < 0 else 'above'} its twin"
+                        if xs is not None
+                        else ""
+                    )
                     ui.label(
                         f"Peer benchmark: holding this same universe equal-weight "
                         f"did {ew:+,.1f}%{xs_txt} — the honest passive twin of "

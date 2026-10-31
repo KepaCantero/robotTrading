@@ -114,9 +114,7 @@ class DeployDecisionOrchestrator:
                     or recommendation.get("recommendation")
                     or ""
                 ),
-                universe_ew_sharpe=self._safe_float(
-                    backtest_result.get("universe_ew_sharpe")
-                )
+                universe_ew_sharpe=self._safe_float(backtest_result.get("universe_ew_sharpe"))
                 or None,
             )
 
@@ -137,12 +135,19 @@ class DeployDecisionOrchestrator:
             )
             if ew_return > 0 and strategy_return < ew_return:
                 if strategy_name == "static_ew":
+                    # descomposición honesta: el término dominante es el
+                    # objetivo de despliegue del 95% (5% de caja permanente
+                    # que no compone), NO los costes de las 12 operaciones —
+                    # críticas 31-10: "ningún coste realista se come 10 pp"
+                    cash_floor_pp = ew_return * 0.05
                     reasons.append(
                         f"The passive twin of this universe did {ew_return:+.1f}% vs "
                         f"{strategy_return:+.1f}% executed "
-                        f"({strategy_return - ew_return:+.1f} pp): that residual is the "
-                        "honest cost of real execution (t+1 entry, commissions, "
-                        "liquidity caps) — this IS the static portfolio."
+                        f"({strategy_return - ew_return:+.1f} pp). Decomposed honestly: "
+                        f"~{cash_floor_pp:.1f} pp is the engine's permanent 5% cash "
+                        "floor (95% deployment target — cash does not compound), the "
+                        "rest is staggered entry (t+1, liquidity caps) and commissions "
+                        "— this IS the static portfolio, fully invested to 95% by design."
                     )
                 else:
                     reasons.append(
@@ -353,13 +358,10 @@ class DeployDecisionOrchestrator:
                 )
             if sharpe_ratio is not None and sharpe_ratio < 0.5:
                 steps.append(
-                    f"Sharpe {sharpe_ratio:.2f} < 0.5: the strategy does not yet "
-                    "pay for its risk"
+                    f"Sharpe {sharpe_ratio:.2f} < 0.5: the strategy does not yet pay for its risk"
                 )
             elif not passive:
-                steps.append(
-                    "Run sensitivity analysis on weights and rebalance frequency"
-                )
+                steps.append("Run sensitivity analysis on weights and rebalance frequency")
             if feasibility_ratio is not None and feasibility_ratio < 1.5:
                 steps.append(
                     f"Feasibility {feasibility_ratio:.2f} is a thin margin — more "
@@ -367,8 +369,7 @@ class DeployDecisionOrchestrator:
                 )
             if recommendation_score is not None and recommendation_score < 70:
                 drag = (
-                    f"Sharpe {sharpe_ratio:.2f} vs the universe's "
-                    f"{universe_ew_sharpe:.2f}"
+                    f"Sharpe {sharpe_ratio:.2f} vs the universe's {universe_ew_sharpe:.2f}"
                     if universe_ew_sharpe
                     else "the return-per-risk ratio"
                 )
