@@ -1,0 +1,66 @@
+"""Cartera pasiva de PESOS FIJOS equity/bono — el reparto que se BUSCA.
+
+El owner (31-10) rechazó los pesos fijos a mano y pidió que el motor
+``busque el mejor peso para mi edad``: esta estrategia expone UN grado
+de libertad honesto (``equity_weight``) que el optimizador in-backtest
+barre en cada run. El default y el techo de la búsqueda vienen del
+perfil de riesgo del run (BAJO 0.60 / MEDIO 0.75 / ALTO 0.90, los
+mismos equity_max_pct del robo-advisor) — la edad entra por ahí.
+
+Solo aplica a un universo DOS FONDOS con una pata identificada como
+bono (tabla abajo); cualquier otro universo degenera honestamente en
+static_ew (equal weight) en vez de inventar clasificaciones.
+"""
+
+from __future__ import annotations
+
+import math
+from typing import Any
+
+from app.domain.strategies.static_ew import StaticEqualWeightStrategy
+
+#: pata "bono" del universo dos-fondos. Fuente: ASSET_CLASS del
+#: portfolio-management (BND/BIV/SCHZ/VBT/IBTS/IBGS.AS/AGGH.AS) — todo lo
+#: demás cuenta como equity (fail-safe: el cap de equity binda).
+BOND_ETFS: frozenset[str] = frozenset({"BND", "BIV", "SCHZ", "VBT", "IBTS", "IBGS.AS", "AGGH.AS"})
+
+#: default del grado de libertad cuando ni el perfil ni lo adoptado lo
+#: traen (MEDIO — el dueño tiene 45 y riesgo MEDIO; el optimizador barre
+#: alrededor en el mismo run)
+DEFAULT_EQUITY_WEIGHT = 0.75
+
+
+class StaticWeightedStrategy(StaticEqualWeightStrategy):
+    """Pasiva dos-fondos: ``equity_weight`` al fondo equity, el resto al bono."""
+
+    def __init__(self, config: dict[str, Any]) -> None:
+        super().__init__(config)
+        self.equity_weight = min(
+            max(float(config.get("equity_weight", DEFAULT_EQUITY_WEIGHT)), 0.05), 0.95
+        )
+        equity = [s for s in self.universe if s not in BOND_ETFS]
+        bonds = [s for s in self.universe if s in BOND_ETFS]
+        #: pesos por símbolo; None = universo no clasificable → equal weight
+        self._weights: dict[str, float] | None = None
+        if len(equity) == 1 and len(bonds) == 1:
+            self._weights = {
+                equity[0]: self.equity_weight,
+                bonds[0]: 1.0 - self.equity_weight,
+            }
+
+    @property
+    def suggested_max_position_size(self) -> float:
+        """El techo del validador debe cubrir la manga MÁS grande."""
+        if self._weights is None:
+            return super().suggested_max_position_size
+        heaviest = max(self._weights.values()) * self.target_exposure
+        return math.ceil(min(0.95, heaviest) * 100) / 100
+
+    def get_required_parameters(self) -> list[str]:
+        return ["rebalance_days", "equity_weight"]
+
+    def _position_weight(self, symbol: str) -> float:
+        # peso declarado por manga (× exposure); sin clasificación → 1/N
+        if self._weights is not None and symbol in self._weights:
+            return round(min(0.95, self._weights[symbol] * self.target_exposure), 4)
+        return super()._position_weight(symbol)

@@ -208,8 +208,13 @@ class BacktestingConfig(BaseModel):
         description="Default take profit percentage",  # 15% take profit
     )
     default_risk_free_rate: Decimal = Field(
-        default=Decimal("0.02"),  # 2% annual risk-free rate
-        description="Default risk-free rate for Sharpe calculation",
+        # rf=0 (31-10): the passive twin runs rf=0 ("referencia RELATIVA"),
+        # and the side-by-side must be ONE convention — a 50/50 VWCE+AGGH
+        # read 0.45 next to its twin's 0.71 purely from this 2% subtraction
+        # ((5.5−2)/7.8 vs 5.5/7.8), and the hard Sharpe gate judged the
+        # penalized number. rf=0 everywhere: the comparisons are relative.
+        default=Decimal("0.00"),
+        description="Default risk-free rate for Sharpe calculation (0: relative reference, same as the passive twin)",
     )
     annual_trading_days: int = Field(
         default=252, description="Number of trading days in a year for annualization"

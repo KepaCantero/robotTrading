@@ -31,6 +31,10 @@ STRATEGY_CATALOG: dict[str, str] = {
     # cuando el equiponderado pasivo batió a toda gestión medida, la
     # cartera desplegable ES el pasivo
     "static_ew": "app.domain.strategies.static_ew:StaticEqualWeightStrategy",
+    # pasiva dos-fondos con el reparto equity/bondo como grado de libertad:
+    # el optimizador in-backtest BUSCA el mejor peso del perfil (owner
+    # 31-10: "debería buscarme tú el mejor peso para mi edad")
+    "static_weighted": "app.domain.strategies.static_weighted:StaticWeightedStrategy",
     # pares cointegrados (spread z-score + correlación): el engine vive en
     # app/engines pero ES un BaseStrategy completo y testeado — ve el
     # timeline intercalado de ambos símbolos (is_cross_sectional)

@@ -649,9 +649,16 @@ class Capa2PipelineExecutor:
     _GOAL_STRATEGY: dict[str, str] = {
         "MAXIMIZAR_DIVIDENDOS": "static_ew",
         "CAPITAL_PRESERVATION": "low_volatility",
-        "VIVIR_DE_LA_CARTERA": "static_ew",
-        "ACUMULAR": "static_ew",
+        # total-return de DOS fondos: el reparto equity/bondo se BUSCA
+        # (owner 31-10), no se fija a mano — static_weighted + optimizer
+        "VIVIR_DE_LA_CARTERA": "static_weighted",
+        "ACUMULAR": "static_weighted",
     }
+
+    #: techo del grado de libertad equity_weight por riesgo del run — los
+    #: equity_max_pct del robo-advisor (60/75/90). La edad/riesgo ACOTA la
+    #: búsqueda; dentro del rango, la historia elige.
+    _RISK_EQUITY_CAP: dict[str, float] = {"BAJO": 0.60, "MEDIO": 0.75, "ALTO": 0.90}
 
     #: tope de combinaciones extra que un run explora dentro de T4.1
     #: (además del baseline con los parámetros que trae). El coste es
@@ -741,6 +748,21 @@ class Capa2PipelineExecutor:
         if overrides:
             orchestrator._strategy_param_overrides = overrides  # noqa: SLF001
 
+        # static_weighted: el reparto equity/bondo es el grado de libertad
+        # que este run BUSCA. Default = el cap del perfil de riesgo (la
+        # edad/riesgo del inversor), y el grid de búsqueda nunca lo excede.
+        grid_override = None
+        if strategy == "static_weighted":
+            cap = self._RISK_EQUITY_CAP.get(
+                str(getattr(ctx.request, "risk_tolerance", "") or "").upper(), 0.75
+            )
+            if "equity_weight" not in overrides:
+                overrides["equity_weight"] = cap
+            orchestrator._strategy_param_overrides = overrides  # noqa: SLF001
+            grid_override = {
+                "equity_weight": [w for w in (0.3, 0.45, 0.6, 0.75, 0.9) if w <= cap + 1e-9]
+            }
+
         ctx.backtest = await orchestrator.orchestrate(request)
 
         # 30-10 (user: "se tiene que optimizar solo en el backtesting"):
@@ -756,7 +778,7 @@ class Capa2PipelineExecutor:
         from app.services.agent_swarm.optimizer import PARAM_GRIDS, optimize
 
         combos = 1
-        for values in (PARAM_GRIDS.get(strategy) or {}).values():
+        for values in (grid_override or PARAM_GRIDS.get(strategy) or {}).values():
             combos *= len(values)
         if combos > 1:
             try:
@@ -770,6 +792,7 @@ class Capa2PipelineExecutor:
                     self.IN_RUN_MAX_TRIALS,
                     True,
                     overrides,
+                    grid_override,
                 )
             except Exception:  # noqa: BLE001 - optimization is best-effort
                 logger.warning("In-backtest optimization failed", exc_info=True)

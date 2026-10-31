@@ -229,7 +229,10 @@ class BacktestOrchestrator:
             strategy = strategy_cls({"name": name, "enabled": True, "symbols": symbols})
         elif name == "low_volatility" and symbols:
             strategy = strategy_cls({"name": name, "enabled": True, "universe": symbols})
-        elif name == "static_ew" and symbols:
+        elif name in {"static_ew", "static_weighted"} and symbols:
+            # static_weighted SIN esta rama caía al else sin símbolos: su
+            # universo default (SCHD/VYM…) nunca cotiza en los datos del
+            # run → 0 señales → 0 trades en TODOS los trials (31-10)
             strategy = strategy_cls({"name": name, "enabled": True, "symbols": symbols})
         elif name == "pairs_trading" and symbols and len(symbols) >= 2:
             strategy = strategy_cls(
@@ -393,7 +396,9 @@ class BacktestOrchestrator:
         # nunca llamaba — los veredictos salían sin validación out-of-sample).
         gate = self._walk_forward_gate(engine_result, engine.config, probe, config.risk_profile)
         benchmark = self._load_benchmark(config, loader, start_dt, end_dt)
-        dividend_bench = self._load_dividend_benchmark(config, loader, start_dt, end_dt)
+        dividend_bench = self._load_dividend_benchmark(
+            config, loader, start_dt, end_dt, weights=self._twin_weights(config)
+        )
         if dividend_bench and benchmark:
             # para dividendos, el excess vs SPY es informativo pero el
             # vs equal-weight del propio universo es el benchmark honesto.
@@ -447,8 +452,27 @@ class BacktestOrchestrator:
     #: fraction of the span from the requested start
     _BENCHMARK_COVERAGE_TOLERANCE = 0.05
 
-    def _load_dividend_benchmark(self, config, loader, start_dt, end_dt) -> dict | None:
-        """Benchmark honesto para dividendos: equal-weight del propio universo.
+    def _twin_weights(self, config) -> dict[str, float] | None:
+        """For static_weighted runs the honest twin holds the SAME weights —
+        comparing a 75/25 execution against a 50/50 twin prices the weight
+        choice as if it were execution drag (owner 31-10)."""
+        if getattr(config, "strategy_name", "") != "static_weighted":
+            return None
+        from app.domain.strategies.static_weighted import BOND_ETFS
+
+        symbols = list(config.symbols or [])
+        equity = [s for s in symbols if s not in BOND_ETFS]
+        bonds = [s for s in symbols if s in BOND_ETFS]
+        if len(equity) != 1 or len(bonds) != 1:
+            return None
+        ew = float(self._strategy_param_overrides.get("equity_weight") or 0.75)
+        ew = min(max(ew, 0.05), 0.95)
+        return {equity[0]: ew, bonds[0]: 1.0 - ew}
+
+    def _load_dividend_benchmark(
+        self, config, loader, start_dt, end_dt, weights: dict[str, float] | None = None
+    ) -> dict | None:
+        """Benchmark honesto: hold pasivo del propio universo.
 
         SPY es un índice de mega-caps tech; para una cartera de dividendos
         el punto de comparación correcto es "simplemente mantener este mismo
@@ -463,6 +487,10 @@ class BacktestOrchestrator:
         un ganador temprano siga creciendo (el rebalanceo le recorta) o un
         perdedor temprano se recupere (el rebalanceo le añade). Composición
         explícita en `symbols_used`, invariante al orden de entrada.
+
+        ``weights`` (31-10): pesos por símbolo del gemelo buy&hold — el
+        default es equal-weight; static_weighted pasa SUS pesos para que
+        la comparación mida ejecución, no la elección de reparto.
         """
 
         symbols = list(config.symbols or [])
@@ -501,7 +529,26 @@ class BacktestOrchestrator:
                     day_returns[ts].append(px / prev_px - 1)
 
         days = sorted(day_returns)
-        rets = [sum(day_returns[d]) / len(day_returns[d]) for d in days]
+        if weights:
+            # per-day weighted mean over the symbols that quoted that day
+            by_day: dict[object, dict[str, float]] = collections.defaultdict(dict)
+            for sym, closes in series.items():
+                for i in range(1, len(closes)):
+                    pts, ppx = closes[i - 1]
+                    ts, px = closes[i]
+                    if ts != pts and ppx > 0:
+                        by_day[ts][sym] = px / ppx - 1
+
+            def _wmean(d: object) -> float:
+                avail = by_day[d]
+                total_w = sum(weights.get(s, 0.0) for s in avail)
+                if total_w <= 0:
+                    return sum(avail.values()) / len(avail)
+                return sum(weights.get(s, 0.0) * r for s, r in avail.items()) / total_w
+
+            rets = [_wmean(d) for d in days]
+        else:
+            rets = [sum(day_returns[d]) / len(day_returns[d]) for d in days]
         if not rets:
             return None
         equity = 100.0
@@ -535,7 +582,10 @@ class BacktestOrchestrator:
             for sym, sleeve in sleeves.items():
                 if d in sleeve:
                     last[sym] = sleeve[d]
-            value = sum(last.values()) / len(sleeves)
+            if weights:
+                value = sum(weights.get(s, 0.0) * v for s, v in last.items())
+            else:
+                value = sum(last.values()) / len(sleeves)
             if prev_value is not None and prev_value > 0:
                 bh_rets.append(value / prev_value - 1)
             bh_curve.append((d, value))
@@ -558,6 +608,7 @@ class BacktestOrchestrator:
         return {
             "symbol": "UNIVERSE-EW",
             "symbols_used": sorted(series),
+            "twin_weights": weights or None,
             "return_pct": round(ret_pct, 2),
             "sharpe": round(ew_sharpe, 4),
             "curve": [(ts.isoformat(), round(v, 2)) for ts, v in sampled],

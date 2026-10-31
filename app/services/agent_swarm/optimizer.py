@@ -49,6 +49,13 @@ PARAM_GRIDS: dict[str, dict[str, list[Any]]] = {
     "static_ew": {
         "rebalance_days": [252, 365, 730, 3650],
     },
+    # dos-fondos: el reparto equity/bondo se BUSCA (owner 31-10: "debería
+    # buscarme tú el mejor peso para mi edad"). El ejecutor recorta este
+    # grid al cap del perfil de riesgo (BAJO 0.60 / MEDIO 0.75 / ALTO 0.90)
+    # antes de llamar — la edad/riesgo acota la búsqueda, la historia elige.
+    "static_weighted": {
+        "equity_weight": [0.3, 0.45, 0.6, 0.75, 0.9],
+    },
     # pares: la ventana del spread y cuán extremo debe ser el z-score
     "pairs_trading": {
         "lookback_period": [30, 60, 120],
@@ -192,6 +199,7 @@ def optimize(
     max_trials: int = 12,
     parallel: bool = True,
     baseline_params: dict[str, Any] | None = None,
+    grid: dict[str, list[Any]] | None = None,
 ) -> OptimizationResult:
     """Grid-search the strategy's tunable params with the real engine.
 
@@ -204,8 +212,11 @@ def optimize(
     overrides + the adopted default) — the baseline backtest runs with
     them so "current" is the truth, not the YAML defaults. Trials still
     explore the full grid on top of ``default_params``.
+    ``grid`` (31-10): an explicit grid overriding PARAM_GRIDS — the
+    executor uses it to cap static_weighted's equity_weight search at
+    the run's risk profile.
     """
-    grid = PARAM_GRIDS.get(strategy)
+    grid = grid or PARAM_GRIDS.get(strategy)
     if not grid:
         raise ValueError(f"No tunable parameters defined for strategy '{strategy}'")
 

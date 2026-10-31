@@ -211,14 +211,17 @@ GOAL_PRESETS: dict[str, tuple[str, list[str] | None]] = {
     # universo del objetivo, decidido por ventana — nada de listas
     # clavadas). El acumulador de núcleo (EUNL.DE hace de VWCE pre-2019),
     # VHYL/IDVY de renta y IBGS.AS de colchón.
-    "VIVIR_DE_LA_CARTERA": ("static_ew", None),
+    "VIVIR_DE_LA_CARTERA": ("static_weighted", None),
     # Acumulación pura (30-10): la fase ANTES de vivir de la cartera —
     # mismo principio, TODO el universo del objetivo vía AUTOMÁTICO: la
     # pantalla decide por ventana quién cubre. En 10 años: EUNL/IUSQ/
     # EIMI/VHYL/IDVY + IBGS de colchón; en ventanas cortas entran también
     # VWCE y QDIV (nacen 2019/2018 y sí cubren). Sin reparto no hay IRPF
     # anual — Hacienda espera a que el dueño venda.
-    "ACUMULAR": ("static_ew", None),
+    # 31-10 (owner: "debería buscarme tú el mejor peso para mi edad"): el
+    # reparto equity/bondo ya no se fija a mano — static_weighted + el
+    # optimizador in-backtest barre el peso dentro del cap del perfil.
+    "ACUMULAR": ("static_weighted", None),
 }
 
 #: objetivo → universo alternativo cuando el horizonte es largo
@@ -1427,6 +1430,7 @@ def render(
                                 "dividend_tracking": "Dividend ETFs (core-satellite)",
                                 "low_volatility": "Low volatility (sector ETFs)",
                                 "static_ew": "Static equal-weight (passive)",
+                                "static_weighted": "Static weighted — searches the best equity/bond split (passive)",
                                 "pairs_trading": "Pairs trading (spread z-score)",
                             },
                             value="static_ew",  # el default que pasa (preset dividendos)
@@ -2168,8 +2172,14 @@ def render(
                         if xs is not None
                         else ""
                     )
+                    twin_basis = (
+                        # the twin holds the run's SEARCHED weights, not 50/50
+                        "at the run's searched equity/bond weights"
+                        if str(metrics.get("strategy")) == "static_weighted"
+                        else "equal-weight"
+                    )
                     ui.label(
-                        f"Peer benchmark: holding this same universe equal-weight "
+                        f"Peer benchmark: holding this same universe {twin_basis} "
                         f"did {ew:+,.1f}%{xs_txt} — the honest passive twin of "
                         "this portfolio."
                     ).classes("help q-mt-xs")
