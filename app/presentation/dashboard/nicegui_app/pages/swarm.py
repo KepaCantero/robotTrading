@@ -2698,9 +2698,14 @@ def render(
     async def _run_pipeline(request: SwarmRunRequest, run_id: str) -> None:
         try:
             await executor.run(request, run_id=run_id)  # type: ignore[union-attr]
-        except Exception:  # noqa: BLE001 - notify instead of killing the task silently
+        except Exception as exc:  # noqa: BLE001 - never leave a silent eternal spinner
             logger.exception("Swarm pipeline crashed")
-            ui.notify("Pipeline crashed — see server logs.", type="negative")
+            # The theater is the page's headline: a run that dies must SAY so
+            # there (a fleeting toast left it stuck on "running" forever —
+            # 'le doy a backtest y no termina', 31-10). Gate messages are
+            # already plain and actionable (e.g. the ACUMULAR coverage error).
+            render_theater("bad", "The run failed", str(exc))
+            ui.notify(str(exc)[:200], type="negative", position="top")
             run_button.enable()
 
     # discreet sound toggle

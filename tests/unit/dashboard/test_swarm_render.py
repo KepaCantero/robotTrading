@@ -19,12 +19,18 @@ from app.services.agent_swarm.executor import AGENT_SPECS
 
 
 @pytest.fixture
-def register_page():
-    """Register a /swarm-test route rendering the page with a real executor."""
+def register_page(tmp_path):
+    """Register a /swarm-test route rendering the page with a real executor.
+
+    ``profiles_path`` MUST be isolated: with the default (repo-root) store
+    the page would auto-apply the owner's real ACTIVE profile and run a
+    'max' 20-year window — tests crawled for minutes and failed on the
+    coverage gate (31-10).
+    """
 
     @ui.page("/swarm-test")
     def page():
-        swarm.render(Capa2PipelineExecutor(), None)
+        swarm.render(Capa2PipelineExecutor(), None, str(tmp_path / "no-profiles.json"))
 
 
 async def test_swarm_page_renders(user: User, register_page):
