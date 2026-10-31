@@ -1,21 +1,26 @@
 """Objectives & compliance page for the NiceGUI dashboard.
 
-Evaluates every saved backtest run against the integration-test targets.
-the target values are unchanged so historical comparisons still match.
+Evaluates every REAL run (swarm_runs.db — the store Mission Control
+persists to; until 31-10 this page read the orphaned backtest_results.db
+and showed two frozen Oct-17 rows) against the integration-test targets.
+The target values are unchanged so historical comparisons still match.
 """
 
 from __future__ import annotations
 
 import logging
+from datetime import datetime
+from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any
 
 from nicegui import ui
 
 from app.presentation.dashboard.nicegui_app import design_system as ds
+from app.presentation.dashboard.nicegui_app.pages.swarm import extract_result_metrics
 from app.presentation.dashboard.nicegui_app.theme import COLORS
 
 if TYPE_CHECKING:
-    from app.infrastructure.persistence.backtest_result_store import BacktestResultStore
+    from app.services.agent_swarm.store import SwarmRunStore
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +102,47 @@ def _format_value(metric: str, value: float) -> str:
     return f"{value:.2f}"
 
 
-def render(store: BacktestResultStore | None) -> None:
+def _swarm_run_view(entry: dict, detail: dict) -> SimpleNamespace | None:
+    """A swarm run's result shaped like the attributes this page reads
+    (timestamp, strategy_name, objective metrics) — None when the run
+    produced no comparable metrics (failed/truncated/pure-metadata)."""
+    results = detail.get("results") or {}
+    inner = (results.get("backtest_result") or {}).get("backtest_result") or {}
+    metrics = inner.get("metrics") or {}
+
+    def _f(key: str) -> float | None:
+        try:
+            return float(metrics.get(key))
+        except (TypeError, ValueError):
+            return None
+
+    view = SimpleNamespace(
+        timestamp=None,
+        strategy_name=str(
+            extract_result_metrics(results).get("strategy")
+            or (entry.get("request") or {}).get("strategy")
+            or "—"
+        ),
+        max_drawdown=_f("max_drawdown_pct"),
+        sharpe_ratio=_f("sharpe_ratio"),
+        sortino_ratio=_f("sortino_ratio"),
+        profit_factor=_f("profit_factor"),
+        win_rate=_f("win_rate_pct"),
+    )
+    started = str(entry.get("started_at") or "")
+    try:
+        view.timestamp = datetime.fromisoformat(started[:19])
+    except ValueError:
+        view.timestamp = datetime.utcnow()
+    if all(
+        getattr(view, metric) is None
+        for metric in ("max_drawdown", "sharpe_ratio", "sortino_ratio", "profit_factor", "win_rate")
+    ):
+        return None
+    return view
+
+
+def render(store: SwarmRunStore | None) -> None:
     """Render the objectives compliance page."""
     ds.section_heading(
         "Objectives & Compliance",
@@ -110,12 +155,20 @@ def render(store: BacktestResultStore | None) -> None:
     container = ui.column().classes("w-full")
 
     async def load() -> None:
-        if store is None:
+        if store is None or not store.is_initialized:
             with container:
-                ui.label("BacktestResultStore is not initialized.").classes("text-warning")
+                ui.label("Run storage is not available — restart the dashboard.").classes(
+                    "text-warning"
+                )
             return
         try:
-            runs = await store.list_runs(limit=100)
+            listed = await store.list_runs(limit=100)
+            runs = []
+            for entry in listed:
+                detail = await store.get_run(entry["workflow_id"]) or {}
+                view = _swarm_run_view(entry, detail)
+                if view is not None:
+                    runs.append(view)
         except Exception:
             logger.exception("Failed to load runs for the objectives page")
             container.clear()

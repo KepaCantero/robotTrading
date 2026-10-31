@@ -297,7 +297,8 @@ class AppShell:
             cls._build_shell()
             from app.presentation.dashboard.nicegui_app.pages.objectives import render
 
-            render(cls._store)
+            # 31-10: la memoria real son los runs del swarm (swarm_runs.db)
+            render(cls._swarm_store)
 
         @ui.page("/config")
         def page_config():
