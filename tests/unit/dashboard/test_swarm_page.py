@@ -8,56 +8,11 @@ the duration chart option and the result-metrics extraction.
 from datetime import date
 
 from app.presentation.dashboard.nicegui_app.pages import swarm
-from app.services.agent_swarm.events import AgentEvent
 from app.services.agent_swarm.executor import AGENT_SPECS, AgentState
 
 
 def fresh_states() -> dict[str, AgentState]:
     return {spec.agent_id: AgentState() for spec in AGENT_SPECS}
-
-
-class TestFormatLogLine:
-    def test_run_started(self):
-        event = AgentEvent(
-            "run_started",
-            "r1",
-            payload={"request": {"capital_initial": "100000", "objetivo_inversion": "MAX"}},
-        )
-        line = swarm.format_log_line(event)
-        assert "Pipeline started" in line
-        assert "€100000" in line
-
-    def test_stage_started_and_completed(self):
-        started = AgentEvent("stage_started", "r1", agent_id="t11")
-        completed = AgentEvent(
-            "stage_completed", "r1", agent_id="t21", payload={"duration_ms": 12.3, "xp": 50}
-        )
-        assert "T1.1 Input Processor started" == swarm.format_log_line(started)
-        line = swarm.format_log_line(completed)
-        assert "T2.1 Profile Generator completed in 12 ms (+50 XP)" == line
-
-    def test_stage_failed_and_skipped(self):
-        failed = AgentEvent("stage_failed", "r1", agent_id="t41", payload={"error": "boom"})
-        skipped = AgentEvent("stage_skipped", "r1", agent_id="t51")
-        assert "T4.1 Backtest Orchestrator FAILED — boom" == swarm.format_log_line(failed)
-        assert "skipped" in swarm.format_log_line(skipped)
-
-    def test_run_completed_and_failed(self):
-        done = AgentEvent(
-            "run_completed", "r1", payload={"xp": 600, "decision": {"status": "APPROVED"}}
-        )
-        failed = AgentEvent("run_failed", "r1", payload={"completed": 3})
-        assert "600 XP" in swarm.format_log_line(done)
-        assert "APPROVED" in swarm.format_log_line(done)
-        assert "3/10" in swarm.format_log_line(failed)
-
-    def test_milestone_wording(self):
-        event = AgentEvent("achievement_unlocked", "r1", payload={"label": "First execution"})
-        assert "Milestone reached: First execution" == swarm.format_log_line(event)
-
-    def test_accepts_plain_dicts_too(self):
-        event = {"type": "achievement_unlocked", "payload": {"label": "Clean run"}}
-        assert "Clean run" in swarm.format_log_line(event)
 
 
 class TestApplyEventToStates:
@@ -249,32 +204,6 @@ class TestModuleExposureChart:
 
     def test_none_when_empty(self):
         assert swarm.build_module_exposure_chart({}) is None
-
-
-class TestDurationChart:
-    def test_none_when_no_done_agents(self):
-        assert swarm.build_duration_chart_option(fresh_states()) is None
-
-    def test_includes_only_done_agents(self):
-        states = fresh_states()
-        states["t11"].status = "DONE"
-        states["t11"].duration_ms = 100.0
-        states["t21"].status = "DONE"
-        states["t21"].duration_ms = 50.0
-        states["t31"].status = "FAILED"
-
-        option = swarm.build_duration_chart_option(states)
-        names = option["yAxis"]["data"]
-        assert len(names) == 2
-        values = [d["value"] for d in option["series"][0]["data"]]
-        assert values == [50.0, 100.0]
-
-    def test_values_are_rounded(self):
-        states = fresh_states()
-        states["t11"].status = "DONE"
-        states["t11"].duration_ms = 100.123456
-        option = swarm.build_duration_chart_option(states)
-        assert option["series"][0]["data"][0]["value"] == 100.1
 
 
 class TestRegistry:

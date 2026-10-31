@@ -26,7 +26,6 @@ from nicegui import ui
 
 from app.presentation.dashboard.nicegui_app import design_system as ds
 from app.presentation.dashboard.nicegui_app.components.agent_card import StepTrack
-from app.presentation.dashboard.nicegui_app.components.mission_log import MissionLog
 from app.presentation.dashboard.nicegui_app.components.office_scene import OfficeScene
 from app.presentation.dashboard.nicegui_app.components.swarm_fx import install as install_fx
 from app.services.agent_swarm.executor import (
@@ -833,44 +832,6 @@ def build_risk_adjustment_chart(adjusted: list[dict]) -> dict | None:
     }
 
 
-def build_duration_chart_option(states: dict[str, AgentState]) -> dict | None:
-    """ECharts horizontal-bar option of per-step durations, or None if empty."""
-    done = [
-        (spec, states[spec.agent_id])
-        for spec in AGENT_SPECS
-        if states.get(spec.agent_id) and states[spec.agent_id].status == "DONE"
-    ]
-    if not done:
-        return None
-    done.reverse()  # ECharts draws categories bottom-up
-    return {
-        "backgroundColor": "transparent",
-        "tooltip": {"trigger": "axis", "axisPointer": {"type": "shadow"}},
-        "grid": {"left": 170, "right": 40, "top": 10, "bottom": 24},
-        "xAxis": {"type": "value", "name": "ms", "axisLabel": {"color": "#8a97ab"}},
-        "yAxis": {
-            "type": "category",
-            "data": [f"{spec.emoji} {spec.name}" for spec, _ in done],
-            "axisLabel": {"color": "#17233b"},
-        },
-        "series": [
-            {
-                "type": "bar",
-                "data": [
-                    {
-                        "value": round(agent.duration_ms, 1),
-                        "itemStyle": {"color": spec.color},
-                    }
-                    for spec, agent in done
-                ],
-                "barMaxWidth": 16,
-                "barMinHeight": 2,
-                "animationDuration": 500,
-            }
-        ],
-    }
-
-
 def _parse_ts(text: str | None) -> datetime | None:
     if not text:
         return None
@@ -1185,7 +1146,6 @@ def render(
     view: dict[str, Any] = {
         "run_id": None,
         "version": -1,
-        "log_index": 0,
         "finished_shown": False,
         "states": {spec.agent_id: AgentState() for spec in AGENT_SPECS},
     }
@@ -1620,27 +1580,11 @@ def render(
                     portfolio_container = ui.column().classes("w-full gap-md")
                     parameters_container = ui.column().classes("w-full gap-md")
 
-                    with ui.expansion("Technical detail", icon="terminal").classes("w-full panel"):
-                        log = MissionLog()
-                        chart_container = ui.column().classes("w-full")
-
                     with ui.expansion("History & replay", icon="history").classes("w-full panel"):
                         with ui.row().classes("w-full items-center gap-md no-wrap"):
                             replay_select = ui.select(
                                 options=[], with_input=True, label="Past runs"
                             ).classes("flex-1")
-                            replay_knob = (
-                                ui.knob(
-                                    value=0.15,
-                                    min=0.05,
-                                    max=0.5,
-                                    step=0.05,
-                                    color="teal",
-                                    show_value=True,
-                                )
-                                .props("size=64px")
-                                .tooltip("Replay speed: delay between events (s)")
-                            )
                             with ui.column().classes("gap-xs"):
 
                                 async def refresh_history() -> None:
@@ -2485,25 +2429,14 @@ def render(
 
     def reset_view() -> None:
         view["states"] = fresh_states()
-        view["log_index"] = 0
         view["finished_shown"] = False
         office.update(view["states"])
         if track is not None:
             track.update(view["states"])
-        log.clear()
-        chart_container.clear()
         result_container.clear()
         portfolio_container.clear()
         parameters_container.clear()
         update_state(None)
-
-    def drain_log(events: list, start: int) -> int:
-        index = start
-        while index < len(events):
-            event = events[index]
-            index += 1
-            log.append(event.timestamp, event.type, format_log_line(event))
-        return index
 
     def _save_params_dialog(run: RunState) -> None:
         """30-10: the backtest optimized itself and found BETTER
@@ -2584,14 +2517,6 @@ def render(
             opt = (run.results or {}).get("optimization") or {}
             if opt.get("params_changed"):
                 _save_params_dialog(run)
-            option = build_duration_chart_option(run.agents)
-            chart_container.clear()
-            if option is not None:
-                with chart_container:
-                    ui.label("STEP DURATIONS").classes("lbl q-mt-md q-mb-xs")
-                    ui.echart(option).props(
-                        "role=img aria-label='Bar chart of step durations'"
-                    ).classes("w-full").style("height: 300px")
 
     def poll() -> None:
         if executor is None:
@@ -2606,7 +2531,6 @@ def render(
         view["states"] = dict(run.agents)
         refresh_cards()
         update_state(run)
-        view["log_index"] = drain_log(run.events, view["log_index"])
         if run.status != "running" and not view["finished_shown"]:
             view["finished_shown"] = True
             update_state(run)
@@ -2639,12 +2563,9 @@ def render(
                 if etype == "run_completed":
                     decision = (event.get("payload") or {}).get("decision") or decision
                 apply_event_to_states(states, event)
-                view["states"] = states
-                refresh_cards()
-                update_state({"agents": states, "status": "running"})
-                log.append(event["timestamp"], etype, format_log_line(event))
-                fx("swarmFX.sounds.tick()")
-                await asyncio.sleep(float(replay_knob.value or 0.15))
+            view["states"] = states
+            refresh_cards()
+            update_state({"agents": states, "status": "running"})
         finally:
             replay_select.enable()
 

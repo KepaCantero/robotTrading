@@ -99,9 +99,11 @@ async def test_swarm_pipeline_runs_end_to_end_from_ui(user: User, register_page)
     await user.open("/swarm-test")
     user.find(marker="run_pipeline").click()
 
-    # The real T1.1→T10.1 chain includes a full backtest plus the mandatory
-    # walk-forward gate and a clean compliance-engine init; allow 60s.
-    for _ in range(240):
+    # The real T1.1→T10.1 chain includes a full backtest, the mandatory
+    # walk-forward gate AND the in-backtest optimization (up to 6 extra
+    # backtests — and a sequential fallback if the process pool breaks),
+    # so the budget must cover minutes, not seconds.
+    for _ in range(720):
         await asyncio.sleep(0.25)
         try:
             await user.should_see("Completed")
@@ -109,7 +111,7 @@ async def test_swarm_pipeline_runs_end_to_end_from_ui(user: User, register_page)
         except AssertionError:
             continue
     else:
-        pytest.fail("pipeline did not complete within 60s in the simulated UI")
+        pytest.fail("pipeline did not complete within 180s in the simulated UI")
 
     await user.should_see("Step 10 of 10")
     await user.should_see("3 · RESULT")
