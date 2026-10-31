@@ -111,9 +111,16 @@ def render(profiles_path: str | Path | None = None) -> None:
     option_buttons: dict[str, list[tuple[Any, ui.button]]] = {}
 
     def _option(key: str, value, label: str) -> ui.button:
-        """One answer choice — the selected state glows, siblings un-glow."""
+        """One answer choice — the selected state glows, siblings un-glow.
+
+        ``color=None`` is REQUIRED: NiceGUI's default color='primary'
+        pins Quasar's bg-primary/text-white onto the button, and those
+        utilities beat even ``!important`` page CSS — every option rendered
+        Quasar blue with a near-invisible selected state ("se ve mal lo
+        seleccionado", 31-10). Without a color, .ds-option styles it.
+        """
         b = (
-            ui.button(label, on_click=lambda: _pick(key, value, label, b))
+            ui.button(label, on_click=lambda: _pick(key, value, label, b), color=None)
             .classes("ds-option")
             .props("no-caps unelevated")
             .mark("opt_" + key + "_" + "".join(c for c in label if c.isalnum()))
