@@ -38,9 +38,16 @@ def allocation_from_backtest(
     annual_return_pct: Decimal,
     sharpe_ratio: Decimal,
     max_drawdown_pct: Decimal,
+    window_days: int | None = None,
 ) -> PortfolioAllocation:
-    """Build the run's real allocation from its closed trades."""
+    """Build the run's real allocation from its closed trades.
+
+    ``window_days`` (the backtest window length) unlocks the honesty
+    metrics: average cash fraction = 1 − Σ(exposure×days)/(capital×days)
+    — the number FIX 4 compares against the <1% passive bar.
+    """
     exposure_days: dict[str, Decimal] = {}
+    total_exposure_days = Decimal("0")
     for trade in trades_summary:
         symbol = str(trade.get("symbol") or "").upper()
         if not symbol:
@@ -51,11 +58,11 @@ def allocation_from_backtest(
             )
         except ArithmeticError:
             continue
-        exposure_days[symbol] = exposure_days.get(symbol, Decimal("0")) + notional * _days(
-            trade.get("entry_time"), trade.get("exit_time")
-        )
+        held = _days(trade.get("entry_time"), trade.get("exit_time"))
+        exposure_days[symbol] = exposure_days.get(symbol, Decimal("0")) + notional * held
+        total_exposure_days += notional * held
 
-    total = sum(exposure_days.values(), Decimal("0"))
+    total = total_exposure_days
     if total <= 0 or not exposure_days:
         raise ValueError("no trade exposure to allocate from")
 
@@ -74,6 +81,15 @@ def allocation_from_backtest(
     effective_names = Decimal("1") / hhi if hhi > 0 else Decimal("1")
     diversification = (effective_names / Decimal(len(weights))).quantize(Decimal("0.01"))
 
+    #: FIX 4: ¿fue ESTE run el pasivo 1/N? desviación máxima de manga vs
+    #: 1/N (en pp) y % medio de caja (lo que no estuvo invertido)
+    unit = Decimal("100") / Decimal(len(allocations))
+    max_deviation = max(abs(a.weight_pct - unit) for a in allocations)
+    avg_cash_pct: Decimal | None = None
+    if window_days and window_days > 0:
+        deployed_fraction = total_exposure_days / (capital_eur * Decimal(window_days))
+        avg_cash_pct = (Decimal("1") - min(Decimal("1"), deployed_fraction)) * Decimal("100")
+
     return PortfolioAllocation(
         success=True,
         profile_id=profile_id,
@@ -88,4 +104,6 @@ def allocation_from_backtest(
             f"Average exposure over {len(trades_summary)} real trades; all positions "
             "were closed at the end of the window (realised-P&L accounting)."
         ),
+        max_weight_deviation_pct=max_deviation.quantize(Decimal("0.01")),
+        avg_cash_pct=avg_cash_pct.quantize(Decimal("0.01")) if avg_cash_pct is not None else None,
     )

@@ -50,6 +50,11 @@ class PortfolioAllocation(BaseModel):
     diversification_ratio: Decimal
     optimization_notes: str = ""
     error_message: str | None = None
+    #: honestidad del pasivo (FIX 4, 31-10): desviación máxima de peso vs
+    #: 1/N (pp) y % medio de caja del run. "This IS the passive portfolio"
+    #: exige <1pp y <1% — con más, la UI debe decir NO-passive con cifras
+    max_weight_deviation_pct: Decimal | None = None
+    avg_cash_pct: Decimal | None = None
 
 
 class RiskScalingRequest(BaseModel):

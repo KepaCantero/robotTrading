@@ -1031,6 +1031,9 @@ class Capa2PipelineExecutor:
         bt = getattr(ctx.backtest, "backtest_result", None)
         if bt is not None and bt.trades_summary:
             try:
+                start = _to_date(ctx.request.backtest_start)
+                end = _to_date(ctx.request.backtest_end)
+                window_days = (end - start).days if start and end else None
                 ctx.portfolio = allocation_from_backtest(
                     profile_id=ctx.profile.profile_id,
                     capital_eur=ctx.input_profile.capital_initial,
@@ -1038,6 +1041,7 @@ class Capa2PipelineExecutor:
                     annual_return_pct=bt.achieved_annual_return_pct,
                     sharpe_ratio=bt.metrics.sharpe_ratio,
                     max_drawdown_pct=bt.metrics.max_drawdown_pct,
+                    window_days=window_days,
                 )
                 return ctx.portfolio
             except ValueError:
@@ -1142,6 +1146,16 @@ class Capa2PipelineExecutor:
                 "total_return": float(m.total_return_pct),
                 "max_drawdown": abs(float(m.max_drawdown_pct)),
                 "win_rate": float(m.win_rate_pct),
+                "total_trades": int(m.total_trades or 0),
+                #: comisiones totales pagadas, en pp del capital inicial —
+                #: la descomposición honesta del gap las separa del residual
+                "commissions_paid_pct": (
+                    sum(float(t.get("commission") or 0) for t in payload.trades_summary)
+                    / float(ctx.input_profile.capital_initial)
+                    * 100
+                    if payload.trades_summary
+                    else 0.0
+                ),
                 "universe_ew_return_pct": (
                     float(payload.universe_ew_return_pct)
                     if getattr(payload, "universe_ew_return_pct", None) is not None
@@ -1170,6 +1184,18 @@ class Capa2PipelineExecutor:
                 },
                 "sharpe_ratio": float(ctx.portfolio.expected_portfolio_sharpe),
                 "diversification_ratio": float(ctx.portfolio.diversification_ratio),
+                #: FIX 4: ¿fue el pasivo 1/N de verdad? desviación máxima de
+                #: manga (pp) y % medio de caja del run
+                "max_weight_deviation_pct": (
+                    float(ctx.portfolio.max_weight_deviation_pct)
+                    if ctx.portfolio.max_weight_deviation_pct is not None
+                    else None
+                ),
+                "avg_cash_pct": (
+                    float(ctx.portfolio.avg_cash_pct)
+                    if ctx.portfolio.avg_cash_pct is not None
+                    else None
+                ),
             },
             "investment_profile": safe_json(ctx.profile.to_dict()),
         }

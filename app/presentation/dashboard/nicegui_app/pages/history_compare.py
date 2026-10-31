@@ -24,7 +24,9 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-_PASSING = ("APPROVED", "CONDITIONAL")
+#: FIX 3 (31-10): binary verdicts — CONDITIONAL is retired. Historical
+#: CONDITIONAL runs render but no longer count as passing.
+_PASSING = ("APPROVED",)
 
 
 def _fmt(value: Any, suffix: str = "") -> str:

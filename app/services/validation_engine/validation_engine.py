@@ -29,6 +29,15 @@ from .models import (
 
 logger = logging.getLogger(__name__)
 
+#: tolerancia de drawdown (%) según el perfil de riesgo declarado —
+#: fuente única: la leen ValidationEngine y DeployDecisionOrchestrator
+#: (gate duro FIX 3, 31-10)
+DD_TOLERANCE_BY_RISK_PCT = {
+    "aggressive": Decimal("35"),
+    "moderate": Decimal("30"),
+    "conservative": Decimal("25"),
+}
+
 
 class ValidationEngine:
     """
@@ -386,11 +395,9 @@ class ValidationEngine:
     @staticmethod
     def _dd_tolerance_for(request: ValidationRequest) -> Decimal:
         """Tolerancia de drawdown (%) según el perfil de riesgo declarado."""
-        return {
-            "aggressive": Decimal("35"),
-            "moderate": Decimal("30"),
-            "conservative": Decimal("25"),
-        }.get((getattr(request, "risk_profile", "") or "").lower(), Decimal("30"))
+        return DD_TOLERANCE_BY_RISK_PCT.get(
+            (getattr(request, "risk_profile", "") or "").lower(), Decimal("30")
+        )
 
     def _determine_overall_status(
         self,

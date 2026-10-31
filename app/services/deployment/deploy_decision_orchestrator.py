@@ -2,7 +2,22 @@
 T10.1: DeployDecisionOrchestrator - Master deployment decision orchestrator
 
 Synthesizes all components (validation, backtest, recommendation, portfolio)
-into a final APPROVED|CONDITIONAL|REJECTED deployment decision.
+into a final APPROVED|REJECTED deployment decision.
+
+FIX 3 (owner 31-10): verdicts are BINARY. Four hard gates, none
+compensable by score — a run passes ALL of them or it is REJECTED with
+the exact list of what failed and the structural change that would
+approve it. CONDITIONAL is retired (the 27-10 "the default must pass"
+product rule is jubilated by the same decree):
+
+1. validation gates passed (T5.1, incl. walk-forward)
+2. Sharpe >= 0.50
+3. max drawdown <= the risk profile's declared tolerance
+   (aggressive 35 / moderate 30 / conservative 25)
+4. feasibility ratio >= 1.0
+5. strategy >= passive twin after costs, minus a 2 pp execution
+   tolerance (the twin buys day-one with no costs; the engine enters
+   t+1, pays commissions and respects liquidity caps)
 """
 
 from __future__ import annotations
@@ -10,6 +25,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from dataclasses import dataclass
+from decimal import Decimal
 from typing import ClassVar
 
 logger = logging.getLogger(__name__)
@@ -19,7 +35,7 @@ logger = logging.getLogger(__name__)
 class DeploymentDecision:
     """Final deployment decision with rationale."""
 
-    status: str  # "APPROVED", "CONDITIONAL", "REJECTED"
+    status: str  # "APPROVED", "REJECTED"
     decision_id: str
     confidence_level: str  # "HIGH", "MODERATE", "LOW"
     feasibility_ratio: float
@@ -32,29 +48,44 @@ class DeploymentDecision:
     next_steps: list[str]  # Actions to take
 
 
+#: execution tolerance (pp) vs the passive twin: the twin enters day-one
+#: cost-free; the real engine enters t+1, pays commissions and respects
+#: liquidity caps. A managed strategy must BEAT the twin, a passive one
+#: may trail it by at most this
+TWIN_EXECUTION_TOLERANCE_PP = 2.0
+
+#: Sharpe floor for ANY deployment (owner 31-10: hard gate, not
+#: compensable by score)
+SHARPE_HARD_FLOOR = 0.50
+
+
+def _dd_tolerance_for_risk(risk_profile: str | None) -> float:
+    """DD tolerance (%, 0-100) for the run's risk profile (single source:
+    ValidationEngine.DD_TOLERANCE_BY_RISK_PCT)."""
+    from app.services.validation_engine.validation_engine import DD_TOLERANCE_BY_RISK_PCT
+
+    key = (risk_profile or "").strip().lower()
+    return float(DD_TOLERANCE_BY_RISK_PCT.get(key, Decimal("30")))
+
+
 class DeployDecisionOrchestrator:
     """
     T10.1: Master orchestrator for deployment decisions.
 
     Synthesizes:
     - ValidationReport (passed/failed gates)
-    - BacktestResult (feasibility_ratio, returns, Sharpe)
-    - StrategyRecommendation (score, confidence)
-    - PortfolioAllocation (diversification, volatility)
+    - BacktestResult (feasibility_ratio, returns, Sharpe, drawdown, twin)
+    - StrategyRecommendation (score, confidence — informational, NOT a gate)
+    - PortfolioAllocation (diversification, passive-honesty metrics)
 
-    Into final APPROVED|CONDITIONAL|REJECTED decision.
+    Into a final APPROVED|REJECTED decision (binary, FIX 3).
     """
 
-    # Decision thresholds
+    # Decision thresholds (score is informational since FIX 3)
     APPROVAL_THRESHOLDS: ClassVar[dict] = {
         "feasibility_ratio_approved": 1.0,  # Can fully meet target
-        "feasibility_ratio_conditional": 0.7,  # Needs optimization
-        "feasibility_ratio_rejected": 0.5,  # Not viable
-        "recommendation_score_approved": 75,  # Strong recommendation
-        "recommendation_score_conditional": 60,  # Moderate recommendation
-        "recommendation_score_rejected": 40,  # Weak recommendation
-        "sharpe_ratio_approved": 1.0,  # Good risk-adjusted return
-        "sharpe_ratio_conditional": 0.5,  # Moderate risk-adjusted return
+        "sharpe_hard_floor": SHARPE_HARD_FLOOR,
+        "twin_execution_tolerance_pp": TWIN_EXECUTION_TOLERANCE_PP,
     }
 
     def __init__(self):
@@ -90,15 +121,43 @@ class DeployDecisionOrchestrator:
             recommendation_score = self._safe_float(recommendation.get("score", 0.0))
             sharpe_ratio = self._safe_float(backtest_result.get("sharpe_ratio", 0.0))
             portfolio_sharpe = self._safe_float(allocation.get("sharpe_ratio", 0.0))
+            max_drawdown = backtest_result.get("max_drawdown")
+            max_drawdown = abs(self._safe_float(max_drawdown)) if max_drawdown is not None else None
+            twin_return = backtest_result.get("universe_ew_return_pct")
+            twin_return = self._safe_float(twin_return) if twin_return is not None else None
+            strategy_return = self._safe_float(backtest_result.get("total_return"))
+            total_trades = int(backtest_result.get("total_trades") or 0)
+            commissions_pp = self._safe_float(backtest_result.get("commissions_paid_pct"))
+            risk_profile = str((investment_profile or {}).get("risk_profile") or "")
+            dd_tolerance = _dd_tolerance_for_risk(risk_profile)
+            weight_dev_pp = allocation.get("max_weight_deviation_pct")
+            avg_cash_pct = allocation.get("avg_cash_pct")
 
-            # Determine status based on decision matrix
-            status, confidence = await self._determine_status(
-                validation_passed, feasibility_ratio, recommendation_score, sharpe_ratio
+            # Determine status: binary, hard gates only (FIX 3)
+            status, confidence, failures = await self._determine_status(
+                validation_passed=validation_passed,
+                feasibility_ratio=feasibility_ratio,
+                recommendation_score=recommendation_score,
+                sharpe_ratio=sharpe_ratio,
+                max_drawdown=max_drawdown,
+                dd_tolerance=dd_tolerance,
+                twin_return=twin_return,
+                strategy_return=strategy_return,
+                total_trades=total_trades,
             )
 
             # Generate reasons, risks, and recommendations
             reasons = await self._generate_reasons(
-                status, validation_passed, feasibility_ratio, recommendation_score, sharpe_ratio
+                status,
+                validation_passed,
+                feasibility_ratio,
+                recommendation_score,
+                sharpe_ratio,
+                failures=failures,
+                max_drawdown=max_drawdown,
+                dd_tolerance=dd_tolerance,
+                twin_return=twin_return,
+                strategy_return=strategy_return,
             )
             risks = await self._identify_risks(feasibility_ratio, sharpe_ratio, allocation)
             recommendations = await self._generate_recommendations(
@@ -116,38 +175,44 @@ class DeployDecisionOrchestrator:
                 ),
                 universe_ew_sharpe=self._safe_float(backtest_result.get("universe_ew_sharpe"))
                 or None,
+                failures=failures,
+                weight_dev_pp=weight_dev_pp,
+                avg_cash_pct=avg_cash_pct,
             )
 
-            # Criterio 6 honesto: si el equiponderado pasivo del propio
-            # universo batió a la estrategia gestionada, la recomendación
-            # desplegable ES el pasivo — decirlo explícitamente en vez de
-            # esconder la underperformance tras "optimiza los parámetros".
-            # EXCEPCIÓN: si la estrategia YA ES el pasivo (static_ew), el
-            # gap residual es el coste real de ejecución (entrada t+1,
-            # comisiones, caps de liquidez) — no una "capa de gestión que
-            # resta valor", y no puede recomendarse desplegarse a sí mismo.
-            ew_return = self._safe_float(backtest_result.get("universe_ew_return_pct"))
-            strategy_return = self._safe_float(backtest_result.get("total_return"))
+            # Criterio 6 honesto: descomposición del gap vs el gemelo pasivo
+            # del propio universo. EXCEPCIÓN static_ew: la estrategia YA ES
+            # el pasivo — el gap residual es coste real de ejecución (entrada
+            # t+1, comisiones, caps de liquidez), y se descompone en cifras:
+            # caja media + comisiones + residual. Un residual >2 pp con
+            # <20 trades NO es coste: es bug de despliegue y se marca como
+            # tal (regla de honestidad 31-10 — nunca disfrazarlo de coste).
+            ew_return = twin_return or 0.0
             strategy_name = str(
                 recommendation.get("executed_strategy")
                 or recommendation.get("recommendation")
                 or ""
             )
             if ew_return > 0 and strategy_return < ew_return:
+                gap_pp = ew_return - strategy_return
+                cash_pp = (avg_cash_pct or 0.0) * (ew_return / 100.0)
+                residual_pp = gap_pp - cash_pp - commissions_pp
+                parts = [
+                    f"~{cash_pp:.1f} pp average cash drag",
+                    f"{commissions_pp:.1f} pp commissions",
+                ]
                 if strategy_name == "static_ew":
-                    # descomposición honesta: el término dominante es el
-                    # objetivo de despliegue del 95% (5% de caja permanente
-                    # que no compone), NO los costes de las 12 operaciones —
-                    # críticas 31-10: "ningún coste realista se come 10 pp"
-                    cash_floor_pp = ew_return * 0.05
+                    # descomposición honesta del gap YA aprobado (≤2 pp por el
+                    # gate): lo explicado (caja, comisiones) y el residual de
+                    # entrada escalonada t+1 + caps de liquidez
                     reasons.append(
                         f"The passive twin of this universe did {ew_return:+.1f}% vs "
-                        f"{strategy_return:+.1f}% executed "
-                        f"({strategy_return - ew_return:+.1f} pp). Decomposed honestly: "
-                        f"~{cash_floor_pp:.1f} pp is the engine's permanent 5% cash "
-                        "floor (95% deployment target — cash does not compound), the "
-                        "rest is staggered entry (t+1, liquidity caps) and commissions "
-                        "— this IS the static portfolio, fully invested to 95% by design."
+                        f"{strategy_return:+.1f}% executed ({strategy_return - ew_return:+.1f} pp), "
+                        "decomposed honestly: "
+                        + ", ".join(parts)
+                        + f", residual {residual_pp:.1f} pp (staggered t+1 entry and "
+                        "liquidity caps) — this IS the static portfolio, deployed to "
+                        "target with real execution."
                     )
                 else:
                     reasons.append(
@@ -196,44 +261,60 @@ class DeployDecisionOrchestrator:
         feasibility_ratio: float,
         recommendation_score: float,
         sharpe_ratio: float,
+        *,
+        max_drawdown: float | None = None,
+        dd_tolerance: float = 30.0,
+        twin_return: float | None = None,
+        strategy_return: float = 0.0,
+        total_trades: int = 0,
     ) -> tuple:
-        """
-        Determine deployment status using decision matrix.
+        """Binary hard-gate evaluation (FIX 3, owner 31-10).
 
-        Decision Logic:
-        1. If validation failed → REJECTED (hard gate)
-        2. If feasibility_ratio >= 1.0 AND recommendation >= 75 → APPROVED
-        3. If feasibility_ratio >= 0.7 AND recommendation >= 60 → CONDITIONAL
-        4. Otherwise → REJECTED
+        Every gate is HARD — none compensable by recommendation score.
+        Returns (status, confidence, failures): APPROVED only when ALL
+        gates pass; otherwise REJECTED with the exact list of failures.
+        CONDITIONAL is retired.
         """
-        # Hard gate: validation must pass
+        failures: list[str] = []
         if not validation_passed:
-            return "REJECTED", "LOW"
-
-        # Sharpe gate (owner 31-10: "el umbral de Sharpe debería ser un gate
-        # duro, no compensable por score"): bajo 0.5 no hay APPROVED —
-        # degrada a CONDITIONAL en vez de REJECT para no romper la regla de
-        # que el run por defecto pasa.
-        sharpe_gate = sharpe_ratio >= 0.5
-
-        # Feasibility and recommendation matrix
+            failures.append("validation gates failed (see the validation report)")
+        if sharpe_ratio < SHARPE_HARD_FLOOR:
+            failures.append(f"Sharpe {sharpe_ratio:.2f} < {SHARPE_HARD_FLOOR:.2f} hard floor")
+        if max_drawdown is not None and max_drawdown > dd_tolerance:
+            failures.append(
+                f"max drawdown {max_drawdown:.1f}% > {dd_tolerance:.0f}% tolerance "
+                "for this risk profile"
+            )
+        if feasibility_ratio < self.APPROVAL_THRESHOLDS["feasibility_ratio_approved"]:
+            failures.append(
+                f"feasibility ratio {feasibility_ratio:.2f} < 1.0 "
+                "(the run cannot reach its own target return)"
+            )
         if (
-            feasibility_ratio >= self.APPROVAL_THRESHOLDS["feasibility_ratio_approved"]
-            and recommendation_score >= self.APPROVAL_THRESHOLDS["recommendation_score_approved"]
+            twin_return is not None
+            and twin_return > 0
+            and strategy_return < twin_return - TWIN_EXECUTION_TOLERANCE_PP
         ):
-            if not sharpe_gate:
-                return "CONDITIONAL", "LOW"
-            confidence = "HIGH" if sharpe_ratio > 1.0 else "MODERATE"
-            return "APPROVED", confidence
+            trail_pp = twin_return - strategy_return
+            failure = (
+                f"strategy {strategy_return:+.1f}% trails the passive twin "
+                f"{twin_return:+.1f}% by more than {TWIN_EXECUTION_TOLERANCE_PP:.0f} pp "
+                "after execution costs"
+            )
+            # regla de honestidad 31-10: una brecha >2 pp con <20 trades NO
+            # es coste de ejecución (ninguna ejecución honesta de 8 órdenes
+            # cuesta eso) — es un bug de despliegue y se nombra como tal
+            if total_trades < 20:
+                failure += (
+                    f" — a {trail_pp:.1f} pp gap on {total_trades} trades is a "
+                    "DEPLOYMENT BUG, not execution cost"
+                )
+            failures.append(failure)
 
-        elif (
-            feasibility_ratio >= self.APPROVAL_THRESHOLDS["feasibility_ratio_conditional"]
-            and recommendation_score >= self.APPROVAL_THRESHOLDS["recommendation_score_conditional"]
-        ):
-            return "CONDITIONAL", "MODERATE"
-
-        else:
-            return "REJECTED", "LOW"
+        if failures:
+            return "REJECTED", "LOW", failures
+        confidence = "HIGH" if sharpe_ratio > 1.0 else "MODERATE"
+        return "APPROVED", confidence, []
 
     async def _generate_reasons(
         self,
@@ -242,37 +323,39 @@ class DeployDecisionOrchestrator:
         feasibility_ratio: float,
         recommendation_score: float,
         sharpe_ratio: float,
+        *,
+        failures: list[str] | None = None,
+        max_drawdown: float | None = None,
+        dd_tolerance: float = 30.0,
+        twin_return: float | None = None,
+        strategy_return: float = 0.0,
     ) -> list[str]:
-        """Generate human-readable reasons for decision."""
+        """Generate human-readable reasons for decision.
+
+        REJECTED carries the EXACT list of failed gates (owner 31-10) —
+        one line per gate, with the number that failed it."""
         reasons = []
 
         if status == "APPROVED":
             reasons.append("✅ All validation gates passed")
-            reasons.append(f"✅ Feasibility ratio {feasibility_ratio:.2f} exceeds 1.0 threshold")
-            reasons.append(f"✅ Recommendation score {recommendation_score:.1f} is strong")
-            if sharpe_ratio > 1.0:
-                reasons.append(f"✅ Excellent risk-adjusted returns (Sharpe: {sharpe_ratio:.2f})")
-
-        elif status == "CONDITIONAL":
-            reasons.append("⚠️  Validation passed but with conditions")
-            if feasibility_ratio >= 1.0:
+            reasons.append(f"✅ Sharpe {sharpe_ratio:.2f} ≥ {SHARPE_HARD_FLOOR:.2f} hard floor")
+            if max_drawdown is not None:
                 reasons.append(
-                    f"✅ Feasibility ratio {feasibility_ratio:.2f} exceeds 1.0 threshold"
+                    f"✅ Max drawdown {max_drawdown:.1f}% within the "
+                    f"{dd_tolerance:.0f}% tolerance of this risk profile"
                 )
-            else:
+            reasons.append(f"✅ Feasibility ratio {feasibility_ratio:.2f} ≥ 1.0")
+            if twin_return is not None and twin_return > 0:
+                verdict = "beats" if strategy_return >= twin_return else "trails within cost of"
                 reasons.append(
-                    f"⚠️  Feasibility ratio {feasibility_ratio:.2f} is moderate (0.7-1.0)"
+                    f"✅ {verdict} the passive twin of its universe "
+                    f"({strategy_return:+.1f}% vs {twin_return:+.1f}%)"
                 )
-            reasons.append(f"⚠️  Recommendation score {recommendation_score:.1f} is acceptable")
-            reasons.append("⚠️  Strategy requires optimization before full deployment")
+            reasons.append(f"ℹ️ Recommendation score {recommendation_score:.1f}/100 (informational)")
 
-        else:  # REJECTED
-            if not validation_passed:
-                reasons.append("❌ Validation gates failed")
-            if feasibility_ratio < 0.7:
-                reasons.append(f"❌ Feasibility ratio {feasibility_ratio:.2f} too low")
-            if recommendation_score < 60:
-                reasons.append(f"❌ Recommendation score {recommendation_score:.1f} insufficient")
+        else:  # REJECTED — the exact failure list, one per gate
+            for failure in failures or []:
+                reasons.append(f"❌ {failure}")
 
         return reasons
 
@@ -319,15 +402,8 @@ class DeployDecisionOrchestrator:
 
         if feasibility_ratio < 1.0:
             recommendations.append(
-                "Optimize strategy parameters to improve returns or reduce capital requirements"
+                "More capital or a more modest target return closes the feasibility gap"
             )
-
-        if recommendation_score < 75:
-            recommendations.append("Review strategy for potential improvements in Sharpe ratio")
-
-        if status == "CONDITIONAL":
-            recommendations.append("Run additional sensitivity analysis before deployment")
-            recommendations.append("Consider smaller initial position size and scale gradually")
 
         if status == "APPROVED":
             recommendations.append("Deploy strategy and monitor performance against benchmarks")
@@ -343,57 +419,92 @@ class DeployDecisionOrchestrator:
         recommendation_score: float | None = None,
         strategy_name: str = "",
         universe_ew_sharpe: float | None = None,
+        failures: list[str] | None = None,
+        weight_dev_pp: float | None = None,
+        avg_cash_pct: float | None = None,
     ) -> list[str]:
         """Determine next actions based on status. Copy is English (UI
-        language), data-driven, and knows whether the run WAS the passive
-        — satellite-era advice (and the old Spanish lines) made no sense
-        for a static_ew portfolio."""
+        language) and data-driven.
+
+        REJECTED (owner 31-10): each failed gate names the STRUCTURAL
+        change that would approve it — a REJECTED default must tell the
+        user what to change, not just "optimize".
+
+        APPROVED static_ew claims "This IS the passive portfolio" ONLY
+        when the executed weights stayed within 1 pp of 1/N and average
+        cash stayed under 1% (FIX 4); otherwise it says NOT-passive with
+        the exact numbers."""
         next_steps = []
 
         if status == "APPROVED":
+            if strategy_name == "static_ew":
+                dev = weight_dev_pp if weight_dev_pp is not None else float("nan")
+                cash = avg_cash_pct if avg_cash_pct is not None else float("nan")
+                if dev <= 1.0 and cash < 1.0:
+                    next_steps.append(
+                        "This IS the passive portfolio — weights within "
+                        f"{dev:.2f} pp of 1/N, average cash {cash:.2f}%. Adopt it to "
+                        "paper and let the drift band decide when to touch it"
+                    )
+                else:
+                    next_steps.append(
+                        "This is NOT the passive portfolio — weights deviated "
+                        f"{dev:.2f} pp from 1/N, average cash {cash:.2f}% "
+                        "(bar: <1 pp and <1%). Fix the deployment before adopting it"
+                    )
             next_steps.append("1. Review risk management parameters")
             next_steps.append("2. Set up position monitoring")
             next_steps.append("3. Begin deployment with allocated capital")
             next_steps.append("4. Schedule weekly performance reviews")
 
-        elif status == "CONDITIONAL":
+        else:  # REJECTED — the structural change per failed gate
             steps: list[str] = []
-            passive = strategy_name == "static_ew"
-            if passive:
-                steps.append(
-                    "This IS the passive portfolio — adopt it to paper and let "
-                    "the drift band decide when to touch it"
-                )
-            if sharpe_ratio is not None and sharpe_ratio < 0.5:
-                steps.append(
-                    f"Sharpe {sharpe_ratio:.2f} < 0.5: the strategy does not yet pay for its risk"
-                )
-            elif not passive:
-                steps.append("Run sensitivity analysis on weights and rebalance frequency")
-            if feasibility_ratio is not None and feasibility_ratio < 1.5:
-                steps.append(
-                    f"Feasibility {feasibility_ratio:.2f} is a thin margin — more "
-                    "capital or a more modest target makes it robust"
-                )
-            if recommendation_score is not None and recommendation_score < 70:
-                drag = (
-                    f"Sharpe {sharpe_ratio:.2f} vs the universe's {universe_ew_sharpe:.2f}"
-                    if universe_ew_sharpe
-                    else "the return-per-risk ratio"
-                )
-                steps.append(
-                    f"Score {recommendation_score:.0f}/100 — APPROVED needs 75: "
-                    f"the drag is {drag}, not the portfolio"
-                )
-            else:
-                steps.append("Walk-forward validation before larger deployment")
-            next_steps = [f"{i}. {s}" for i, s in enumerate(steps, start=1)]
-
-        else:  # REJECTED
-            next_steps.append("1. Review strategy parameters")
-            next_steps.append("2. Optimize for better risk-adjusted returns")
-            next_steps.append("3. Rerun backtest with optimized parameters")
-            next_steps.append("4. Reassess for deployment reconsideration")
+            for failure in failures or []:
+                if "Sharpe" in failure:
+                    drag = (
+                        f" (the universe's passive twin runs {universe_ew_sharpe:.2f})"
+                        if universe_ew_sharpe
+                        else ""
+                    )
+                    steps.append(
+                        f"Sharpe {sharpe_ratio:.2f}{drag}: this universe/strategy "
+                        "combination does not pay for its risk — a structurally "
+                        "better risk-adjusted mix (e.g. a genuine bond cushion, not "
+                        "another equity sleeve) is needed, not parameter tuning"
+                    )
+                elif "drawdown" in failure:
+                    steps.append(
+                        "Drawdown beyond this profile's tolerance: add real ballast "
+                        "(bond sleeve) or accept a lower-risk profile — tuning "
+                        "entry timing will not cut a 10-year drawdown"
+                    )
+                elif "feasibility" in failure:
+                    steps.append(
+                        f"Feasibility {feasibility_ratio:.2f}: the target return is "
+                        "unreachable with this capital/universe — raise capital, "
+                        "lower the target, or extend the horizon"
+                    )
+                elif "passive twin" in failure:
+                    if "DEPLOYMENT BUG" in failure:
+                        steps.append(
+                            "The gap vs the passive twin is a DEPLOYMENT BUG (too few "
+                            "trades for honest execution to cost that much) — report it; "
+                            "do not deploy until it is fixed"
+                        )
+                    else:
+                        steps.append(
+                            "The passive twin beats this strategy after costs: deploy the "
+                            "static equal-weight of the universe instead — the management "
+                            "layer subtracts value here"
+                        )
+                elif "validation" in failure:
+                    steps.append(
+                        "Validation gates failed (walk-forward, capital or costs): "
+                        "read the validation report — the run is not deployable as is"
+                    )
+            next_steps = [f"{i}. {s}" for i, s in enumerate(steps, start=1)] or [
+                "1. Review the failed gates above and rerun"
+            ]
 
         return next_steps
 
