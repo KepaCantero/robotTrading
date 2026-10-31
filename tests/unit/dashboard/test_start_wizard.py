@@ -114,6 +114,38 @@ class TestProfileManagement:
         user.find(marker="load_Retirement").click()
         await user.should_see("Editing “Retirement” — all questions pre-filled.")
 
+    async def test_age_saved_under_old_representative_still_loads(self, user, tmp_path):
+        """'la edad no se guarda' (31-10): a profile stored as 42 (the old
+        '35–50' representative, pre-PERFIL-45) matched NO button after the
+        band moved to 45 — the age looked unsaved. Loading must snap to the
+        band and saving must persist the band's current representative."""
+        from app.presentation.dashboard.nicegui_app.pages.start import _band_value_for_age
+
+        assert _band_value_for_age(42) == 45
+        assert _band_value_for_age(34) == 30
+        assert _band_value_for_age(66) == 70
+
+        path = tmp_path / "investor_profiles.json"
+        save_profile(
+            InvestorProfile(
+                name="Legacy 42",
+                investor_age=42,
+                investment_horizon=120,
+                risk_tolerance="MEDIO",
+                objetivo_inversion="ACUMULAR",
+            ),
+            path,
+        )
+        _open_wizard(user, path, "/start-age42-test")
+
+        await user.open("/start-age42-test")
+        user.find(marker="load_Legacy 42").click()
+        await user.should_see("Editing “Legacy 42” — all questions pre-filled.")
+
+        user.find(marker="save_profile").click()
+        data = json.loads(path.read_text(encoding="utf-8"))
+        assert data["profiles"][0]["investor_age"] == 45  # band representative
+
     async def test_delete_asks_first_then_removes(self, user, tmp_path):
         path = tmp_path / "investor_profiles.json"
         save_profile(

@@ -73,6 +73,24 @@ _AGE_LABEL = {v: k for k, v in AGE_OPTIONS.items()}
 _HORIZON_LABEL = {months: label for label, (_, months) in HORIZON_WINDOWS.items()}
 
 
+def _band_value_for_age(age: int) -> int:
+    """Any stored age → the wizard band that owns it.
+
+    The wizard speaks in BANDS ('35–50'); the stored number is just a
+    representative and representatives change (PERFIL 45 moved '35–50'
+    from 42 to 45). A profile saved as 42 then loaded under the new
+    mapping matched NO button — the age looked unsaved ('la edad no se
+    guarda', 31-10). Bands are the stable vocabulary.
+    """
+    if age < 35:
+        return 30
+    if age <= 50:
+        return 45
+    if age <= 65:
+        return 57
+    return 70
+
+
 def _profile_summary(profile: InvestorProfile) -> str:
     """One sober line per profile: what Mission Control would run."""
     return " · ".join(
@@ -83,7 +101,7 @@ def _profile_summary(profile: InvestorProfile) -> str:
                 profile.risk_tolerance, profile.risk_tolerance
             ),
             profile.tax_province,
-            f"age {profile.investor_age}",
+            _AGE_LABEL.get(_band_value_for_age(profile.investor_age), str(profile.investor_age)),
         )
     )
 
@@ -262,7 +280,7 @@ def render(profiles_path: str | Path | None = None) -> None:
                 return
             answers.update(
                 {
-                    "age": profile.investor_age,
+                    "age": _band_value_for_age(profile.investor_age),
                     "horizon": _HORIZON_LABEL.get(profile.investment_horizon),
                     "risk": profile.risk_tolerance,
                     "province": profile.tax_province,
