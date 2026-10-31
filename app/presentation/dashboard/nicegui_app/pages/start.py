@@ -46,10 +46,17 @@ HORIZON_WINDOWS = {
 }
 RISK_OPTIONS = {"Cautious": "BAJO", "Balanced": "MEDIO", "Adventurous": "ALTO"}
 AGE_OPTIONS = {"Under 35": 30, "35–50": 42, "50–65": 57, "Over 65": 70}
+#: every objective Mission Control can run, in novice words — ACUMULAR
+#: first because it is the owner-decreed default (31-10). The wizard
+#: must never offer less than /swarm ("faltan opciones", 31-10).
 GOAL_OPTIONS = {
-    "Monthly income (dividends)": "MAXIMIZAR_DIVIDENDOS",
-    "Keep my money safe": "CAPITAL_PRESERVATION",
+    "Accumulate — reinvest everything": "ACUMULAR",
+    "Live off it one day": "VIVIR_DE_LA_CARTERA",
     "Grow it over time": "BALANCED_GROWTH",
+    "Grow capital as much as possible": "MAXIMIZAR_CAPITAL",
+    "Monthly income (dividends)": "MAXIMIZAR_DIVIDENDOS",
+    "Generate income": "INCOME_GENERATION",
+    "Keep my money safe": "CAPITAL_PRESERVATION",
 }
 
 #: value → label, so a SAVED profile redisplays as the answers the user

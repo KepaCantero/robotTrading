@@ -368,6 +368,12 @@ class SignalProcessor:
                 total_capital=max(current_strategy_capital, self.total_portfolio_capital),
                 strategy_capital=max(current_strategy_capital, strategy_cap),
                 max_strategy_exposure_pct=max_strategy_pct,
+                # el cap de PORTFOLIO sigue al objetivo DECLARADO por la
+                # estrategia (mismo hint target_exposure): static_ew despliega
+                # al 99% (owner 31-10) y el default 95% mataba en silencio
+                # todos los top-ups una vez superado el 95% — la manga quedaba
+                # congelada a ~96% para siempre. Sin hint, el default 95%.
+                max_portfolio_exposure_pct=max_strategy_pct,
             )
 
             if not is_valid:

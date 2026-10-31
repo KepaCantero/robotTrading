@@ -20,12 +20,15 @@ class TestHorizonWindows:
 
 
 class TestGoals:
-    def test_goals_map_to_pipeline_values(self):
-        assert set(GOAL_OPTIONS.values()) <= {
-            "MAXIMIZAR_DIVIDENDOS",
-            "CAPITAL_PRESERVATION",
-            "BALANCED_GROWTH",
-        }
+    def test_wizard_offers_every_mission_control_objective(self):
+        """The wizard can never offer LESS than /swarm — 'faltan opciones
+        como el acumulado' (31-10) was exactly this drift."""
+        from app.presentation.dashboard.nicegui_app.pages.swarm import OBJECTIVES
+
+        assert set(GOAL_OPTIONS.values()) == set(OBJECTIVES)
+
+    def test_owner_decree_default_goal_comes_first(self):
+        assert next(iter(GOAL_OPTIONS.values())) == "ACUMULAR"
 
 
 class TestProfileSave:

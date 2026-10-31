@@ -234,9 +234,11 @@ class TestGoalAwareUniverse:
             auto_universe(tmp_path, today=TODAY, goal="MAXIMIZAR_DIVIDENDOS")
 
     def test_acumular_drops_uncovered_acc_on_long_windows(self, tmp_path):
-        # VWCE nació 2019 y AGGH cotiza desde 2021: en una ventana de 10
-        # años no pueden entrar — uncovered (avisado), no rompen la run.
-        # VHYL/IDVY ya NO son del objetivo (distribuyen — critique 30-10).
+        # FIX 2 (31-10): ACUMULAR son DOS fondos por diseño. En una
+        # ventana de 10 años VWCE (2019) y AGGH (2021) no cubren — el
+        # par cae a los sustitutos DOCUMENTADOS con historia (IUSQ.DE +
+        # AGG) y la limitación se DECLARA en notes, nunca en silencio.
+        # EUNL/EIMI/IBGS salen del objetivo: no son asiento de un par.
         for sym, bars in (
             ("EUNL.DE", 3900),
             ("IUSQ.DE", 3900),
@@ -244,6 +246,7 @@ class TestGoalAwareUniverse:
             ("VWCE", 2000),
             ("AGGH.AS", 1000),
             ("IBGS.AS", 3900),
+            ("AGG", 3900),
         ):
             write_csv(tmp_path, sym, bars)
 
@@ -254,9 +257,68 @@ class TestGoalAwareUniverse:
             window_start=TODAY - timedelta(days=3650),
         )
 
-        assert result.dropped["uncovered-window"] == 2
-        assert "VWCE" not in result.symbols and "AGGH.AS" not in result.symbols
-        assert {"EUNL.DE", "IUSQ.DE", "EIMI.MI", "IBGS.AS"} == set(result.symbols)
+        assert {"IUSQ.DE", "AGG"} == set(result.symbols)
+        assert any("IUSQ.DE sustituye a VWCE" in n for n in result.notes)
+        assert any("AGG sustituye a AGGH.AS" in n for n in result.notes)
+        assert "limitación" not in result.summary() or result.notes  # declarada
+
+    def test_acumular_short_window_is_exactly_the_target_pair(self, tmp_path):
+        # ventanas que VWCE+AGGH cubren (≤ ~5,4 años): exactamente esos
+        # dos — nada más entra aunque tenga historia (IUSQ/EUNL sobran)
+        for sym, bars in (
+            ("VWCE", 1400),
+            ("AGGH.AS", 1400),
+            ("IUSQ.DE", 3900),
+            ("EUNL.DE", 3900),
+            ("IBGS.AS", 3900),
+        ):
+            write_csv(tmp_path, sym, bars)
+
+        result = auto_universe(
+            tmp_path,
+            today=TODAY,
+            goal="ACUMULAR",
+            window_start=TODAY - timedelta(days=1000),
+        )
+
+        assert {"VWCE", "AGGH.AS"} == set(result.symbols)
+        assert result.notes == ()
+
+    def test_acumular_mixed_window_uses_real_equity_substitute_bond(self, tmp_path):
+        # ventana que VWCE cubre pero AGGH no: equity REAL (VWCE) y bono
+        # sustituido (AGG) — cada asiento usa el fondo objetivo si cubre
+        for sym, bars in (
+            ("VWCE", 2100),
+            ("AGGH.AS", 1400),
+            ("IUSQ.DE", 3900),
+            ("AGG", 2600),
+        ):
+            write_csv(tmp_path, sym, bars)
+
+        result = auto_universe(
+            tmp_path,
+            today=TODAY,
+            goal="ACUMULAR",
+            window_start=TODAY - timedelta(days=2000),  # ~5,5 años: AGGH fuera
+        )
+
+        assert {"VWCE", "AGG"} == set(result.symbols)
+        assert any("AGG sustituye a AGGH.AS" in n for n in result.notes)
+        assert not any("IUSQ" in n for n in result.notes)
+
+    def test_acumular_window_beyond_every_substitute_fails_loudly(self, tmp_path):
+        # ni el objetivo ni los sustitutos cubren (ventana de 20 años):
+        # la run FALLA con razón clara — nunca un universo ajeno en silencio
+        for sym, bars in (("VWCE", 2000), ("AGGH.AS", 1000), ("IUSQ.DE", 3900), ("AGG", 2600)):
+            write_csv(tmp_path, sym, bars)
+
+        with pytest.raises(ValueError, match="ACUMULAR"):
+            auto_universe(
+                tmp_path,
+                today=TODAY,
+                goal="ACUMULAR",
+                window_start=TODAY - timedelta(days=7300),
+            )
 
     def test_unknown_goal_is_generic(self, tmp_path):
         write_csv(tmp_path, "SPY", 700)

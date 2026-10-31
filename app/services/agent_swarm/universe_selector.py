@@ -158,31 +158,26 @@ UCITS_TOTAL_RETURN = {
     "IBGS.AS",  # iShares € Govt Bond 1-3yr (verificado 30-10), 2008-10+ — cushion
 }
 
-#: UCITS ACCUMULATORS (30-10): todo acumulador EUR — cero drag de IRPF
-#: anual (user + critique 30-10: VHYL/IDVY FUERA — son distribuyentes y
-#: no pintan nada en acumulación; ya no hacen falta de relleno porque el
-#: fallback curado no exige mínimo). VWCE/AGGH solo cubren ventanas
-#: cortas (2019/2021): la pantalla decima por ventana. Solape
-#: EUNL/IUSQ/VWCE = deliberado: son sustitutos con historia del mismo
-#: mundo — arnés de simulación, no lista de la compra (el target es VWCE
-#: + un solo bono). IBGS.AS es el 1-3 AÑOS (verificado 30-10: -3,8% en
-#: el shock de tipos 2022 = duration ~2); AGGH es el aggregate global
-#: cubierto EUR Acc (-14,1% en 2022) — el amortiguador de verdad.
-UCITS_ACCUMULATORS = {
-    "EUNL.DE",  # iShares Core MSCI World Acc, 2009-09+
-    "IUSQ.DE",  # iShares MSCI ACWI Acc, 2011-10+ — el VWCE con historia
-    "EIMI.MI",  # iShares Core MSCI EM IMI Acc, 2014-07+
-    "VWCE",  # Vanguard FTSE All-World Acc, 2019-07+
-    "AGGH.AS",  # iShares Core Global Aggregate Bond EUR-hedged Acc, 2021-05+
-    "IBGS.AS",  # iShares € Govt Bond 1-3yr (¡1-3, no 7-10!), 2008-10+ — cushion corto
-}
+#: ACUMULAR (owner 31-10, FIX 2): el objetivo son SIEMPRE dos fondos —
+#: equity global + bono aggregate. El PAR OBJETIVO es VWCE + AGGH.AS
+#: (la cartera real del usuario); ambos nacen tarde (2019-07 / 2021-05),
+#: así que en ventanas que no cubren se sustituyen por DOCUMENTADOS con
+#: historia: IUSQ.DE (iShares MSCI ACWI Acc, 2011-10+ — el VWCE con
+#: historia) por equity, y AGG (iShares Core US Aggregate, el hermano
+#: US del Global Aggregate EUR-hedged) por bono. EUNL/EIMI/IBGS SALEN
+#: del objetivo: eran relleno del arnés de simulación y un run ACUMULAR
+#: de 10 años desplegaba 4 mangas (29/29/21/20) en lugar del par
+#: objetivo — el objetivo de producto es 2 fondos, no un harness.
+ACUMULAR_EQUITY = ("VWCE", "IUSQ.DE")  # (target, sustituto con historia)
+ACUMULAR_BOND = ("AGGH.AS", "AGG")
 
 #: goal (as the UI sends it) → corpus filter
 GOAL_FILTERS: dict[str, set[str]] = {
     "MAXIMIZAR_DIVIDENDOS": DIVIDEND_ETFS,
     "CAPITAL_PRESERVATION": DEFENSIVE_SYMBOLS,
     "VIVIR_DE_LA_CARTERA": UCITS_TOTAL_RETURN,
-    "ACUMULAR": UCITS_ACCUMULATORS,
+    # ACUMULAR no vive aquí: es una selección por VENTANA (par objetivo
+    # vs sustitutos documentados) — ver _acumular_universe
 }
 
 #: overlap families inside the goal sets: funds that hold essentially the
@@ -309,6 +304,10 @@ class AutoUniverseResult:
     goal_filter: str = ""
     diversified: bool = False
     overlap_dropped: int = 0
+    #: limitaciones declaradas del objetivo (sustitutos por ventana) —
+    #: la UI las muestra: el usuario debe SABER que su 10y ACUMULAR
+    #: simula IUSQ.DE+AGG porque VWCE/AGGH nacen tarde
+    notes: tuple[str, ...] = ()
 
     def summary(self) -> str:
         one_liner = "auto universe"
@@ -328,6 +327,7 @@ class AutoUniverseResult:
             + (" by liquidity" if not self.goal_filter else " by liquidity in-goal")
             + (" with family cap" if self.diversified else "")
             + (f" ({self.overlap_dropped} overlapping dropped)" if self.overlap_dropped else "")
+            + (f" — {'; '.join(self.notes)}" if self.notes else "")
         )
 
 
@@ -383,6 +383,70 @@ def scan_corpus(data_dir: Path) -> CorpusScan:
     return CorpusScan(symbols=tuple(symbols), unreadable=tuple(unreadable))
 
 
+def _acumular_universe(
+    scan: CorpusScan,
+    today: date,
+    window_start: date | None,
+) -> AutoUniverseResult:
+    """The ACUMULAR two-fund universe, resolved per window (FIX 2, 31-10).
+
+    ``VWCE + AGGH.AS`` (the target pair) whenever the window fits both
+    funds' history; otherwise each seat falls to its DOCUMENTED
+    substitute with history — ``IUSQ.DE`` (ACWI Acc, 2011-10+) for
+    equity, ``AGG`` (US aggregate) for the bond — and the substitution
+    is DECLARED in ``notes`` so logs and UI say it out loud. Never a
+    4-fund simulation harness: the product objective is two funds.
+    """
+    by_name = {sym.symbol: sym for sym in scan.symbols}
+    dropped: dict[str, int] = {
+        "unreadable": len(scan.unreadable),
+        "out-of-goal": max(0, len(scan.symbols) - 4),
+        "short-history": 0,
+        "stale": 0,
+        "illiquid": 0,
+        "uncovered-window": 0,
+    }
+    notes: list[str] = []
+    picked: list[str] = []
+    for role, (target, substitute) in (
+        ("equity", ACUMULAR_EQUITY),
+        ("bond", ACUMULAR_BOND),
+    ):
+        chosen: str | None = None
+        for candidate in (target, substitute):
+            sym = by_name.get(candidate)
+            if sym is None:
+                continue
+            if sym.bars < MIN_BARS:
+                dropped["short-history"] += 1
+            elif (today - sym.last_date).days > MAX_STALE_DAYS:
+                dropped["stale"] += 1
+            elif window_start is not None and sym.first_date > window_start:
+                dropped["uncovered-window"] += 1
+            else:
+                chosen = candidate
+                break
+        if chosen is None:
+            raise ValueError(
+                "Auto universe: ACUMULAR no tiene un fondo viable que cubra la "
+                f"ventana {window_start or '(sin fecha)'} para el asiento {role} "
+                f"(probados {target} y {substitute}) — recorta la ventana o "
+                "descarga su histórico primero."
+            )
+        if chosen != target:
+            notes.append(f"{role}: {chosen} sustituye a {target} (no cubre la ventana)")
+        picked.append(chosen)
+    return AutoUniverseResult(
+        symbols=picked,
+        scanned=len(scan.symbols) + len(scan.unreadable),
+        kept=len(picked),
+        dropped=dropped,
+        fallback_used=False,
+        goal_filter="ACUMULAR",
+        notes=tuple(notes),
+    )
+
+
 def auto_universe(
     data_dir: Path | str = DEFAULT_DATA_DIR,
     k: int = AUTO_UNIVERSE_SIZE,
@@ -411,6 +475,12 @@ def auto_universe(
     effective_today = today or date.today()
     scan = scan_corpus(Path(data_dir))
     goal_key = (goal or "").upper().strip()
+    if goal_key == "ACUMULAR" and not exhaustive:
+        # FIX 2 (31-10): el objetivo de acumulación es DOS fondos por
+        # diseño — par objetivo si la ventana lo cubre, sustitutos
+        # documentados si no, limitación declarada. Nunca un conjunto
+        # de relleno de 4+ mangas.
+        return _acumular_universe(scan, effective_today, window_start)
     goal_filter = None if exhaustive else GOAL_FILTERS.get(goal_key)
     goal_label = (goal_key if goal_filter else "") or ("exhaustive" if exhaustive else "")
     k = len(scan.symbols) if exhaustive else k

@@ -144,9 +144,17 @@ class TradeExecutor:
         strategy_name = signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
 
         # Skip BUY signal if already holding a position
-        # CRITICAL FIX: Don't close and reopen - just skip to prevent commission losses
+        # CRITICAL FIX: Don't close and reopen - just skip to prevent commission losses.
+        # EXCEPTION (31-10): an explicit add-on order (metadata
+        # order_purpose="top_up", emitted by static_ew to complete a sleeve
+        # left short by a partial fill) is a legitimate incremental buy —
+        # skipping it froze every partial sleeve at 65% forever (run 8fb715:
+        # IBGS/EUNL 29% vs IUSQ/EIMI 20% — +112,3% torcido contra +140,4%
+        # con mangas iguales, mismo config). update_position adds a delta,
+        # so the top-up accumulates onto the existing sleeve.
         current_position = self.position_manager.get_position(signal.symbol)
-        if current_position > 0:
+        purpose = (signal.metadata or {}).get("order_purpose") if signal.metadata else None
+        if current_position > 0 and purpose != "top_up":
             logger.debug(
                 f"BUY {signal.symbol} (strategy={strategy_name}): "
                 f"Skipping - already holding position ({current_position:.6f})"

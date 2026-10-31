@@ -29,6 +29,14 @@ DEFAULT_PRIORITY = 80.0
 
 DEFAULT_UNIVERSE = ["SCHD", "VYM", "VYMI", "VIG"]
 
+#: una manga cuenta como desplegada cuando su cantidad ejecutada alcanza
+#: esta fracción de la cantidad ordenada. El umbral no es 1.0 porque el
+#: qty ordenado se fijó contra el equity del día de la orden original y
+#: el peso real converge aunque falte un resto de cantidad: 0,95 ≈ ±1pp
+#: de peso por manga, y el risk-envelope del motor guarda el lado alto
+#: (ningún top-up supera el target_exposure declarado).
+_SLEEVE_COMPLETE_FRACTION = 0.95
+
 
 class StaticEqualWeightStrategy(BaseStrategy):
     """Equal-weight buy&hold del universo del run, rebalance al calendario."""
@@ -57,6 +65,13 @@ class StaticEqualWeightStrategy(BaseStrategy):
         self._closes: dict[str, list[tuple[datetime, float]]] = {}
         self._holdings: set[str] = set()
         self._last_rebalance: datetime | None = None
+        #: despliegue por manga: cantidad ordenada vs ejecutada. Un partial
+        #: fill (cap de liquidez del motor) reporta status "filled" con
+        #: filled < requested — sin este registro la manga quedaba congelada
+        #: al 65% para siempre (IUSQ 17,7% vs 24,75% objetivo, run 8fb715:
+        #: +112,3% torcido vs +140,4% con mangas iguales el mismo config)
+        self._ordered_qty: dict[str, float] = {}
+        self._filled_qty: dict[str, float] = {}
         #: el runner fija la fecha desde la que las señales son ejecutables
         #: (warm-up acumula historia; comprometer holdings pre-ventana crea
         #: posiciones fantasma cuando el motor descarta esas señales)
@@ -84,6 +99,21 @@ class StaticEqualWeightStrategy(BaseStrategy):
             signals.append(self._signal(market_data, held, SignalType.SELL))
         for wanted in sorted(desired - self._holdings):
             signals.append(self._signal(market_data, wanted, SignalType.BUY))
+        # mangas cortas por partial fills: top-up con el peso RESTANTE — el
+        # motor dimensiona position_weight × capital sin restar lo ya en
+        # cartera, así que re-emitir el peso completo compraría la manga
+        # entera otra vez (overweight). El top-up itera hacia el peso 1/N.
+        unit = self._position_weight(market_data.symbol.upper())
+        for sym, remaining in self._incomplete_sleeves().items():
+            signals.append(
+                self._signal(
+                    market_data,
+                    sym,
+                    SignalType.BUY,
+                    weight=round(unit * remaining, 4),
+                    purpose="top_up",
+                )
+            )
         self._holdings = desired
         return signals
 
@@ -115,15 +145,31 @@ class StaticEqualWeightStrategy(BaseStrategy):
         (p.ej. el cap de liquidez del motor — ≤10% del volumen diario)
         dejaba el sleeve en caja PARA SIEMPRE: el hold pensaba que lo
         tenía y jamás re-emitía (VHYL 2016-2026: sleeve entero sin
-        desplegar, -30 pp). El reintento llega por _rebalance_due."""
+        desplegar, -30 pp). El reintento llega por _rebalance_due.
+
+        Un PARTIAL fill (status "filled", filled < requested) también
+        dejaba la manga corta para siempre: se marcaba como desplegada y
+        nunca se completaba. Aquí se registra lo ejecutado y el top-up
+        llega por la misma cadencia de reintento."""
         symbol = str(symbol).upper()
         if status == "rejected":
             if side == "buy":
-                self._holdings.discard(symbol)
+                # solo es "no desplegada" si NO hay nada en cartera; con un
+                # partial previo la manga existe y se reintenta como top-up
+                if self._filled_qty.get(symbol, 0.0) <= 0.0:
+                    self._holdings.discard(symbol)
             return
         if status == "filled":
             if side == "buy":
                 self._holdings.add(symbol)
+                try:
+                    requested = float(requested_qty or 0)
+                    filled = float(filled_qty or 0)
+                except (TypeError, ValueError):
+                    return
+                if requested > 0:
+                    self._ordered_qty[symbol] = max(self._ordered_qty.get(symbol, 0.0), requested)
+                    self._filled_qty[symbol] = self._filled_qty.get(symbol, 0.0) + filled
             elif side == "sell":
                 self._holdings.discard(symbol)
 
@@ -146,9 +192,22 @@ class StaticEqualWeightStrategy(BaseStrategy):
         # por liquidez) reintentan en cadencia corta, no esperando un periodo
         # entero de rebalance en caja — así una orden grande se completa en
         # días sucesivos al ≤10% del volumen, como se ejecuta de verdad.
-        if self._holdings != self._desired_holdings():
+        if self._holdings != self._desired_holdings() or self._incomplete_sleeves():
             return (now - self._last_rebalance).days >= self.entry_retry_days
         return False
+
+    def _incomplete_sleeves(self) -> dict[str, float]:
+        """Mangas con cantidad ejecutada corta → fracción que falta.
+
+        ``{symbol: (ordered - filled) / ordered}`` para cada manga en cartera
+        cuyo partial fill dejó el despliegue por debajo del objetivo."""
+        out: dict[str, float] = {}
+        for sym in sorted(self._holdings):
+            ordered = self._ordered_qty.get(sym, 0.0)
+            filled = self._filled_qty.get(sym, 0.0)
+            if ordered > 0 and filled < _SLEEVE_COMPLETE_FRACTION * ordered:
+                out[sym] = max(0.0, (ordered - filled) / ordered)
+        return out
 
     def _desired_holdings(self) -> set[str]:
         """Todo símbolo del universo que haya cotizado al menos una vez."""
@@ -163,7 +222,23 @@ class StaticEqualWeightStrategy(BaseStrategy):
         n = max(1, len(self.universe))
         return round(min(0.25, self.target_exposure / n), 4)
 
-    def _signal(self, quote: Quote, symbol: str, side: SignalType) -> Signal:
+    def _signal(
+        self,
+        quote: Quote,
+        symbol: str,
+        side: SignalType,
+        weight: float | None = None,
+        purpose: str = "entry",
+    ) -> Signal:
+        metadata = {
+            "strategy": self.name,
+            "target_exposure": str(self.target_exposure),
+            "position_weight": str(weight if weight is not None else self._position_weight(symbol)),
+            "tier": "static",
+            "rebalance_days": str(self.rebalance_days),
+        }
+        if purpose != "entry":
+            metadata["order_purpose"] = purpose
         return Signal(
             symbol=symbol,
             signal_type=side,
@@ -175,11 +250,5 @@ class StaticEqualWeightStrategy(BaseStrategy):
             price=quote.close if quote.close else quote.last,
             volume=quote.volume,
             timestamp=quote.timestamp,
-            metadata={
-                "strategy": self.name,
-                "target_exposure": str(self.target_exposure),
-                "position_weight": str(self._position_weight(symbol)),
-                "tier": "static",
-                "rebalance_days": str(self.rebalance_days),
-            },
+            metadata=metadata,
         )
