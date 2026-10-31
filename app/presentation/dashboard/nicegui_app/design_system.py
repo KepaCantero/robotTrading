@@ -361,16 +361,16 @@ BEAUTY_CSS = """
 .ds-chip--active { background: var(--ds-warn_tint); color: var(--ds-warn); }
 .ds-chip--todo { background: var(--ds-surface_alt); color: var(--ds-text_soft); }
 .ds-chip--blocked { background: var(--ds-surface_alt); color: var(--ds-text_soft); }
-.ds-option {
+.q-btn.ds-option {
   width: 100%; justify-content: flex-start; text-align: left; min-height: 48px;
-  background: var(--ds-surface); border: 1.5px solid var(--ds-line);
-  border-radius: var(--ds-radius-s); color: var(--ds-text);
+  background: var(--ds-surface) !important; border: 1.5px solid var(--ds-line);
+  border-radius: var(--ds-radius-s); color: var(--ds-text) !important;
   transition: all var(--ds-motion); padding: 10px 16px; font-weight: 500;
 }
-.ds-option:hover { border-color: var(--ds-teal); transform: translateX(3px); }
-.ds-option--selected {
-  background: rgba(63,143,133,0.12); border-color: var(--ds-teal);
-  color: var(--ds-teal_deep); font-weight: 700;
+.q-btn.ds-option:hover { border-color: var(--ds-teal); transform: translateX(3px); }
+.q-btn.ds-option.ds-option--selected {
+  background: rgba(63,143,133,0.12) !important; border-color: var(--ds-teal);
+  color: var(--ds-teal_deep) !important; font-weight: 700;
   box-shadow: 0 2px 8px rgba(63,143,133,0.18);
 }
 @keyframes ds-fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
