@@ -1162,6 +1162,7 @@ def render(
         "run_id": None,
         "version": -1,
         "finished_shown": False,
+        "failure": None,  # set by a crashed run; poll() renders it (UI context)
         "states": {spec.agent_id: AgentState() for spec in AGENT_SPECS},
     }
 
@@ -2502,6 +2503,7 @@ def render(
     def reset_view() -> None:
         view["states"] = fresh_states()
         view["finished_shown"] = False
+        view["failure"] = None
         office.update(view["states"])
         if track is not None:
             track.update(view["states"])
@@ -2592,6 +2594,18 @@ def render(
 
     def poll() -> None:
         if executor is None:
+            return
+        # A CRASHED run never reaches the store/executor state (e.g. the
+        # coverage gate raises before any row exists) — the background task
+        # only sets the flag; rendering happens HERE, in a UI context.
+        if view.get("failure") is not None:
+            message = str(view["failure"])
+            view["failure"] = None
+            view["run_id"] = None
+            # update_state FIRST: it also paints the idle theater, and the
+            # failure panel must be the last word on the headline.
+            update_state(None)
+            render_theater("bad", "The run failed", message)
             return
         run_id = view["run_id"]
         run = executor.get_run(run_id) if run_id else None
@@ -2699,13 +2713,12 @@ def render(
         try:
             await executor.run(request, run_id=run_id)  # type: ignore[union-attr]
         except Exception as exc:  # noqa: BLE001 - never leave a silent eternal spinner
+            # Context-free ONLY: this task has no UI slot, and any context
+            # call (even ui.notify) raises RuntimeError and kills the task
+            # before the button re-enables — the eternal 'Running… Step 1'.
+            # poll() renders the failure from a valid UI context.
             logger.exception("Swarm pipeline crashed")
-            # The theater is the page's headline: a run that dies must SAY so
-            # there (a fleeting toast left it stuck on "running" forever —
-            # 'le doy a backtest y no termina', 31-10). Gate messages are
-            # already plain and actionable (e.g. the ACUMULAR coverage error).
-            render_theater("bad", "The run failed", str(exc))
-            ui.notify(str(exc)[:200], type="negative", position="top")
+            view["failure"] = str(exc)
             run_button.enable()
 
     # discreet sound toggle
