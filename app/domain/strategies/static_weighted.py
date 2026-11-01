@@ -31,8 +31,9 @@ from app.domain.strategies.static_ew import StaticEqualWeightStrategy
 BOND_ETFS: frozenset[str] = frozenset({"BND", "BIV", "SCHZ", "VBT", "IBTS", "IBGS.AS", "AGGH.AS"})
 
 #: default del grado de libertad cuando ni el perfil ni lo adoptado lo
-#: traen (MEDIO — el dueño tiene 45 y riesgo MEDIO; el optimizador barre
-#: alrededor en el mismo run)
+#: traen — un punto medio NEUTRO: el perfil de riesgo del run es el que
+#: decide (BAJO 0.60 / MEDIO 0.75 / ALTO 0.90 vía el ejecutor), nunca
+#: una suposición sobre el dueño (31-10: su perfil real es ALTO).
 DEFAULT_EQUITY_WEIGHT = 0.75
 
 
