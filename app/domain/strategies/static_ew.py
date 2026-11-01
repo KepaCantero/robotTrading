@@ -15,6 +15,7 @@ re-balancea al calendario (anual por defecto, ≤4 veces/año).
 
 from __future__ import annotations
 
+import logging
 import math
 from datetime import datetime
 from typing import Any
@@ -28,6 +29,8 @@ DEFAULT_LIQUIDITY = 90.0
 DEFAULT_PRIORITY = 80.0
 
 DEFAULT_UNIVERSE = ["SCHD", "VYM", "VYMI", "VIG"]
+
+_logger = logging.getLogger(__name__)
 
 #: una manga cuenta como desplegada cuando su cantidad ejecutada alcanza
 #: esta fracción de la cantidad ordenada. El umbral no es 1.0 porque el
@@ -155,7 +158,13 @@ class StaticEqualWeightStrategy(BaseStrategy):
         Un PARTIAL fill (status "filled", filled < requested) también
         dejaba la manga corta para siempre: se marcaba como desplegada y
         nunca se completaba. Aquí se registra lo ejecutado y el top-up
-        llega por la misma cadencia de reintento."""
+        llega por la misma cadencia de reintento.
+
+        FSM (idea NautilusTrader, 31-10): el libro de mangas es una
+        máquina de estados — empty → deploying → deployed (top-ups
+        dentro de deploying), sell → empty. Un evento con un estado
+        DESCONOCIDO no se ignora en silencio (un estado nuevo del motor
+        dejaba la manga en un limbo corrupto): se loguea a gritos."""
         symbol = str(symbol).upper()
         if status == "rejected":
             if side == "buy":
@@ -176,7 +185,23 @@ class StaticEqualWeightStrategy(BaseStrategy):
                     self._ordered_qty[symbol] = max(self._ordered_qty.get(symbol, 0.0), requested)
                     self._filled_qty[symbol] = self._filled_qty.get(symbol, 0.0) + filled
             elif side == "sell":
+                # la venta VACÍA la manga, libro incluido: sin esto una
+                # re-entrada acumularía el histórico de fills del ciclo
+                # anterior y el top-up jamás dispararía (latente 31-10,
+                # cazado por el golden sleeve_book_fsm)
                 self._holdings.discard(symbol)
+                self._ordered_qty.pop(symbol, None)
+                self._filled_qty.pop(symbol, None)
+            return
+        # estado no modelado: NUNCA silencioso — el libro quedaría corrupto
+        _logger.error(
+            "SLEEVE BOOK: evento de fill no modelado (%r/%r para %s) — el "
+            "motor emitió un estado que este libro no sabe aplicar; revisa "
+            "la máquina de estados antes de confiar en las mangas",
+            status,
+            side,
+            symbol,
+        )
 
     def get_required_parameters(self) -> list[str]:
         return ["rebalance_days"]

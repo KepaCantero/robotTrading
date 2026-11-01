@@ -1,0 +1,32 @@
+{
+  "after_sell": {
+    "filled": 0.0,
+    "held": false,
+    "incomplete": null
+  },
+  "after_topup_90pct": {
+    "filled": 900.0,
+    "held": true,
+    "incomplete": 0.1
+  },
+  "complete": {
+    "filled": 1000.0,
+    "held": true,
+    "incomplete": null
+  },
+  "partial_40pct": {
+    "filled": 400.0,
+    "held": true,
+    "incomplete": 0.6
+  },
+  "rejected_from_empty": {
+    "filled": 0.0,
+    "held": false,
+    "incomplete": null
+  },
+  "unknown_status_noop": {
+    "filled": 0.0,
+    "held": false,
+    "incomplete": null
+  }
+}

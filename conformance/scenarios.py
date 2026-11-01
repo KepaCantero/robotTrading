@@ -336,10 +336,59 @@ def scenario_passive_twin() -> tuple[str, dict[str, Any]]:
     return "passive_twin", payload
 
 
+def scenario_sleeve_book_fsm() -> tuple[str, dict[str, Any]]:
+    """The sleeve book as a state machine, driven event by event (idea
+    NautilusTrader): rejected stays empty, a partial leaves the sleeve
+    incomplete until a top-up crosses 95% of ordered, a sell empties it,
+    and an UNMODEDED engine status must NOT corrupt the book (it is
+    logged loudly instead — previously it was silently dropped)."""
+
+    strategy = StaticEqualWeightStrategy({"symbols": ["AAA", "BBB"]})
+
+    def _state(sym: str) -> dict[str, Any]:
+        return _r(
+            {
+                "held": sym in strategy._holdings,
+                "incomplete": strategy._incomplete_sleeves().get(sym),
+                "filled": strategy._filled_qty.get(sym, 0.0),
+            }
+        )
+
+    steps: dict[str, Any] = {}
+
+    # 1) compra RECHAZADA sin nada en cartera → manga sigue vacía
+    strategy._holdings.add("AAA")  # el hold la marca deseada al emitir
+    strategy.on_fill("AAA", "buy", "rejected", 1000, 0)
+    steps["rejected_from_empty"] = _state("AAA")
+
+    # 2) PARTIAL del 40% → en cartera pero incompleta (falta 60%)
+    strategy.on_fill("AAA", "buy", "filled", 1000, 400)
+    steps["partial_40pct"] = _state("AAA")
+
+    # 3) top-up de 50% → 90% ejecutado: aún incompleta (<95%)
+    strategy.on_fill("AAA", "buy", "filled", 500, 500)
+    steps["after_topup_90pct"] = _state("AAA")
+
+    # 4) top-up final → 140% de la orden original ≈ completa
+    strategy.on_fill("AAA", "buy", "filled", 100, 100)
+    steps["complete"] = _state("AAA")
+
+    # 5) venta → manga vacía de nuevo
+    strategy.on_fill("AAA", "sell", "filled", 1000, 1000)
+    steps["after_sell"] = _state("AAA")
+
+    # 6) estado NO modelado del motor → el libro no cambia (y loguea)
+    strategy.on_fill("AAA", "buy", "expired", 100, 100)
+    steps["unknown_status_noop"] = _state("AAA")
+
+    return "sleeve_book_fsm", steps
+
+
 SCENARIOS = [
     scenario_t_plus_1_entry,
     scenario_partial_fill_topup,
     scenario_sharpe_convention,
     scenario_weight_override_applies,
     scenario_passive_twin,
+    scenario_sleeve_book_fsm,
 ]

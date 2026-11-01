@@ -126,6 +126,66 @@ def render(executor: Any = None, store: Any = None) -> None:
 
         ui.timer(0.05, _render_scenarios, once=True)
 
+        # ── (a2) what the simulation does NOT reproduce ───────────────
+        # NautilusTrader publishes its "backtest and live differences";
+        # our honesty brand demands the same document (31-10). Every row
+        # is a place where live can differ from the numbers you saw —
+        # stated before you ever touch the live door below.
+        with ds.card(title="What the simulation does not reproduce").classes("w-full"):
+            rows: list[tuple[str, str, str]] = [
+                (
+                    "Fills",
+                    "Orders fill at the next day's price with a fixed 0.1% haircut",
+                    "Real venues fill against the live order book: spreads move "
+                    "with the hour, big orders walk the book",
+                ),
+                (
+                    "Liquidity",
+                    "A buy is capped at 10% of that day's volume and retried",
+                    "Resting orders can sit unfilled for days, or fill in "
+                    "pieces at prices you did not choose",
+                ),
+                (
+                    "Currency",
+                    "Each symbol is simulated in its listing currency",
+                    "Your EUR account pays a conversion spread on USD/GBP "
+                    "legs when buying and when selling",
+                ),
+                (
+                    "Corporate actions",
+                    "Prices are adjusted series; UCITS distributions are "
+                    "marked non-computable rather than guessed",
+                    "Real accounts receive distributions on ex-dates and "
+                    "reinvest them at that day's price",
+                ),
+                (
+                    "The day itself",
+                    "One price per day (the close) — gaps and opens only",
+                    "Intraday swings, auction opens and halted symbols happen",
+                ),
+                (
+                    "Operations",
+                    "Paper uses a deterministic broker that never disconnects",
+                    "Live adds latency, rejected orders, dropped connections "
+                    "and Monday-morning reconciliation",
+                ),
+            ]
+            with ui.grid(columns=3).classes("w-full gap-2"):
+                ui.label("Where").classes("ds-card__title").style("font-size:13px")
+                ui.label("What the backtest does").classes("ds-card__title").style("font-size:13px")
+                ui.label("What real life adds").classes("ds-card__title").style("font-size:13px")
+                for where, simulated, real in rows:
+                    ui.label(where).style("font-weight:600;color:var(--ds-text)")
+                    ui.label(simulated).style(
+                        "color:var(--ds-text_soft);font-size:var(--ds-small-size)"
+                    )
+                    ui.label(real).style("color:var(--ds-text_soft);font-size:var(--ds-small-size)")
+            ui.label(
+                "None of this is a bug: it is the honest boundary of a simulation. "
+                "Fees, taxes and worst-case paths you saw are real inside that "
+                "boundary — the boundary itself is this list."
+            ).style("color:var(--ds-text_soft);font-size:var(--ds-small-size);margin-top:12px")
+
         # ── (b) the door to live: 2 explicit steps, honest terminal ──
         with ds.card(title="Real money — the door").classes("w-full") as door:
             ui.label(
