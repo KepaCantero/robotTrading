@@ -943,11 +943,14 @@ class BacktestOrchestrator:
         bootstrap_analysis = None
         withdrawal_analysis = None
         stress_analysis = None
+        risk_analysis = None
         try:
             from app.services.backtest_orchestration.reliability import (
                 bootstrap_portfolio,
                 daily_returns,
                 stress_windows,
+                time_in_market,
+                var_historical,
                 withdrawal_sequences,
             )
 
@@ -955,6 +958,16 @@ class BacktestOrchestrator:
             bootstrap_analysis = bootstrap_portfolio(returns)
             withdrawal_analysis = withdrawal_sequences(returns)
             stress_analysis = stress_windows(list(config.symbols or []))
+            # VaR + time-in-market (31-10, robados honestamente del LSE
+            # Terminal): dos números baratos que faltaban al panel.
+            risk_analysis = {
+                "var_95_daily": var_historical(returns),
+                "time_in_market": time_in_market(
+                    engine_result.trades,
+                    float(config.initial_capital),
+                    max(1, (end_dt - start_dt).days),
+                ),
+            }
         except Exception:  # noqa: BLE001 - la fiabilidad es best-effort
             logger.warning("reliability analysis failed", exc_info=True)
 
@@ -971,6 +984,7 @@ class BacktestOrchestrator:
             metrics=metrics,
             equity_curve=equity_points,
             bootstrap_analysis=bootstrap_analysis,
+            risk_analysis=risk_analysis,
             withdrawal_analysis=withdrawal_analysis,
             stress_analysis=stress_analysis,
             trades_summary=trade_summary,

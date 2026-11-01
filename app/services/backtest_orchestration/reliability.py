@@ -57,6 +57,36 @@ def daily_returns(equity: list) -> np.ndarray:
     return values[1:] / values[:-1] - 1.0
 
 
+def var_historical(returns: np.ndarray, pct: float = 5.0) -> float | None:
+    """VaR diario histórico: el peor día que ocurre más del (100−pct)% de
+    las veces. Convención de pérdida positiva (0.012 = −1,2%)."""
+    returns = np.asarray(returns, dtype=float)
+    if len(returns) < MIN_RETURNS:
+        return None
+    return float(-np.percentile(returns, pct))
+
+
+def time_in_market(trades: list, capital: float, window_days: int) -> float | None:
+    """Fracción €·día desplegada del total disponible en la ventana.
+
+    Contabilidad de trades cerrados (el libro del motor cierra todo al
+    final de la ventana): Σ qty×precio×días en cartera / (capital×días).
+    1.0 = siempre invertido; el cash drag de entrada escalonada se ve
+    aquí, no en los pesos relativos."""
+    if window_days <= 0 or capital <= 0:
+        return None
+    eur_days = 0.0
+    for t in trades:
+        entry, exit_ = getattr(t, "entry_time", None), getattr(t, "exit_time", None)
+        qty, price = getattr(t, "quantity", None), getattr(t, "entry_price", None)
+        if entry is None or exit_ is None or qty is None or price is None:
+            continue
+        days = max(0.0, (exit_ - entry).total_seconds() / 86400.0)
+        eur_days += float(qty) * float(price) * days
+    total = capital * window_days
+    return min(1.5, eur_days / total) if total > 0 else None
+
+
 def _circular_block_paths(
     returns: np.ndarray, horizon: int, n_paths: int, rng: np.random.Generator
 ) -> np.ndarray:

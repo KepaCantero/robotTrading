@@ -2250,6 +2250,25 @@ def render(
                         f"{'PASS' if criterion.passed else 'below the floor'}"
                     ).classes("help q-mt-xs")
 
+                # VaR + time-in-market (31-10): two cheap honesty numbers
+                # the panel lacked — worst usual day, and how much of the
+                # time the capital was actually working.
+                risk = inner_bt.get("risk_analysis") or {}
+                if risk.get("var_95_daily") is not None or risk.get("time_in_market") is not None:
+                    with ui.row().classes("w-full gap-lg wrap q-mt-sm"):
+                        if risk.get("var_95_daily") is not None:
+                            with ui.column().classes("gap-xs"):
+                                ui.label(f"−{float(risk['var_95_daily']) * 100:.1f}%").classes(
+                                    "help"
+                                ).style("font-size:1.3rem;font-weight:600")
+                                ui.label("Worst day of a normal month (VaR 95%)").classes("help")
+                        if risk.get("time_in_market") is not None:
+                            with ui.column().classes("gap-xs"):
+                                ui.label(f"{float(risk['time_in_market']) * 100:.0f}%").classes(
+                                    "help"
+                                ).style("font-size:1.3rem;font-weight:600")
+                                ui.label("Time in the market (€·days deployed)").classes("help")
+
                 wd = inner_bt.get("withdrawal_analysis")
                 if isinstance(wd, dict):
                     rate = float(wd.get("withdrawal_rate_annual", 0)) * 100

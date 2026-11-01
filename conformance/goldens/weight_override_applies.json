@@ -1,0 +1,68 @@
+{
+  "after_setattr_030": {
+    "AGGH.AS": 0.693,
+    "VWCE": 0.297,
+    "max_position": 0.7
+  },
+  "after_setattr_090": {
+    "AGGH.AS": 0.099,
+    "VWCE": 0.891,
+    "max_position": 0.9
+  },
+  "default": {
+    "AGGH.AS": 0.2475,
+    "VWCE": 0.7425,
+    "max_position": 0.75
+  },
+  "executed_090": {
+    "equity_points": 20,
+    "final_positions": {
+      "AGGH.AS": 0.0,
+      "VWCE": 0.0
+    },
+    "metrics": {
+      "max_drawdown": -0.003305,
+      "sharpe_ratio": 4.532451,
+      "total_return_pct": 0.39359,
+      "total_trades": 2
+    },
+    "trades": [
+      {
+        "entry_price": 101.35125,
+        "entry_time": "2024-02-05 00:00:00",
+        "exit_price": 102.2,
+        "exit_time": "2024-03-01 00:00:00",
+        "quantity": 880.0,
+        "side": "buy",
+        "symbol": "VWCE"
+      },
+      {
+        "entry_price": 50.31026,
+        "entry_time": "2024-02-06 00:00:00",
+        "exit_price": 50.44,
+        "exit_time": "2024-03-01 00:00:00",
+        "quantity": 196.324669,
+        "side": "buy",
+        "symbol": "AGGH.AS"
+      },
+      {
+        "entry_price": 101.35125,
+        "entry_time": "2024-02-05 00:00:00",
+        "exit_price": 102.2,
+        "exit_time": "2024-03-01 00:00:00",
+        "quantity": 880.0,
+        "side": "sell",
+        "symbol": "VWCE"
+      },
+      {
+        "entry_price": 50.31026,
+        "entry_time": "2024-02-06 00:00:00",
+        "exit_price": 50.44,
+        "exit_time": "2024-03-01 00:00:00",
+        "quantity": 196.324669,
+        "side": "sell",
+        "symbol": "AGGH.AS"
+      }
+    ]
+  }
+}

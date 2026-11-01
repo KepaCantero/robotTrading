@@ -236,6 +236,8 @@ class BacktestResult:
     withdrawal_analysis: dict | None = None
     #: replay del universo en COVID-2020 y shock-de-tipos-2022
     stress_analysis: dict | None = None
+    #: VaR 95 diario histórico + fracción €·día desplegada (31-10)
+    risk_analysis: dict | None = None
 
     # Novice-readable trade list (symbol, shares, prices, P&L per trade)
     trades_summary: list[dict] = field(default_factory=list)
@@ -318,6 +320,7 @@ class BacktestResult:
             "bootstrap_analysis": self.bootstrap_analysis,
             "withdrawal_analysis": self.withdrawal_analysis,
             "stress_analysis": self.stress_analysis,
+            "risk_analysis": self.risk_analysis,
             "trades_summary": self.trades_summary,
             "symbols": list(self.symbols),
             "metrics": (

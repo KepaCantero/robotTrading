@@ -1,0 +1,52 @@
+{
+  "equity_points": 65,
+  "final_positions": {
+    "AAA": 0.0,
+    "BBB": 0.0
+  },
+  "metrics": {
+    "max_drawdown": -0.003734,
+    "sharpe_ratio": 1.968083,
+    "total_return_pct": 1.213489,
+    "total_trades": 2
+  },
+  "trades": [
+    {
+      "entry_price": 50.06001,
+      "entry_time": "2024-02-05 00:00:00",
+      "exit_price": 50.02,
+      "exit_time": "2024-05-03 00:00:00",
+      "quantity": 989.80204,
+      "side": "buy",
+      "symbol": "BBB"
+    },
+    {
+      "entry_price": 101.55115,
+      "entry_time": "2024-02-06 00:00:00",
+      "exit_price": 104.9145,
+      "exit_time": "2024-05-03 00:00:00",
+      "quantity": 487.016717,
+      "side": "buy",
+      "symbol": "AAA"
+    },
+    {
+      "entry_price": 50.06001,
+      "entry_time": "2024-02-05 00:00:00",
+      "exit_price": 50.02,
+      "exit_time": "2024-05-03 00:00:00",
+      "quantity": 989.80204,
+      "side": "sell",
+      "symbol": "BBB"
+    },
+    {
+      "entry_price": 101.55115,
+      "entry_time": "2024-02-06 00:00:00",
+      "exit_price": 104.9145,
+      "exit_time": "2024-05-03 00:00:00",
+      "quantity": 487.016717,
+      "side": "sell",
+      "symbol": "AAA"
+    }
+  ],
+  "twin_sharpe_rf0": 12.397508
+}
