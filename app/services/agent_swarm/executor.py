@@ -759,9 +759,12 @@ class Capa2PipelineExecutor:
             if "equity_weight" not in overrides:
                 overrides["equity_weight"] = cap
             orchestrator._strategy_param_overrides = overrides  # noqa: SLF001
-            grid_override = {
-                "equity_weight": [w for w in (0.3, 0.45, 0.6, 0.75, 0.9) if w <= cap + 1e-9]
-            }
+            # La edad/riesgo acota por AMBOS lados (auditoría 1-11): el
+            # grid libre + objetivo Sharpe arrastraba CUALQUIER perfil a
+            # 0,60 (los bonos abaratan la vol) — un ALTO de 45 años acababa
+            # en 60/40. La historia elige en el VECINDARIO del perfil:
+            # [cap−0.30, cap−0.15, cap], nunca más abajo.
+            grid_override = {"equity_weight": [round(cap - 0.30, 2), round(cap - 0.15, 2), cap]}
 
         ctx.backtest = await orchestrator.orchestrate(request)
 
@@ -1170,6 +1173,11 @@ class Capa2PipelineExecutor:
                 "max_drawdown": abs(float(m.max_drawdown_pct)),
                 "win_rate": float(m.win_rate_pct),
                 "total_trades": int(m.total_trades or 0),
+                #: trades completos — la decisión de despliegue mide el SPAN
+                #: de las compras: si se espacian por cap de liquidez, la
+                #: brecha vs el gemelo día-1 es coste de LIQUIDEZ del activo
+                #: (IUSQ.DE 2016), no un bug del motor (auditoría 1-11)
+                "trades_summary": [dict(t) for t in (payload.trades_summary or [])],
                 #: comisiones totales pagadas, en pp del capital inicial —
                 #: la descomposición honesta del gap las separa del residual
                 "commissions_paid_pct": (

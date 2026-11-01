@@ -71,6 +71,13 @@ class SignalProcessor:
         self.diagnostic_logger = diagnostic_logger
         self.total_portfolio_capital = total_portfolio_capital or config.initial_capital
         self.strategy_name = strategy_name
+        #: peso MÁXIMO declarado por símbolo en este run (auditoría 1-11):
+        #: el cap por símbolo usaba el peso de la SEÑAL — la entrada declara
+        #: el peso de manga (0,59) pero un top-up declara unit×restante
+        #: (0,26) → el cap colapsaba al default 30% y vetaba todos los
+        #: top-ups PARA SIEMPRE: manga IUSQ congelada al 85% durante 10
+        #: años, −22 pp de cash drag contra su propio gemelo.
+        self._declared_symbol_weights: dict[str, Decimal] = {}
 
         # Initialize Trading Validator for position size and stop-loss validation
         self.trading_validator = TradingValidator()
@@ -347,6 +354,12 @@ class SignalProcessor:
             # estrategia declara su exposición objetivo (metadato de la señal):
             # el envelope la respeta hasta ese tope; sin declaración, 80%.
             strategy_cap = self.config.initial_capital
+            try:
+                declared_w = Decimal(str((signal.metadata or {}).get("position_weight") or 0))
+            except Exception:  # noqa: BLE001 - metadata es texto no numérico
+                declared_w = Decimal("0")
+            if declared_w > self._declared_symbol_weights.get(signal.symbol, Decimal("0")):
+                self._declared_symbol_weights[signal.symbol] = declared_w
             hint = (signal.metadata or {}).get("target_exposure") if signal.metadata else None
             max_strategy_pct = None
             if hint:
@@ -375,7 +388,8 @@ class SignalProcessor:
                 max_symbol_exposure_pct=(
                     max(
                         Decimal("0.30"),
-                        Decimal(str((signal.metadata or {}).get("position_weight") or 0.30)),
+                        self._declared_symbol_weights.get(signal.symbol, Decimal("0")),
+                        Decimal(str((signal.metadata or {}).get("position_weight") or 0)),
                     )
                     if signal.metadata
                     else None

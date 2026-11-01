@@ -63,6 +63,16 @@ ASSET_CLASS: dict[str, str] = {
     "IBTS": "bond",  # iShares $ Treasury Bond 1-3yr UCITS ETF
     "IBGS.AS": "bond",  # iShares € Govt Bond 1-3yr UCITS ETF (1-3, verificado 30-10)
     "AGGH.AS": "bond",  # iShares Core Global Aggregate Bond EUR-hedged Acc
+    # aggregate/aggregate-like del corpus (auditoría 1-11: el default 10y
+    # ACUMULAR corre IUSQ.DE+AGG; sin estas filas la pata bono quedaba
+    # sin clasificar). Sincronizado con static_weighted.BOND_ETFS.
+    "AGG": "bond",
+    "AGGV": "bond",
+    "BNDX": "bond",
+    "IAGG": "bond",
+    "SCHR": "bond",
+    "FBND": "bond",
+    "KBND": "bond",
 }
 
 #: Questionnaire objectives — same keys the swarm page uses, so a swarm

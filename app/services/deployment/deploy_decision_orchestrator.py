@@ -25,6 +25,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from dataclasses import dataclass
+from datetime import date as _date
 from decimal import Decimal
 from typing import ClassVar
 
@@ -127,6 +128,19 @@ class DeployDecisionOrchestrator:
             twin_return = self._safe_float(twin_return) if twin_return is not None else None
             strategy_return = self._safe_float(backtest_result.get("total_return"))
             total_trades = int(backtest_result.get("total_trades") or 0)
+            # span de despliegue: días entre la PRIMERA y la ÚLTIMA compra —
+            # si las compras se espacian, la brecha vs el gemelo día-1 es
+            # coste de liquidez, no bug (auditoría 1-11, ver /trust)
+            buy_dates = [
+                str(t.get("entry_time"))[:10]
+                for t in (backtest_result.get("trades_summary") or [])
+                if isinstance(t, dict) and t.get("side") == "buy" and t.get("entry_time")
+            ]
+            entry_span_days = (
+                (_date.fromisoformat(max(buy_dates)) - _date.fromisoformat(min(buy_dates))).days
+                if len(buy_dates) >= 2
+                else 0
+            )
             commissions_pp = self._safe_float(backtest_result.get("commissions_paid_pct"))
             risk_profile = str((investment_profile or {}).get("risk_profile") or "")
             dd_tolerance = _dd_tolerance_for_risk(risk_profile)
@@ -144,6 +158,7 @@ class DeployDecisionOrchestrator:
                 twin_return=twin_return,
                 strategy_return=strategy_return,
                 total_trades=total_trades,
+                entry_span_days=int(entry_span_days or 0),
             )
 
             # Generate reasons, risks, and recommendations
@@ -267,6 +282,7 @@ class DeployDecisionOrchestrator:
         twin_return: float | None = None,
         strategy_return: float = 0.0,
         total_trades: int = 0,
+        entry_span_days: int = 0,
     ) -> tuple:
         """Binary hard-gate evaluation (FIX 3, owner 31-10).
 
@@ -302,12 +318,24 @@ class DeployDecisionOrchestrator:
                 "after execution costs"
             )
             # regla de honestidad 31-10: una brecha >2 pp con <20 trades NO
-            # es coste de ejecución (ninguna ejecución honesta de 8 órdenes
-            # cuesta eso) — es un bug de despliegue y se nombra como tal
-            if total_trades < 20:
+            # es coste de ejecución — es un bug de despliegue y se nombra
+            # como tal. EXCEPCIÓN honesta (auditoría 1-11): si las compras
+            # se ESPACIARON en el tiempo (despliegue escalonado por cap de
+            # liquidez — p.ej. IUSQ.DE 2016: ~500 k€/día de volumen real),
+            # la brecha es el COSTE DE LIQUIDEZ del activo, no un bug del
+            # motor: el gemelo asume día-1 completo, físicamente imposible
+            # ahí (ver /trust "What the simulation does not reproduce").
+            staggered = (entry_span_days or 0) > 5 and total_trades >= 4
+            if total_trades < 20 and not staggered:
                 failure += (
                     f" — a {trail_pp:.1f} pp gap on {total_trades} trades is a "
                     "DEPLOYMENT BUG, not execution cost"
+                )
+            elif staggered:
+                failure += (
+                    f" — the sleeve deployed over {entry_span_days} days (liquidity "
+                    "caps on a thin market): most of this gap is the real cost of "
+                    "trading an illiquid fund, which the day-one twin cannot pay"
                 )
             failures.append(failure)
 

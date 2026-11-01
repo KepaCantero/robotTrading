@@ -20,6 +20,15 @@ class TestWeights:
         s = _strategy(["EUNL.DE", "IBGS.AS"], 0.6)
         assert s._position_weight("EUNL.DE") > s._position_weight("IBGS.AS")
 
+    def test_the_default_10y_universe_splits(self):
+        """Auditoría 1-11: el DEFAULT 10y ACUMULAR corre IUSQ.DE+AGG —
+        AGG faltaba en la tabla de bonos y el run degradaba a 50/50 con
+        la búsqueda de pesos como espejo. Este par ES el camino por
+        defecto del producto: si deja de partirse, el default miente."""
+        s = _strategy(["IUSQ.DE", "AGG"], 0.9)
+        assert s._position_weight("IUSQ.DE") == round(0.9 * 0.99, 4)
+        assert s._position_weight("AGG") == round(0.1 * 0.99, 4)
+
     def test_unclassifiable_universe_degrades_to_equal_weight(self):
         s = _strategy(["VWCE", "EUNL.DE"], 0.9)  # two equity funds, no bond
         assert s._split() is None

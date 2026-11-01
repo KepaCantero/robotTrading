@@ -26,9 +26,28 @@ from typing import Any
 from app.domain.strategies.static_ew import StaticEqualWeightStrategy
 
 #: pata "bono" del universo dos-fondos. Fuente: ASSET_CLASS del
-#: portfolio-management (BND/BIV/SCHZ/VBT/IBTS/IBGS.AS/AGGH.AS) — todo lo
-#: demás cuenta como equity (fail-safe: el cap de equity binda).
-BOND_ETFS: frozenset[str] = frozenset({"BND", "BIV", "SCHZ", "VBT", "IBTS", "IBGS.AS", "AGGH.AS"})
+#: portfolio-management MÁS los aggregate del corpus que esa tabla
+#: olvidó (auditoría 1-11: el default 10y ACUMULAR corre IUSQ.DE+AGG y
+#: AGG sin clasificar degradaba el run a 50/50 — la búsqueda de pesos
+#: era un espejo en LA ventana por defecto). Sincronizado con ASSET_CLASS.
+BOND_ETFS: frozenset[str] = frozenset(
+    {
+        "BND",
+        "BIV",
+        "SCHZ",
+        "VBT",
+        "IBTS",
+        "IBGS.AS",
+        "AGGH.AS",
+        "AGG",
+        "AGGV",
+        "BNDX",
+        "IAGG",
+        "SCHR",
+        "FBND",
+        "KBND",
+    }
+)
 
 #: default del grado de libertad cuando ni el perfil ni lo adoptado lo
 #: traen — un punto medio NEUTRO: el perfil de riesgo del run es el que
