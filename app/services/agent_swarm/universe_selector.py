@@ -168,7 +168,12 @@ UCITS_TOTAL_RETURN = {
 #: del objetivo: eran relleno del arnés de simulación y un run ACUMULAR
 #: de 10 años desplegaba 4 mangas (29/29/21/20) en lugar del par
 #: objetivo — el objetivo de producto es 2 fondos, no un harness.
-ACUMULAR_EQUITY = ("VWCE", "IUSQ.DE")  # (target, sustituto con historia)
+#: (target, sustitutos con historia, EN ORDEN DE LIQUIDEZ medido en el
+#: arranque de la ventana 2016-17: EUNL.DE 6,3 M€/día vs IUSQ.DE 460 k€
+#: — 14x. IUSQ como sustituto único dejaba el default 10y con un fondo
+#: que no absorbía la orden: manga escalonada 51 días, −14,9 pp contra
+#: su propio gemelo (auditoría 1-11). EUNL cubre desde 2009-09.
+ACUMULAR_EQUITY = ("VWCE", "EUNL.DE", "IUSQ.DE")
 ACUMULAR_BOND = ("AGGH.AS", "AGG")
 
 #: goal (as the UI sends it) → corpus filter
@@ -408,12 +413,13 @@ def _acumular_universe(
     }
     notes: list[str] = []
     picked: list[str] = []
-    for role, (target, substitute) in (
+    for role, candidates in (
         ("equity", ACUMULAR_EQUITY),
         ("bond", ACUMULAR_BOND),
     ):
+        target = candidates[0]
         chosen: str | None = None
-        for candidate in (target, substitute):
+        for candidate in candidates:
             sym = by_name.get(candidate)
             if sym is None:
                 continue
@@ -430,7 +436,7 @@ def _acumular_universe(
             raise ValueError(
                 "Auto universe: ACUMULAR no tiene un fondo viable que cubra la "
                 f"ventana {window_start or '(sin fecha)'} para el asiento {role} "
-                f"(probados {target} y {substitute}) — recorta la ventana o "
+                f"(probados {', '.join(candidates)}) — recorta la ventana o "
                 "descarga su histórico primero."
             )
         if chosen != target:

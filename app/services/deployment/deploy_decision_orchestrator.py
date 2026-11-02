@@ -53,7 +53,20 @@ class DeploymentDecision:
 #: cost-free; the real engine enters t+1, pays commissions and respects
 #: liquidity caps. A managed strategy must BEAT the twin, a passive one
 #: may trail it by at most this
+#: tolerancia base vs el gemelo pasivo. NO es fija en el tiempo: el coste
+#: de ejecución REAL (impacto de entrada/salida) se paga una vez y
+#: capitaliza todo el horizonte — 1,6% de impacto en una entrada de 10
+#: años son ~5 pp del final sin ser bug ninguno (auditoría 1-11, EUNL).
+#: Escala: 2 pp + 0,75 pp por año de ventana (6m → 2,4; 5y → 5,75; 10y → 9,5).
 TWIN_EXECUTION_TOLERANCE_PP = 2.0
+TWIN_TOLERANCE_PP_PER_YEAR = 0.75
+
+
+def _twin_tolerance_pp(years: float | None) -> float:
+    if not years or years <= 0:
+        return TWIN_EXECUTION_TOLERANCE_PP
+    return TWIN_EXECUTION_TOLERANCE_PP + TWIN_TOLERANCE_PP_PER_YEAR * years
+
 
 #: Sharpe floor for ANY deployment (owner 31-10: hard gate, not
 #: compensable by score)
@@ -141,6 +154,23 @@ class DeployDecisionOrchestrator:
                 if len(buy_dates) >= 2
                 else 0
             )
+            # años de ventana: la tolerancia vs el gemelo ESCALA con el
+            # horizonte (el impacto de entrada se paga una vez y capitaliza)
+            all_dates = sorted(
+                {
+                    str(t.get(k))[:10]
+                    for t in (backtest_result.get("trades_summary") or [])
+                    if isinstance(t, dict)
+                    for k in ("entry_time", "exit_time")
+                    if t.get(k)
+                }
+            )
+            test_years = (
+                (_date.fromisoformat(all_dates[-1]) - _date.fromisoformat(all_dates[0])).days
+                / 365.25
+                if len(all_dates) >= 2
+                else None
+            )
             commissions_pp = self._safe_float(backtest_result.get("commissions_paid_pct"))
             risk_profile = str((investment_profile or {}).get("risk_profile") or "")
             dd_tolerance = _dd_tolerance_for_risk(risk_profile)
@@ -159,6 +189,7 @@ class DeployDecisionOrchestrator:
                 strategy_return=strategy_return,
                 total_trades=total_trades,
                 entry_span_days=int(entry_span_days or 0),
+                test_years=test_years,
             )
 
             # Generate reasons, risks, and recommendations
@@ -283,6 +314,7 @@ class DeployDecisionOrchestrator:
         strategy_return: float = 0.0,
         total_trades: int = 0,
         entry_span_days: int = 0,
+        test_years: float | None = None,
     ) -> tuple:
         """Binary hard-gate evaluation (FIX 3, owner 31-10).
 
@@ -306,10 +338,11 @@ class DeployDecisionOrchestrator:
                 f"feasibility ratio {feasibility_ratio:.2f} < 1.0 "
                 "(the run cannot reach its own target return)"
             )
+        tolerance_pp = _twin_tolerance_pp(test_years)
         if (
             twin_return is not None
             and twin_return > 0
-            and strategy_return < twin_return - TWIN_EXECUTION_TOLERANCE_PP
+            and strategy_return < twin_return - tolerance_pp
         ):
             trail_pp = twin_return - strategy_return
             failure = (

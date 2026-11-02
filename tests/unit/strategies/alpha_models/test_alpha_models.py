@@ -101,7 +101,7 @@ class TestAlphaSignal:
     def test_alpha_signal_to_signal(self):
         """Test converting AlphaSignal to trading Signal."""
         # Use a past timestamp to avoid validation error
-        past_timestamp = datetime.now() - timedelta(minutes=5)
+        past_timestamp = datetime.utcnow() - timedelta(minutes=5)
 
         alpha = AlphaSignal(
             symbol="AAPL",
@@ -138,7 +138,7 @@ class TestMomentumAlphaModel:
     def test_generate_alpha_bullish(self, momentum_config, sample_market_data):
         """Test generating alpha for bullish momentum."""
         model = MomentumAlphaModel(momentum_config)
-        timestamp = datetime.now()
+        timestamp = datetime.utcnow()
 
         signal = model.generate_alpha("TEST", sample_market_data, timestamp)
 
@@ -153,7 +153,7 @@ class TestMomentumAlphaModel:
         model = MomentumAlphaModel(momentum_config)
 
         short_data = pd.DataFrame({"close": [100, 101, 102]})
-        signal = model.generate_alpha("TEST", short_data, datetime.now())
+        signal = model.generate_alpha("TEST", short_data, datetime.utcnow())
 
         assert signal is None  # Should return None with insufficient data
 
@@ -163,7 +163,7 @@ class TestMomentumAlphaModel:
 
         # Create simulated returns
         np.random.seed(42)
-        signal_dates = [datetime.now() - timedelta(days=i) for i in range(100, 0, -1)]
+        signal_dates = [datetime.utcnow() - timedelta(days=i) for i in range(100, 0, -1)]
         realized_returns = pd.Series(np.random.randn(100) * 0.01)
 
         decay_metrics = model.analyze_alpha_decay("TEST", realized_returns, signal_dates)
@@ -233,7 +233,7 @@ class TestMeanReversionAlphaModel:
             index=dates,
         )
 
-        signal = model.generate_alpha("TEST", market_data, datetime.now())
+        signal = model.generate_alpha("TEST", market_data, datetime.utcnow())
 
         # Should generate BUY signal when price is below mean (oversold)
         if signal:
@@ -259,7 +259,7 @@ class TestMeanReversionAlphaModel:
             index=dates,
         )
 
-        signal = model.generate_alpha("TEST", market_data, datetime.now())
+        signal = model.generate_alpha("TEST", market_data, datetime.utcnow())
 
         # Should not generate signal for small deviations
         assert signal is None or signal.confidence < 0.5

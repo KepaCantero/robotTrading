@@ -65,7 +65,7 @@ class TestMarketRegimeFilter:
 
         result = strategy._is_market_regime_safe(market_context)
 
-        assert result is False, "Should block trading during bear market crash"
+        assert result is False, "crash: trend_down extreme strength blocks"
 
     def test_bear_market_exactly_at_threshold(self, strategy):
         """Test bear market exactly at threshold (0.6)."""
@@ -78,7 +78,7 @@ class TestMarketRegimeFilter:
 
         result = strategy._is_market_regime_safe(market_context)
 
-        assert result is False, "Should block when strength > 0.6"
+        assert result is False, "crash: strength above threshold blocks"
 
     def test_dead_market_range_low_volatility(self, strategy):
         """Test that dead market (range + low vol) is blocked."""
@@ -91,7 +91,9 @@ class TestMarketRegimeFilter:
 
         result = strategy._is_market_regime_safe(market_context)
 
-        assert result is False, "Should block trading in dead market (no opportunity)"
+        assert result is True, (
+            "dead market ALLOWED: blocking range+low-vol cost 30pp (contract 2026)"
+        )
 
     def test_dead_market_sideways_low_volatility(self, strategy):
         """Test that sideways market with low volatility is blocked."""
@@ -104,7 +106,7 @@ class TestMarketRegimeFilter:
 
         result = strategy._is_market_regime_safe(market_context)
 
-        assert result is False, "Should block sideways with low volatility"
+        assert result is True, "sideways+low-vol ALLOWED (contract 2026)"
 
     def test_extreme_volatility_crisis(self, strategy):
         """Test that extreme volatility (>75 percentile) is blocked."""
@@ -112,25 +114,25 @@ class TestMarketRegimeFilter:
             "type": "trend_up",  # Even with uptrend
             "trend_strength": 0.7,
             "volatility_regime": "high",
-            "volatility_percentile": 85,  # > 75
+            "volatility_percentile": 99.5,  # > 99 (contrato actual: solo extremo)
         }
 
         result = strategy._is_market_regime_safe(market_context)
 
-        assert result is False, "Should block during extreme volatility crisis"
+        assert result is False, "crisis: volatility percentile > 99 blocks"
 
     def test_extreme_volatility_at_threshold(self, strategy):
-        """Test extreme volatility exactly at threshold (75)."""
+        """Exactly at the 99 boundary: NOT a crisis (strictly above blocks)."""
         market_context = {
             "type": "unknown",
             "trend_strength": 0.5,
             "volatility_regime": "high",
-            "volatility_percentile": 76,  # Just above 75
+            "volatility_percentile": 99.0,  # exactly AT the boundary
         }
 
         result = strategy._is_market_regime_safe(market_context)
 
-        assert result is False, "Should block when percentile > 75"
+        assert result is True, "at 99 exactly: NOT a crisis (strictly above blocks)"
 
     # ===== GOOD REGIME TESTS (should return True) =====
 
@@ -434,10 +436,10 @@ class TestMarketRegimeFilterLogging:
 
     @pytest.fixture(autouse=True)
     def reset_rate_limited_logger(self):
-        """Reset the rate-limited logger counters before each logging test."""
-        from app.domain.strategies.momentum_modular.strategy import _rate_limited_logger
+        """Reset the rate-limited logger counters (moved to the
+        consolidated strategy module in the engine fusion)."""
+        from app.domain.strategies.strategy import _rate_limited_logger
 
-        # Reset counters to ensure logs appear in tests
         _rate_limited_logger.counters.clear()
 
     def test_bear_market_logs_warning(self, strategy, caplog):
@@ -468,7 +470,7 @@ class TestMarketRegimeFilterLogging:
             "type": "trend_up",
             "trend_strength": 0.5,
             "volatility_regime": "high",
-            "volatility_percentile": 85,
+            "volatility_percentile": 99.5,  # above 99 → crisis (85 ya no lo es)
         }
 
         strategy._is_market_regime_safe(market_context)

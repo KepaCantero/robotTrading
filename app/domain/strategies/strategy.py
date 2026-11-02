@@ -49,7 +49,10 @@ class StrategyConfig:
     # Solo bloquear trading en crisis MUY extremas
     # NOTE: trend strength uses 0.25 divisor, so 1.01 threshold = disabled (strength capped at 1.0)
     # TODO: Investigate why trend_strength is always 1.0 in backtests
-    bear_market_strength_threshold: float = 1.01  # Temporarily disabled for testing
+    #: 0,6 = el contrato documentado (los tests de régimen lo especifican);
+    #: 1.01 era un "temporarily disabled" que llevaba vivo desde otra era
+    #: y dejaba el filtro anti-crash apagado por defecto (deuda A, 2-11)
+    bear_market_strength_threshold: float = 0.6
     volatility_crisis_percentile: float = 99.0  # Aumentado de 98.0 - solo extremo
     normal_volatility_min: float = 20.0
     normal_volatility_max: float = 80.0

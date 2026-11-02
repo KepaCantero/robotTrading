@@ -16,6 +16,28 @@
 
 ---
 
+## Realidad 27-10 → 2-11 (lo que la cola no contaba)
+
+Sesiones posteriores a la última actualización de este archivo (verificar
+contra git, como manda la regla):
+
+- **Perfiles de investor** (31-10): nombrados, en plural, guardados en
+  `investor_profiles.json`; el picker de /swarm aplica el activo. Riesgo
+  del dueño: **ALTO** (todos sus runs son `risk_tolerance=alto`).
+- **Búsqueda de reparto equity/bondo** (31-10/1-11): `static_weighted` +
+  optimizador in-backtest con grid acotado al perfil.
+- **Conformance corpus** (1-11): `conformance/` + `tests/conformance/` —
+  la semántica del motor congelada byte a byte.
+- **Auditoría exhaustiva ACUMULAR** (1-11): 18-run matriz, 4 fixes de
+  raíz (AGG sin clasificar, top-ups vetados por el envelope, grid libre,
+  gap de liquidez mal etiquetado). El DEFAULT 10y es **APPROVED**:
+  EUNL.DE+AGG 90/10 (EUNL sustituye: 6,3 M€/día vs 460 k€ de IUSQ en
+  2016), +212%, Sharpe 0,74, gap −7,6 pp con tolerancia anualizada.
+- **Deuda técnica** (2-11): arreglados A4+D2+E2+slice-A2 (42/42) y B1;
+  ledger vivo de lo que queda en la sesión del 2-11 (mypy baseline,
+  engines drift 226, fx_carry pydantic, _jobs en memoria, frontend
+  legacy, auth GAP-001, IBKR §5 bloqueado en TWS del dueño).
+
 ## La cola, en orden
 
 ### 1 — EN CURSO: campaña paper IBKR

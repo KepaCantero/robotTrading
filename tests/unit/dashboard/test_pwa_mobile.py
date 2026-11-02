@@ -29,7 +29,8 @@ class TestManifest:
 class TestMobileNav:
     def test_five_thumb_reachable_stages(self):
         routes = [p["route"] for p in AppShell.MOBILE_NAV]
-        assert routes == ["/start", "/", "/portfolio", "/optimize", "/trust"]
+        # nav actual (el /optimize salió del thumb-nav): el test clavaba la lista vieja
+        assert routes == ["/start", "/", "/portfolio", "/trust"]
 
     def test_every_nav_entry_has_name_and_icon(self):
         for page in AppShell.MOBILE_NAV:

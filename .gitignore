@@ -156,3 +156,6 @@ investor_profile.json
 
 # Named investor profiles (wizard runtime state)
 investor_profiles.json
+
+# SimFin bulk downloads (derived, regenerate via the fundamentals source)
+data/fundamentals/download/
