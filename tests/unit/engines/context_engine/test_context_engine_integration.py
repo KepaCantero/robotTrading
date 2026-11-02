@@ -51,7 +51,11 @@ def multi_asset_sample_data():
 
 @pytest.fixture
 def bull_market_data():
-    """Generate bull market data."""
+    return _bull_market_data()
+
+
+def _bull_market_data():
+    """Generate bull market data (plain helper — also consumed directly)."""
     np.random.seed(123)
     n_days = 200
 
@@ -125,7 +129,7 @@ class TestClusteringRegimeDetectorIntegration:
         detector = ClusteringRegimeDetector()
 
         # Test with bull market
-        bull_prices = bull_market_data()["SPY"]
+        bull_prices = _bull_market_data()["SPY"]
         bull_result = detector.detect(bull_prices)
         assert isinstance(bull_result, dict)
 
@@ -240,7 +244,7 @@ class TestHMMRegimeDetectorIntegration:
         detector = HMMRegimeDetector()
 
         # Test with bull market
-        bull_prices = bull_market_data()["SPY"]
+        bull_prices = _bull_market_data()["SPY"]
         result = detector.detect(bull_prices)
 
         assert "regime" in result
@@ -277,7 +281,7 @@ class TestCorrelationNetworkAnalyzerIntegration:
         from app.engines.context_engine.correlation_analyzers.correlation_network_analyzer import (
             CorrelationNetworkAnalyzer,
         )
-        from app.engines.regime_detectors.correlation_regime_detector import (
+        from app.engines.context_engine.regime_detectors.correlation_regime_detector import (
             CorrelationRegimeDetector,
         )
 
@@ -303,7 +307,7 @@ class TestCorrelationNetworkAnalyzerIntegration:
         from app.engines.context_engine.correlation_analyzers.correlation_network_analyzer import (
             CorrelationNetworkAnalyzer,
         )
-        from app.engines.regime_detectors.correlation_regime_detector import (
+        from app.engines.context_engine.regime_detectors.correlation_regime_detector import (
             CorrelationRegimeDetector,
         )
 
@@ -434,7 +438,7 @@ class TestStructuralChangeDetectorIntegration:
         detector = StructuralChangeDetector(config={"method": "cusum"})
 
         # Test with bull to bear transition
-        bull_prices = bull_market_data()["SPY"]
+        bull_prices = _bull_market_data()["SPY"]
         bear_prices = bear_market_data()["SPY"]
         transition_prices = bull_prices + bear_prices
 
@@ -481,7 +485,7 @@ class TestCrossModuleIntegration:
         regime_result = regime_detector.detect(prices)
 
         # Analyze volatility
-        returns = np.diff(prices) / prices[:-1].tolist()
+        returns = np.diff(prices) / prices[:-1]
         vol_analyzer = GARCHAnalyzer()
         vol_analyzer.fit(returns)
         vol_result = vol_analyzer.detect_clustering(returns)

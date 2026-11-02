@@ -14,7 +14,7 @@ import numpy as np
 import pytest
 
 from app.domain.models.market_data import Quote
-from app.domain.models.portfolio import Portfolio, Position
+from app.domain.models.portfolio import AssetClass, Portfolio, Position
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 # ===== Market Data Fixtures =====
@@ -142,6 +142,7 @@ def empty_portfolio() -> Portfolio:
     return Portfolio(
         cash=Decimal("100000"),
         positions=[],
+        broker="paper",
     )
 
 
@@ -151,28 +152,28 @@ def portfolio_with_positions() -> Portfolio:
     positions = [
         Position(
             symbol="AAPL",
-            quantity=Decimal("100"),
-            entry_price=Decimal("150.00"),
-            current_price=Decimal("155.00"),
-            market_value=Decimal("15500"),
-            unrealized_pnl=Decimal("500"),
+            asset_class=AssetClass.EQUITY,
+            quantity=Decimal("50"),
+            avg_price=Decimal("150.00"),
+            market_price=Decimal("155.00"),
+            unrealized_pnl=Decimal("250"),
+            broker="paper",
         ),
         Position(
             symbol="MSFT",
-            quantity=Decimal("50"),
-            entry_price=Decimal("300.00"),
-            current_price=Decimal("295.00"),
-            market_value=Decimal("14750"),
-            unrealized_pnl=Decimal("-250"),
+            asset_class=AssetClass.EQUITY,
+            quantity=Decimal("25"),
+            avg_price=Decimal("300.00"),
+            market_price=Decimal("295.00"),
+            unrealized_pnl=Decimal("-125"),
+            broker="paper",
         ),
     ]
     return Portfolio(
         cash=Decimal("70000"),
         positions=positions,
+        broker="paper",
     )
-
-
-# ===== Signal Fixtures =====
 
 
 @pytest.fixture
@@ -381,7 +382,9 @@ def mock_centralized_config():
             "max_exposure": Decimal("0.60"),
             "ema_period": 20,
             "rsi_period": 14,
-            "lookback_period": 5,
+            "lookback_period": 20,
+            "z_score_threshold": Decimal("2.0"),
+            "min_z_score": Decimal("1.5"),
             "atr_filter_enabled": True,
             "use_relative_atr": True,
             "min_atr_threshold": Decimal("0.015"),
@@ -442,7 +445,7 @@ def quote_with_nan():
         bid=Decimal("150.00"),
         ask=Decimal("150.05"),
         last=Decimal("150.02"),
-        open=Decimal("0"),  # Missing data
+        open=Decimal("199"),  # Missing data
         high=Decimal("0"),
         low=Decimal("0"),
         close=Decimal("150.00"),
@@ -452,17 +455,19 @@ def quote_with_nan():
 
 @pytest.fixture
 def quote_with_zero_price():
-    """Create a quote with zero price for testing edge cases."""
+    """Quote near the price floor: the model requires bid/ask/last > 0
+    and a valid OHLC candle — a literal zero cannot exist. The honest
+    edge case is the smallest representable price."""
     return Quote(
         symbol="TEST",
         timestamp=datetime.utcnow(),
-        bid=Decimal("0"),
-        ask=Decimal("0"),
-        last=Decimal("0"),
-        open=Decimal("0"),
-        high=Decimal("0"),
-        low=Decimal("0"),
-        close=Decimal("0"),
+        bid=Decimal("0.01"),
+        ask=Decimal("0.01"),
+        last=Decimal("0.01"),
+        open=Decimal("0.01"),
+        high=Decimal("0.01"),
+        low=Decimal("0.01"),
+        close=Decimal("0.01"),
         volume=Decimal("1000"),
     )
 

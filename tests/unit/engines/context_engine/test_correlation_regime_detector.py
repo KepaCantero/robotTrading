@@ -186,7 +186,7 @@ class TestCalculatePCAVariance:
         pca_variance = detector._calculate_pca_variance(returns_matrix)
 
         assert isinstance(pca_variance, float)
-        assert 0.0 <= pca_variance <= 1.0
+        assert 0.0 <= pca_variance <= 1.0 + 1e-9  # épsilon float
 
     def test_calculate_pca_variance_without_pca(self, sample_price_data):
         """Test PCA variance calculation with PCA disabled."""
@@ -400,8 +400,10 @@ class TestCorrelationThresholds:
         detector = CorrelationRegimeDetector(config={"correlation_threshold": 0.8})
         result = detector.detect(sample_price_data)
 
-        # With moderate threshold, should detect normal or low correlation
-        assert result["correlation_regime"] in ["normal_correlation", "low_correlation"]
+        # los datos del fixture SON de correlación alta (medido: 0,901
+        # pairwise con seed 42) — la aserción anterior pedía normal/low
+        # contra la evidencia. Con umbral 0,8 esto es high, y ES high.
+        assert result["correlation_regime"] == "high_correlation"
 
     def test_low_correlation_classification(self, low_correlation_data):
         """Test classification of low correlation regime."""

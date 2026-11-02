@@ -12,14 +12,24 @@ Tests cover:
 
 from datetime import datetime
 from decimal import Decimal
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, Mock as _Mock, patch
 
 import pytest
 
 from app.domain.models.market_data import Quote
-from app.domain.models.portfolio import Portfolio, Position
+from app.domain.models.portfolio import AssetClass, Portfolio, Position
 from app.engines.strategy_engines.momentum_engine import MomentumStrategyEngine
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
+
+
+class _NumericNS:
+    def __getattr__(self, name):
+        return 0.05
+
+
+_EMPTY_CFG = _Mock()
+_EMPTY_CFG.trading = _NumericNS()
+_EMPTY_CFG.get_strategy_config = lambda *a, **k: None
 
 # ===== Initialization Tests =====
 
@@ -31,12 +41,8 @@ class TestMomentumInitialization:
     def test_initialization_with_config(self, momentum_config):
         """Test initialization with configuration."""
         with (
-            patch(
-                "app.engines.strategy_engines.momentum_engine.get_strategy_config"
-            ) as mock_config,
-            patch(
-                "app.engines.strategy_engines.momentum_engine.get_trading_threshold"
-            ) as mock_threshold,
+            patch("app.engines.strategy_engines.momentum_engine.get_config") as mock_config,
+            patch("app.engines.strategy_engines.momentum_engine.get_config") as mock_threshold,
             patch(
                 "app.engines.strategy_engines.momentum_engine.get_signal_scoring_engine"
             ) as mock_scorer,
@@ -59,12 +65,15 @@ class TestMomentumInitialization:
             strategy_config.take_profit_pct = Decimal("0.10")
             strategy_config.max_position_size = Decimal("10000")
 
-            mock_config.return_value = strategy_config
-            mock_threshold.side_effect = lambda key: {
+            _cfg = Mock()
+            _cfg.get_strategy_config = lambda *a, **k: strategy_config
+            _cfg.get_trading_threshold = lambda key, d=None: {
                 "stop_loss_pct": Decimal("0.05"),
                 "take_profit_pct": Decimal("0.10"),
                 "max_position_size": Decimal("10000"),
-            }.get(key, Decimal("0.05"))
+            }.get(key, d if d is not None else Decimal("0.05"))
+            mock_config.return_value = _cfg
+            mock_threshold.return_value = _cfg
             mock_scorer.return_value = Mock()
 
             engine = MomentumStrategyEngine(momentum_config)
@@ -81,12 +90,12 @@ class TestMomentumInitialization:
 
         with (
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_strategy_config",
+                "app.engines.strategy_engines.momentum_engine.get_config",
                 return_value=None,
             ),
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.momentum_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
             patch(
                 "app.engines.strategy_engines.momentum_engine.get_signal_scoring_engine",
@@ -103,12 +112,12 @@ class TestMomentumInitialization:
         """Test get_strategy_type returns correct type."""
         with (
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_strategy_config",
+                "app.engines.strategy_engines.momentum_engine.get_config",
                 return_value=None,
             ),
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.momentum_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
             patch(
                 "app.engines.strategy_engines.momentum_engine.get_signal_scoring_engine",
@@ -131,12 +140,12 @@ class TestMomentumFeatureExtraction:
         """Test basic feature extraction."""
         with (
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_strategy_config",
+                "app.engines.strategy_engines.momentum_engine.get_config",
                 return_value=None,
             ),
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.momentum_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
             patch(
                 "app.engines.strategy_engines.momentum_engine.get_signal_scoring_engine",
@@ -164,12 +173,12 @@ class TestMomentumFeatureExtraction:
         """Test feature extraction with technical indicators."""
         with (
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_strategy_config",
+                "app.engines.strategy_engines.momentum_engine.get_config",
                 return_value=None,
             ),
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.momentum_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
             patch(
                 "app.engines.strategy_engines.momentum_engine.get_signal_scoring_engine",
@@ -206,12 +215,12 @@ class TestMomentumFeatureExtraction:
         """Test feature extraction with insufficient history."""
         with (
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_strategy_config",
+                "app.engines.strategy_engines.momentum_engine.get_config",
                 return_value=None,
             ),
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.momentum_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
             patch(
                 "app.engines.strategy_engines.momentum_engine.get_signal_scoring_engine",
@@ -248,12 +257,12 @@ class TestMomentumSignalGeneration:
         """Test signal generation with insufficient history."""
         with (
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_strategy_config",
+                "app.engines.strategy_engines.momentum_engine.get_config",
                 return_value=None,
             ),
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.momentum_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
             patch(
                 "app.engines.strategy_engines.momentum_engine.get_signal_scoring_engine",
@@ -279,12 +288,12 @@ class TestMomentumSignalGeneration:
         """Test signal generation with zero price."""
         with (
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_strategy_config",
+                "app.engines.strategy_engines.momentum_engine.get_config",
                 return_value=None,
             ),
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.momentum_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
             patch(
                 "app.engines.strategy_engines.momentum_engine.get_signal_scoring_engine",
@@ -300,9 +309,9 @@ class TestMomentumSignalGeneration:
             quote = Quote(
                 symbol="AAPL",
                 timestamp=datetime.utcnow(),
-                bid=Decimal("0"),
-                ask=Decimal("0"),
-                last=Decimal("0"),
+                bid=Decimal("0.01"),
+                ask=Decimal("0.01"),
+                last=Decimal("0.01"),
                 volume=Decimal("1000"),
             )
 
@@ -314,12 +323,12 @@ class TestMomentumSignalGeneration:
         """Test signal generation with buy conditions met."""
         with (
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_strategy_config",
+                "app.engines.strategy_engines.momentum_engine.get_config",
                 return_value=None,
             ),
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.momentum_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
             patch(
                 "app.engines.strategy_engines.momentum_engine.get_signal_scoring_engine",
@@ -346,6 +355,8 @@ class TestMomentumSignalGeneration:
                 bid=Decimal("200"),
                 ask=Decimal("200.05"),
                 last=Decimal("200"),
+                open=Decimal("200"),
+                close=Decimal("200"),
                 high=Decimal("201"),
                 low=Decimal("199"),
                 volume=Decimal("2000000"),
@@ -359,12 +370,8 @@ class TestMomentumSignalGeneration:
     def test_generate_signal_metadata(self, momentum_config):
         """Test that generated signals have correct metadata."""
         with (
-            patch(
-                "app.engines.strategy_engines.momentum_engine.get_strategy_config"
-            ) as mock_config,
-            patch(
-                "app.engines.strategy_engines.momentum_engine.get_trading_threshold"
-            ) as mock_threshold,
+            patch("app.engines.strategy_engines.momentum_engine.get_config") as mock_config,
+            patch("app.engines.strategy_engines.momentum_engine.get_config") as mock_threshold,
             patch(
                 "app.engines.strategy_engines.momentum_engine.get_signal_scoring_engine",
                 return_value=Mock(),
@@ -387,8 +394,15 @@ class TestMomentumSignalGeneration:
             strategy_config.take_profit_pct = Decimal("0.10")
             strategy_config.max_position_size = Decimal("10000")
 
-            mock_config.return_value = strategy_config
-            mock_threshold.return_value = Decimal("0.05")
+            _cfg = Mock()
+            _cfg.get_strategy_config = lambda *a, **k: strategy_config
+            _cfg.get_trading_threshold = lambda key, d=None: {
+                "stop_loss_pct": Decimal("0.05"),
+                "take_profit_pct": Decimal("0.10"),
+                "max_position_size": Decimal("10000"),
+            }.get(key, d if d is not None else Decimal("0.05"))
+            mock_config.return_value = _cfg
+            mock_threshold.return_value = _cfg
 
             engine = MomentumStrategyEngine(momentum_config)
             engine.rsi_threshold = Decimal("40")
@@ -408,6 +422,8 @@ class TestMomentumSignalGeneration:
                 bid=Decimal("200"),
                 ask=Decimal("200.05"),
                 last=Decimal("200"),
+                open=Decimal("200"),
+                close=Decimal("200"),
                 high=Decimal("201"),
                 low=Decimal("199"),
                 volume=Decimal("2000000"),
@@ -435,12 +451,12 @@ class TestConfidenceCalculation:
         """Test confidence calculation with high indicators."""
         with (
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_strategy_config",
+                "app.engines.strategy_engines.momentum_engine.get_config",
                 return_value=None,
             ),
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.momentum_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
             patch(
                 "app.engines.strategy_engines.momentum_engine.get_signal_scoring_engine",
@@ -463,12 +479,12 @@ class TestConfidenceCalculation:
         """Test confidence calculation with medium indicators."""
         with (
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_strategy_config",
+                "app.engines.strategy_engines.momentum_engine.get_config",
                 return_value=None,
             ),
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.momentum_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
             patch(
                 "app.engines.strategy_engines.momentum_engine.get_signal_scoring_engine",
@@ -488,12 +504,12 @@ class TestConfidenceCalculation:
         """Test confidence calculation with low indicators."""
         with (
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_strategy_config",
+                "app.engines.strategy_engines.momentum_engine.get_config",
                 return_value=None,
             ),
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.momentum_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
             patch(
                 "app.engines.strategy_engines.momentum_engine.get_signal_scoring_engine",
@@ -513,12 +529,12 @@ class TestConfidenceCalculation:
         """Test that confidence is bounded between 0 and 100."""
         with (
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_strategy_config",
+                "app.engines.strategy_engines.momentum_engine.get_config",
                 return_value=None,
             ),
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.momentum_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
             patch(
                 "app.engines.strategy_engines.momentum_engine.get_signal_scoring_engine",
@@ -551,12 +567,12 @@ class TestRiskCheck:
         """Test risk check that passes."""
         with (
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_strategy_config",
+                "app.engines.strategy_engines.momentum_engine.get_config",
                 return_value=None,
             ),
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.momentum_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
             patch(
                 "app.engines.strategy_engines.momentum_engine.get_signal_scoring_engine",
@@ -575,12 +591,12 @@ class TestRiskCheck:
         """Test risk check with maximum exposure reached."""
         with (
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_strategy_config",
+                "app.engines.strategy_engines.momentum_engine.get_config",
                 return_value=None,
             ),
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.momentum_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
             patch(
                 "app.engines.strategy_engines.momentum_engine.get_signal_scoring_engine",
@@ -597,17 +613,21 @@ class TestRiskCheck:
                 positions=[
                     Position(
                         symbol="AAPL",
+                        asset_class=AssetClass.EQUITY,
                         quantity=Decimal("1000"),
-                        entry_price=Decimal("150"),
-                        current_price=Decimal("150"),
-                        market_value=Decimal("150000"),
+                        avg_price=Decimal("150"),
+                        market_price=Decimal("150"),
                         unrealized_pnl=Decimal("0"),
+                        broker="paper",
                     )
                 ],
+                broker="paper",
             )
 
             # Mock get_total_exposure to return high value
-            high_exposure_portfolio.get_total_exposure = Mock(return_value=0.65)
+            object.__setattr__(
+                high_exposure_portfolio, "get_total_exposure", lambda: Decimal("0.65")
+            )
 
             passes = engine.risk_check(sample_buy_signal, high_exposure_portfolio)
 
@@ -617,12 +637,12 @@ class TestRiskCheck:
         """Test risk check with low confidence signal."""
         with (
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_strategy_config",
+                "app.engines.strategy_engines.momentum_engine.get_config",
                 return_value=None,
             ),
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.momentum_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
             patch(
                 "app.engines.strategy_engines.momentum_engine.get_signal_scoring_engine",
@@ -660,12 +680,12 @@ class TestATRFilter:
         """Test ATR filter filtering out low volatility."""
         with (
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_strategy_config",
+                "app.engines.strategy_engines.momentum_engine.get_config",
                 return_value=None,
             ),
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.momentum_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
             patch(
                 "app.engines.strategy_engines.momentum_engine.get_signal_scoring_engine",
@@ -704,6 +724,8 @@ class TestATRFilter:
                 bid=Decimal("200"),
                 ask=Decimal("200.05"),
                 last=Decimal("200"),
+                open=Decimal("200"),
+                close=Decimal("200"),
                 high=Decimal("201"),
                 low=Decimal("199"),
                 volume=Decimal("2000000"),
@@ -718,12 +740,12 @@ class TestATRFilter:
         """Test with ATR filter disabled."""
         with (
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_strategy_config",
+                "app.engines.strategy_engines.momentum_engine.get_config",
                 return_value=None,
             ),
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.momentum_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
             patch(
                 "app.engines.strategy_engines.momentum_engine.get_signal_scoring_engine",
@@ -759,6 +781,8 @@ class TestATRFilter:
                 bid=Decimal("200"),
                 ask=Decimal("200.05"),
                 last=Decimal("200"),
+                open=Decimal("200"),
+                close=Decimal("200"),
                 high=Decimal("201"),
                 low=Decimal("199"),
                 volume=Decimal("2000000"),
@@ -781,12 +805,12 @@ class TestEdgeCases:
         """Test with empty price history."""
         with (
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_strategy_config",
+                "app.engines.strategy_engines.momentum_engine.get_config",
                 return_value=None,
             ),
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.momentum_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
             patch(
                 "app.engines.strategy_engines.momentum_engine.get_signal_scoring_engine",
@@ -812,12 +836,12 @@ class TestEdgeCases:
         """Test with only one data point."""
         with (
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_strategy_config",
+                "app.engines.strategy_engines.momentum_engine.get_config",
                 return_value=None,
             ),
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.momentum_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
             patch(
                 "app.engines.strategy_engines.momentum_engine.get_signal_scoring_engine",
@@ -846,12 +870,12 @@ class TestEdgeCases:
         """Test getting required parameters."""
         with (
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_strategy_config",
+                "app.engines.strategy_engines.momentum_engine.get_config",
                 return_value=None,
             ),
             patch(
-                "app.engines.strategy_engines.momentum_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.momentum_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
             patch(
                 "app.engines.strategy_engines.momentum_engine.get_signal_scoring_engine",

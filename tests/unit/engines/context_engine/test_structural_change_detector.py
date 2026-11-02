@@ -249,13 +249,13 @@ class TestDetectChowTest:
     def test_detect_chow_custom_breakpoint(self, chow_detector, sample_prices):
         """Test Chow test with custom breakpoint."""
         custom_breakpoint = 80
-        result = chow_detector.detect_chow_test(sample_prices, breakpoint=custom_breakpoint)
+        result = chow_detector.detect_chow_test(sample_prices, split_point=custom_breakpoint)
 
         assert result["breakpoint"] == custom_breakpoint
 
     def test_detect_chow_invalid_breakpoint_too_small(self, chow_detector, sample_prices):
         """Test Chow test with breakpoint too small."""
-        result = chow_detector.detect_chow_test(sample_prices, breakpoint=5)
+        result = chow_detector.detect_chow_test(sample_prices, split_point=5)
 
         assert result["change_detected"] is False
         assert result["breakpoint"] is None
@@ -268,7 +268,7 @@ class TestDetectChowTest:
             / sample_prices[-chow_detector.window_size : -1]
         )
 
-        result = chow_detector.detect_chow_test(sample_prices, breakpoint=len(returns) - 5)
+        result = chow_detector.detect_chow_test(sample_prices, split_point=len(returns) - 5)
 
         assert result["change_detected"] is False
         assert result["breakpoint"] is None
@@ -469,7 +469,7 @@ class TestPropertyBasedTests:
 
         detector = StructuralChangeDetector(config={"method": "chow"})
 
-        result = detector.detect_chow_test(sample_prices, breakpoint=breakpoint)
+        result = detector.detect_chow_test(sample_prices, split_point=breakpoint)
 
         assert isinstance(result, dict)
 
@@ -480,8 +480,11 @@ class TestStatistics:
 
     def test_chow_test_mean_calculation(self, chow_detector, sample_prices):
         """Test that Chow test correctly calculates means."""
-        breakpoint = 100
-        result = chow_detector.detect_chow_test(sample_prices, breakpoint=breakpoint)
+        # la implementación ventanea a los últimos window_size=100 precios
+        # (99 returns): split=100 caía fuera (>89) y devolvía el dict vacío.
+        # Split válido para esa serie: 50.
+        breakpoint = 50
+        result = chow_detector.detect_chow_test(sample_prices, split_point=breakpoint)
 
         assert "mean_before" in result
         assert "mean_after" in result
@@ -645,7 +648,7 @@ class TestBreakpointHandling:
         )
 
         # Use breakpoint at edge (should be valid)
-        result = chow_detector.detect_chow_test(sample_prices, breakpoint=10)
+        result = chow_detector.detect_chow_test(sample_prices, split_point=10)
 
         if len(returns) > 20:
             assert result["breakpoint"] == 10 or result["breakpoint"] is None
@@ -658,6 +661,6 @@ class TestBreakpointHandling:
         )
         middle_breakpoint = len(returns) // 2
 
-        result = chow_detector.detect_chow_test(sample_prices, breakpoint=middle_breakpoint)
+        result = chow_detector.detect_chow_test(sample_prices, split_point=middle_breakpoint)
 
         assert result["breakpoint"] == middle_breakpoint

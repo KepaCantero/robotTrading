@@ -31,7 +31,12 @@ SLUG = "max-dividends-10y"
 @pytest.fixture
 def named_env(tmp_path, monkeypatch):
     """Isolated portfolio registry + per-slug engines, cached page state reset."""
-    monkeypatch.setattr("app.services.portfolio_management.named_portfolios.DATA_DIR", tmp_path)
+    # objeto-módulo, no ruta-string: con --import-mode=importlib la cadena
+    # "app.services..." se resuelve contra un módulo app sin el atributo en
+    # según qué orden de suite (3 errores dependientes del orden, 2-11)
+    import app.services.portfolio_management.named_portfolios as _np
+
+    monkeypatch.setattr(_np, "DATA_DIR", tmp_path)
     page_mod._ACTIVE_SLUG = "main"
     page_mod._stores.clear()
     page_mod._brokers.clear()
@@ -98,7 +103,7 @@ async def test_handoff_selects_the_new_portfolio(user: User, register_page, made
     await user.open("/portfolio-handoff")
     await _settle(user)
 
-    await user.should_see("3 · On track?")
+    await user.should_see("4 · On track?")
     # the selector landed on the created portfolio, not "main"
     select = next(iter(user.find(marker="portfolio_select").elements))
     assert select.value == SLUG
@@ -130,7 +135,7 @@ async def test_no_autodeploy_on_plain_visit(user: User, register_page, made_port
     await user.open("/portfolio-handoff")
     await _settle(user)
 
-    await user.should_see("3 · On track?")
+    await user.should_see("4 · On track?")
     await user.should_see("Cash not invested yet")
     with pytest.raises(AssertionError):
         await user.should_see("Apply to your paper account")

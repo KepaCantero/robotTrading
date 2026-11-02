@@ -50,14 +50,15 @@ def test_acumular_preset_is_automatic_whole_goal_universe():
     cubren (EUNL/IUSQ/EIMI/VHYL/IDVY + IBGS), en ventanas cortas también
     VWCE/QDIV. Nada de listas clavadas por defecto."""
     assert "ACUMULAR" in OBJECTIVES
-    assert preset_for_goal("ACUMULAR") == ("static_ew", None)
+    # 31-10: el reparto se BUSCA — ACUMULAR/VIVIR corren static_weighted
+    assert preset_for_goal("ACUMULAR") == ("static_weighted", None)
     assert preset_for_goal("acumular") == preset_for_goal("ACUMULAR")
 
 
 def test_vivir_preset_is_automatic_too():
     """Mismo principio para VIVIR_DE_LA_CARTERA: el conjunto UCITS lo
     decide la pantalla del objetivo por ventana, no una lista fija."""
-    assert preset_for_goal("VIVIR_DE_LA_CARTERA") == ("static_ew", None)
+    assert preset_for_goal("VIVIR_DE_LA_CARTERA") == ("static_weighted", None)
 
 
 class TestLongHorizonUniverse:

@@ -12,7 +12,7 @@ Tests cover:
 
 from datetime import datetime
 from decimal import Decimal
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, Mock as _Mock, patch
 
 import numpy as np
 import pytest
@@ -20,6 +20,18 @@ import pytest
 from app.domain.models.market_data import Quote
 from app.engines.strategy_engines.mean_reversion_engine import MeanReversionStrategyEngine
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
+
+
+class _NumericNS:
+    def __getattr__(self, name):
+        return 0.05
+
+
+_EMPTY_CFG = _Mock()
+_EMPTY_CFG.trading = _NumericNS()
+_EMPTY_CFG.get_strategy_config = lambda *a, **k: None
+_EMPTY_CFG.trading.volatility_confidence_very_low = 0.01
+_EMPTY_CFG.trading.volatility_confidence_low = 0.02
 
 # ===== Initialization Tests =====
 
@@ -31,11 +43,9 @@ class TestMeanReversionInitialization:
     def test_initialization_with_config(self, mean_reversion_config):
         """Test initialization with configuration."""
         with (
+            patch("app.engines.strategy_engines.mean_reversion_engine.get_config") as mock_config,
             patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_strategy_config"
-            ) as mock_config,
-            patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_trading_threshold"
+                "app.engines.strategy_engines.mean_reversion_engine.get_config"
             ) as mock_threshold,
         ):
             # Setup mocks
@@ -53,12 +63,15 @@ class TestMeanReversionInitialization:
             strategy_config.take_profit_pct = Decimal("0.10")
             strategy_config.max_position_size = Decimal("10000")
 
-            mock_config.return_value = strategy_config
-            mock_threshold.side_effect = lambda key: {
+            _cfg = Mock()
+            _cfg.get_strategy_config = lambda *a, **k: strategy_config
+            _cfg.get_trading_threshold = lambda key, d=None: {
                 "stop_loss_pct": Decimal("0.05"),
                 "take_profit_pct": Decimal("0.10"),
                 "max_position_size": Decimal("10000"),
-            }.get(key, Decimal("0.05"))
+            }.get(key, d if d is not None else Decimal("0.05"))
+            mock_config.return_value = _cfg
+            mock_threshold.return_value = _cfg
 
             engine = MeanReversionStrategyEngine(mean_reversion_config)
 
@@ -71,14 +84,14 @@ class TestMeanReversionInitialization:
         """Test initialization with default values."""
         config = {"name": "test_mean_reversion"}
 
+        from unittest.mock import Mock as _Mock
+
+        _empty_cfg = _Mock()
+        _empty_cfg.get_strategy_config = lambda *a, **k: None
         with (
             patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_strategy_config",
-                return_value=None,
-            ),
-            patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.mean_reversion_engine.get_config",
+                return_value=_empty_cfg,
             ),
         ):
             engine = MeanReversionStrategyEngine(config)
@@ -91,12 +104,8 @@ class TestMeanReversionInitialization:
         """Test get_strategy_type returns correct type."""
         with (
             patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_strategy_config",
-                return_value=None,
-            ),
-            patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.mean_reversion_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = MeanReversionStrategyEngine(mean_reversion_config)
@@ -115,12 +124,8 @@ class TestMeanReversionFeatureExtraction:
         """Test basic feature extraction."""
         with (
             patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_strategy_config",
-                return_value=None,
-            ),
-            patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.mean_reversion_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = MeanReversionStrategyEngine(mean_reversion_config)
@@ -144,12 +149,8 @@ class TestMeanReversionFeatureExtraction:
         """Test Z-score calculation in feature extraction."""
         with (
             patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_strategy_config",
-                return_value=None,
-            ),
-            patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.mean_reversion_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = MeanReversionStrategyEngine(mean_reversion_config)
@@ -181,12 +182,8 @@ class TestMeanReversionFeatureExtraction:
         """Test volatility calculation in feature extraction."""
         with (
             patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_strategy_config",
-                return_value=None,
-            ),
-            patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.mean_reversion_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = MeanReversionStrategyEngine(mean_reversion_config)
@@ -214,12 +211,8 @@ class TestMeanReversionFeatureExtraction:
         """Test feature extraction with insufficient history."""
         with (
             patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_strategy_config",
-                return_value=None,
-            ),
-            patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.mean_reversion_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = MeanReversionStrategyEngine(mean_reversion_config)
@@ -244,12 +237,8 @@ class TestMeanReversionFeatureExtraction:
         """Test price range calculation in feature extraction."""
         with (
             patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_strategy_config",
-                return_value=None,
-            ),
-            patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.mean_reversion_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = MeanReversionStrategyEngine(mean_reversion_config)
@@ -288,12 +277,8 @@ class TestMeanReversionSignalGeneration:
         """Test signal generation with insufficient history."""
         with (
             patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_strategy_config",
-                return_value=None,
-            ),
-            patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.mean_reversion_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = MeanReversionStrategyEngine(mean_reversion_config)
@@ -315,12 +300,8 @@ class TestMeanReversionSignalGeneration:
         """Test signal generation with zero price."""
         with (
             patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_strategy_config",
-                return_value=None,
-            ),
-            patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.mean_reversion_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = MeanReversionStrategyEngine(mean_reversion_config)
@@ -332,9 +313,9 @@ class TestMeanReversionSignalGeneration:
             quote = Quote(
                 symbol="AAPL",
                 timestamp=datetime.utcnow(),
-                bid=Decimal("0"),
-                ask=Decimal("0"),
-                last=Decimal("0"),
+                bid=Decimal("0.01"),
+                ask=Decimal("0.01"),
+                last=Decimal("0.01"),
                 volume=Decimal("1000"),
             )
 
@@ -346,12 +327,8 @@ class TestMeanReversionSignalGeneration:
         """Test signal generation for oversold condition (buy)."""
         with (
             patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_strategy_config",
-                return_value=None,
-            ),
-            patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.mean_reversion_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = MeanReversionStrategyEngine(mean_reversion_config)
@@ -386,12 +363,8 @@ class TestMeanReversionSignalGeneration:
         """Test signal generation for overbought condition (sell)."""
         with (
             patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_strategy_config",
-                return_value=None,
-            ),
-            patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.mean_reversion_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = MeanReversionStrategyEngine(mean_reversion_config)
@@ -423,12 +396,8 @@ class TestMeanReversionSignalGeneration:
         """Test that generated signals have correct metadata."""
         with (
             patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_strategy_config",
-                return_value=None,
-            ),
-            patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.mean_reversion_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = MeanReversionStrategyEngine(mean_reversion_config)
@@ -472,12 +441,8 @@ class TestConfidenceCalculation:
         """Test confidence with very high Z-score."""
         with (
             patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_strategy_config",
-                return_value=None,
-            ),
-            patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.mean_reversion_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = MeanReversionStrategyEngine(mean_reversion_config)
@@ -493,12 +458,8 @@ class TestConfidenceCalculation:
         """Test confidence with medium Z-score."""
         with (
             patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_strategy_config",
-                return_value=None,
-            ),
-            patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.mean_reversion_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = MeanReversionStrategyEngine(mean_reversion_config)
@@ -514,12 +475,8 @@ class TestConfidenceCalculation:
         """Test confidence with low Z-score."""
         with (
             patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_strategy_config",
-                return_value=None,
-            ),
-            patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.mean_reversion_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = MeanReversionStrategyEngine(mean_reversion_config)
@@ -535,12 +492,8 @@ class TestConfidenceCalculation:
         """Test confidence with low volatility (better for mean reversion)."""
         with (
             patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_strategy_config",
-                return_value=None,
-            ),
-            patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.mean_reversion_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = MeanReversionStrategyEngine(mean_reversion_config)
@@ -561,12 +514,8 @@ class TestConfidenceCalculation:
         """Test that confidence is bounded between 0 and 100."""
         with (
             patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_strategy_config",
-                return_value=None,
-            ),
-            patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.mean_reversion_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = MeanReversionStrategyEngine(mean_reversion_config)
@@ -595,12 +544,8 @@ class TestRiskCheck:
         """Test risk check that passes."""
         with (
             patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_strategy_config",
-                return_value=None,
-            ),
-            patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.mean_reversion_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = MeanReversionStrategyEngine(mean_reversion_config)
@@ -615,12 +560,8 @@ class TestRiskCheck:
         """Test risk check with low confidence signal."""
         with (
             patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_strategy_config",
-                return_value=None,
-            ),
-            patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.mean_reversion_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = MeanReversionStrategyEngine(mean_reversion_config)
@@ -649,12 +590,8 @@ class TestRiskCheck:
         """Test risk check with high volatility."""
         with (
             patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_strategy_config",
-                return_value=None,
-            ),
-            patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.mean_reversion_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = MeanReversionStrategyEngine(mean_reversion_config)
@@ -674,12 +611,8 @@ class TestRiskCheck:
         """Test risk check with acceptable volatility."""
         with (
             patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_strategy_config",
-                return_value=None,
-            ),
-            patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.mean_reversion_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = MeanReversionStrategyEngine(mean_reversion_config)
@@ -705,12 +638,8 @@ class TestEdgeCases:
         """Test with empty price history."""
         with (
             patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_strategy_config",
-                return_value=None,
-            ),
-            patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.mean_reversion_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = MeanReversionStrategyEngine(mean_reversion_config)
@@ -732,12 +661,8 @@ class TestEdgeCases:
         """Test with only one data point."""
         with (
             patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_strategy_config",
-                return_value=None,
-            ),
-            patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.mean_reversion_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = MeanReversionStrategyEngine(mean_reversion_config)
@@ -761,12 +686,8 @@ class TestEdgeCases:
         """Test with constant prices (no volatility)."""
         with (
             patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_strategy_config",
-                return_value=None,
-            ),
-            patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.mean_reversion_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = MeanReversionStrategyEngine(mean_reversion_config)
@@ -794,12 +715,8 @@ class TestEdgeCases:
         """Test handling of NaN values in feature extraction."""
         with (
             patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_strategy_config",
-                return_value=None,
-            ),
-            patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.mean_reversion_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = MeanReversionStrategyEngine(mean_reversion_config)
@@ -830,12 +747,8 @@ class TestEdgeCases:
         """Test getting required parameters."""
         with (
             patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_strategy_config",
-                return_value=None,
-            ),
-            patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.mean_reversion_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = MeanReversionStrategyEngine(mean_reversion_config)
@@ -861,12 +774,8 @@ class TestVolatilityRegime:
         """Test signal generation in low volatility regime."""
         with (
             patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_strategy_config",
-                return_value=None,
-            ),
-            patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.mean_reversion_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = MeanReversionStrategyEngine(mean_reversion_config)
@@ -896,12 +805,8 @@ class TestVolatilityRegime:
         """Test signal generation in high volatility regime."""
         with (
             patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_strategy_config",
-                return_value=None,
-            ),
-            patch(
-                "app.engines.strategy_engines.mean_reversion_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.mean_reversion_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = MeanReversionStrategyEngine(mean_reversion_config)

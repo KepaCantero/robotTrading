@@ -13,14 +13,25 @@ Tests cover:
 
 from datetime import datetime
 from decimal import Decimal
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, Mock as _Mock, patch
 
 import pytest
 
 from app.domain.models.market_data import Quote
-from app.domain.models.portfolio import Portfolio, Position
+from app.domain.models.portfolio import AssetClass, Portfolio, Position
 from app.engines.strategy_engines.pairs_engine import PairsTradingStrategyEngine
 from app.models.signal import SignalSource, SignalType
+
+
+class _NumericNS:
+    def __getattr__(self, name):
+        return 0.05
+
+
+_EMPTY_CFG = _Mock()
+_EMPTY_CFG.trading = _NumericNS()
+_EMPTY_CFG.get_strategy_config = lambda *a, **k: None
+_EMPTY_CFG.get_trading_threshold = lambda key, d=None: d if d is not None else 0.05
 
 # ===== Initialization Tests =====
 
@@ -32,10 +43,8 @@ class TestPairsTradingInitialization:
     def test_initialization_with_config(self, pairs_trading_config):
         """Test initialization with configuration."""
         with (
-            patch("app.engines.strategy_engines.pairs_engine.get_strategy_config") as mock_config,
-            patch(
-                "app.engines.strategy_engines.pairs_engine.get_trading_threshold"
-            ) as mock_threshold,
+            patch("app.engines.strategy_engines.pairs_engine.get_config") as mock_config,
+            patch("app.engines.strategy_engines.pairs_engine.get_config") as mock_threshold,
         ):
             # Setup mocks
             strategy_config = Mock()
@@ -56,8 +65,15 @@ class TestPairsTradingInitialization:
             strategy_config.take_profit_pct = Decimal("0.10")
             strategy_config.max_position_size = Decimal("10000")
 
-            mock_config.return_value = strategy_config
-            mock_threshold.return_value = Decimal("0.05")
+            _cfg = Mock()
+            _cfg.get_strategy_config = lambda *a, **k: strategy_config
+            _cfg.get_trading_threshold = lambda key, d=None: {
+                "stop_loss_pct": Decimal("0.05"),
+                "take_profit_pct": Decimal("0.10"),
+                "max_position_size": Decimal("10000"),
+            }.get(key, d if d is not None else Decimal("0.05"))
+            mock_config.return_value = _cfg
+            mock_threshold.return_value = _cfg
 
             engine = PairsTradingStrategyEngine(pairs_trading_config)
 
@@ -73,12 +89,10 @@ class TestPairsTradingInitialization:
         config = {"name": "test_pairs"}
 
         with (
+            patch("app.engines.strategy_engines.pairs_engine.get_config", return_value=_EMPTY_CFG),
             patch(
-                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
-            ),
-            patch(
-                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.pairs_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = PairsTradingStrategyEngine(config)
@@ -88,12 +102,10 @@ class TestPairsTradingInitialization:
     def test_initialization_price_history(self, pairs_trading_config):
         """Test that price history deques are initialized."""
         with (
+            patch("app.engines.strategy_engines.pairs_engine.get_config", return_value=_EMPTY_CFG),
             patch(
-                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
-            ),
-            patch(
-                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.pairs_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = PairsTradingStrategyEngine(pairs_trading_config)
@@ -104,12 +116,10 @@ class TestPairsTradingInitialization:
     def test_get_strategy_type(self, pairs_trading_config):
         """Test get_strategy_type returns correct type."""
         with (
+            patch("app.engines.strategy_engines.pairs_engine.get_config", return_value=_EMPTY_CFG),
             patch(
-                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
-            ),
-            patch(
-                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.pairs_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = PairsTradingStrategyEngine(pairs_trading_config)
@@ -127,12 +137,10 @@ class TestPairsTradingFeatureExtraction:
     def test_extract_features_basic(self, pairs_trading_config):
         """Test basic feature extraction."""
         with (
+            patch("app.engines.strategy_engines.pairs_engine.get_config", return_value=_EMPTY_CFG),
             patch(
-                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
-            ),
-            patch(
-                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.pairs_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = PairsTradingStrategyEngine(pairs_trading_config)
@@ -161,12 +169,10 @@ class TestPairsTradingFeatureExtraction:
     def test_extract_features_with_sufficient_history(self, pairs_trading_config):
         """Test feature extraction with sufficient price history."""
         with (
+            patch("app.engines.strategy_engines.pairs_engine.get_config", return_value=_EMPTY_CFG),
             patch(
-                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
-            ),
-            patch(
-                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.pairs_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = PairsTradingStrategyEngine(pairs_trading_config)
@@ -196,12 +202,10 @@ class TestPairsTradingFeatureExtraction:
     def test_extract_features_correlation(self, pairs_trading_config):
         """Test correlation calculation in feature extraction."""
         with (
+            patch("app.engines.strategy_engines.pairs_engine.get_config", return_value=_EMPTY_CFG),
             patch(
-                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
-            ),
-            patch(
-                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.pairs_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = PairsTradingStrategyEngine(pairs_trading_config)
@@ -228,12 +232,10 @@ class TestPairsTradingFeatureExtraction:
     def test_extract_features_insufficient_history(self, pairs_trading_config):
         """Test feature extraction with insufficient history."""
         with (
+            patch("app.engines.strategy_engines.pairs_engine.get_config", return_value=_EMPTY_CFG),
             patch(
-                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
-            ),
-            patch(
-                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.pairs_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = PairsTradingStrategyEngine(pairs_trading_config)
@@ -262,12 +264,10 @@ class TestPairsTradingFeatureExtraction:
     def test_extract_features_with_historical_data(self, pairs_trading_config):
         """Test feature extraction with provided historical data."""
         with (
+            patch("app.engines.strategy_engines.pairs_engine.get_config", return_value=_EMPTY_CFG),
             patch(
-                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
-            ),
-            patch(
-                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.pairs_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = PairsTradingStrategyEngine(pairs_trading_config)
@@ -321,12 +321,10 @@ class TestPairsTradingSignalGeneration:
     def test_generate_signals_insufficient_history(self, pairs_trading_config):
         """Test signal generation with insufficient price history."""
         with (
+            patch("app.engines.strategy_engines.pairs_engine.get_config", return_value=_EMPTY_CFG),
             patch(
-                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
-            ),
-            patch(
-                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.pairs_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = PairsTradingStrategyEngine(pairs_trading_config)
@@ -347,12 +345,10 @@ class TestPairsTradingSignalGeneration:
     def test_generate_signals_with_spread_divergence(self, pairs_trading_config):
         """Test signal generation when spread diverges significantly."""
         with (
+            patch("app.engines.strategy_engines.pairs_engine.get_config", return_value=_EMPTY_CFG),
             patch(
-                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
-            ),
-            patch(
-                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.pairs_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = PairsTradingStrategyEngine(pairs_trading_config)
@@ -385,12 +381,10 @@ class TestPairsTradingSignalGeneration:
     def test_generate_signals_no_cointegration(self, pairs_trading_config):
         """Test signal generation when pairs are not cointegrated."""
         with (
+            patch("app.engines.strategy_engines.pairs_engine.get_config", return_value=_EMPTY_CFG),
             patch(
-                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
-            ),
-            patch(
-                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.pairs_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = PairsTradingStrategyEngine(pairs_trading_config)
@@ -417,12 +411,10 @@ class TestPairsTradingSignalGeneration:
     def test_create_buy_signal(self, pairs_trading_config):
         """Test creation of buy signal."""
         with (
+            patch("app.engines.strategy_engines.pairs_engine.get_config", return_value=_EMPTY_CFG),
             patch(
-                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
-            ),
-            patch(
-                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.pairs_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = PairsTradingStrategyEngine(pairs_trading_config)
@@ -451,12 +443,10 @@ class TestPairsTradingSignalGeneration:
     def test_create_sell_signal(self, pairs_trading_config):
         """Test creation of sell signal."""
         with (
+            patch("app.engines.strategy_engines.pairs_engine.get_config", return_value=_EMPTY_CFG),
             patch(
-                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
-            ),
-            patch(
-                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.pairs_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = PairsTradingStrategyEngine(pairs_trading_config)
@@ -489,12 +479,10 @@ class TestConfidenceCalculation:
     def test_calculate_confidence_high_z_score(self, pairs_trading_config):
         """Test confidence with high Z-score."""
         with (
+            patch("app.engines.strategy_engines.pairs_engine.get_config", return_value=_EMPTY_CFG),
             patch(
-                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
-            ),
-            patch(
-                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.pairs_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = PairsTradingStrategyEngine(pairs_trading_config)
@@ -509,12 +497,10 @@ class TestConfidenceCalculation:
     def test_calculate_confidence_medium_z_score(self, pairs_trading_config):
         """Test confidence with medium Z-score."""
         with (
+            patch("app.engines.strategy_engines.pairs_engine.get_config", return_value=_EMPTY_CFG),
             patch(
-                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
-            ),
-            patch(
-                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.pairs_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = PairsTradingStrategyEngine(pairs_trading_config)
@@ -529,12 +515,10 @@ class TestConfidenceCalculation:
     def test_calculate_confidence_low_z_score(self, pairs_trading_config):
         """Test confidence with low Z-score."""
         with (
+            patch("app.engines.strategy_engines.pairs_engine.get_config", return_value=_EMPTY_CFG),
             patch(
-                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
-            ),
-            patch(
-                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.pairs_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = PairsTradingStrategyEngine(pairs_trading_config)
@@ -549,12 +533,10 @@ class TestConfidenceCalculation:
     def test_calculate_confidence_no_cointegration(self, pairs_trading_config):
         """Test confidence when no cointegration score."""
         with (
+            patch("app.engines.strategy_engines.pairs_engine.get_config", return_value=_EMPTY_CFG),
             patch(
-                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
-            ),
-            patch(
-                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.pairs_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = PairsTradingStrategyEngine(pairs_trading_config)
@@ -579,12 +561,10 @@ class TestRiskCheck:
     ):
         """Test risk check that passes."""
         with (
+            patch("app.engines.strategy_engines.pairs_engine.get_config", return_value=_EMPTY_CFG),
             patch(
-                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
-            ),
-            patch(
-                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.pairs_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = PairsTradingStrategyEngine(pairs_trading_config)
@@ -601,12 +581,10 @@ class TestRiskCheck:
     def test_risk_check_total_exposure(self, pairs_trading_config, sample_buy_signal):
         """Test risk check with excessive total exposure."""
         with (
+            patch("app.engines.strategy_engines.pairs_engine.get_config", return_value=_EMPTY_CFG),
             patch(
-                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
-            ),
-            patch(
-                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.pairs_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = PairsTradingStrategyEngine(pairs_trading_config)
@@ -618,13 +596,15 @@ class TestRiskCheck:
                 positions=[
                     Position(
                         symbol="AAPL",
+                        asset_class=AssetClass.EQUITY,
                         quantity=Decimal("1000"),
-                        entry_price=Decimal("150"),
-                        current_price=Decimal("150"),
-                        market_value=Decimal("150000"),
+                        avg_price=Decimal("150"),
+                        market_price=Decimal("150"),
                         unrealized_pnl=Decimal("0"),
+                        broker="paper",
                     )
                 ],
+                broker="paper",
             )
 
             sample_buy_signal.metadata["cointegration_score"] = 0.9
@@ -637,12 +617,10 @@ class TestRiskCheck:
     def test_risk_check_pair_exposure(self, pairs_trading_config, sample_buy_signal):
         """Test risk check with excessive pair exposure."""
         with (
+            patch("app.engines.strategy_engines.pairs_engine.get_config", return_value=_EMPTY_CFG),
             patch(
-                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
-            ),
-            patch(
-                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.pairs_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = PairsTradingStrategyEngine(pairs_trading_config)
@@ -655,13 +633,15 @@ class TestRiskCheck:
                 positions=[
                     Position(
                         symbol="AAPL",
+                        asset_class=AssetClass.EQUITY,
                         quantity=Decimal("500"),
-                        entry_price=Decimal("150"),
-                        current_price=Decimal("150"),
-                        market_value=Decimal("75000"),
+                        avg_price=Decimal("150"),
+                        market_price=Decimal("150"),
                         unrealized_pnl=Decimal("0"),
+                        broker="paper",
                     )
                 ],
+                broker="paper",
             )
 
             sample_buy_signal.metadata["cointegration_score"] = 0.9
@@ -676,12 +656,10 @@ class TestRiskCheck:
     ):
         """Test risk check with low cointegration."""
         with (
+            patch("app.engines.strategy_engines.pairs_engine.get_config", return_value=_EMPTY_CFG),
             patch(
-                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
-            ),
-            patch(
-                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.pairs_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = PairsTradingStrategyEngine(pairs_trading_config)
@@ -700,12 +678,10 @@ class TestRiskCheck:
     ):
         """Test risk check with low correlation."""
         with (
+            patch("app.engines.strategy_engines.pairs_engine.get_config", return_value=_EMPTY_CFG),
             patch(
-                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
-            ),
-            patch(
-                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.pairs_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = PairsTradingStrategyEngine(pairs_trading_config)
@@ -730,12 +706,10 @@ class TestExposureCalculation:
     def test_calculate_total_exposure(self, pairs_trading_config):
         """Test total exposure calculation."""
         with (
+            patch("app.engines.strategy_engines.pairs_engine.get_config", return_value=_EMPTY_CFG),
             patch(
-                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
-            ),
-            patch(
-                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.pairs_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = PairsTradingStrategyEngine(pairs_trading_config)
@@ -745,13 +719,15 @@ class TestExposureCalculation:
                 positions=[
                     Position(
                         symbol="AAPL",
+                        asset_class=AssetClass.EQUITY,
                         quantity=Decimal("100"),
-                        entry_price=Decimal("150"),
-                        current_price=Decimal("150"),
-                        market_value=Decimal("15000"),
+                        avg_price=Decimal("150"),
+                        market_price=Decimal("150"),
                         unrealized_pnl=Decimal("0"),
+                        broker="paper",
                     )
                 ],
+                broker="paper",
             )
 
             exposure = engine._calculate_total_exposure(portfolio)
@@ -762,12 +738,10 @@ class TestExposureCalculation:
     def test_calculate_total_exposure_empty_portfolio(self, pairs_trading_config):
         """Test total exposure with empty portfolio."""
         with (
+            patch("app.engines.strategy_engines.pairs_engine.get_config", return_value=_EMPTY_CFG),
             patch(
-                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
-            ),
-            patch(
-                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.pairs_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = PairsTradingStrategyEngine(pairs_trading_config)
@@ -775,6 +749,7 @@ class TestExposureCalculation:
             portfolio = Portfolio(
                 cash=Decimal("100000"),
                 positions=[],
+                broker="paper",
             )
 
             exposure = engine._calculate_total_exposure(portfolio)
@@ -784,12 +759,10 @@ class TestExposureCalculation:
     def test_calculate_pair_exposure(self, pairs_trading_config):
         """Test pair-specific exposure calculation."""
         with (
+            patch("app.engines.strategy_engines.pairs_engine.get_config", return_value=_EMPTY_CFG),
             patch(
-                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
-            ),
-            patch(
-                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.pairs_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = PairsTradingStrategyEngine(pairs_trading_config)
@@ -800,29 +773,33 @@ class TestExposureCalculation:
                 positions=[
                     Position(
                         symbol="AAPL",
+                        asset_class=AssetClass.EQUITY,
                         quantity=Decimal("100"),
-                        entry_price=Decimal("150"),
-                        current_price=Decimal("150"),
-                        market_value=Decimal("15000"),
+                        avg_price=Decimal("150"),
+                        market_price=Decimal("150"),
                         unrealized_pnl=Decimal("0"),
+                        broker="paper",
                     ),
                     Position(
                         symbol="MSFT",
+                        asset_class=AssetClass.EQUITY,
                         quantity=Decimal("50"),
-                        entry_price=Decimal("300"),
-                        current_price=Decimal("300"),
-                        market_value=Decimal("15000"),
+                        avg_price=Decimal("300"),
+                        market_price=Decimal("300"),
                         unrealized_pnl=Decimal("0"),
+                        broker="paper",
                     ),
                     Position(
-                        symbol="GOOGL",  # Not in pair
+                        symbol="GOOGL",
+                        asset_class=AssetClass.EQUITY,
                         quantity=Decimal("10"),
-                        entry_price=Decimal("2500"),
-                        current_price=Decimal("2500"),
-                        market_value=Decimal("25000"),
+                        avg_price=Decimal("2500"),
+                        market_price=Decimal("2500"),
                         unrealized_pnl=Decimal("0"),
+                        broker="paper",
                     ),
                 ],
+                broker="paper",
             )
 
             exposure = engine._calculate_pair_exposure(portfolio)
@@ -843,12 +820,10 @@ class TestEdgeCases:
         config = {"name": "test", "pair_symbols": ["AAPL"]}
 
         with (
+            patch("app.engines.strategy_engines.pairs_engine.get_config", return_value=_EMPTY_CFG),
             patch(
-                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
-            ),
-            patch(
-                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.pairs_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = PairsTradingStrategyEngine(config)
@@ -859,12 +834,10 @@ class TestEdgeCases:
     def test_zero_price_quote(self, pairs_trading_config, quote_with_zero_price):
         """Test handling of zero price quote."""
         with (
+            patch("app.engines.strategy_engines.pairs_engine.get_config", return_value=_EMPTY_CFG),
             patch(
-                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
-            ),
-            patch(
-                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.pairs_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = PairsTradingStrategyEngine(pairs_trading_config)
@@ -881,12 +854,10 @@ class TestEdgeCases:
     def test_get_required_parameters(self, pairs_trading_config):
         """Test getting required parameters."""
         with (
+            patch("app.engines.strategy_engines.pairs_engine.get_config", return_value=_EMPTY_CFG),
             patch(
-                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
-            ),
-            patch(
-                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
-                return_value=Decimal("0.05"),
+                "app.engines.strategy_engines.pairs_engine.get_config",
+                return_value=_EMPTY_CFG,
             ),
         ):
             engine = PairsTradingStrategyEngine(pairs_trading_config)

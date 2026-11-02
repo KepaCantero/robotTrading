@@ -523,8 +523,8 @@ class TestAPIIntegration:
                 "/capa2/execute-backtest",
                 json={"parameter_set_id": param_set_id, "profile_id": profile_id},
             )
-            assert backtest_resp.status_code == 200
-            assert backtest_resp.json()["status"] == "pending"
+            # 2-11: el ejecutor simulado murió — 501 con la verdad
+            assert backtest_resp.status_code == 501
 
             # All steps completed successfully
             assert input_id is not None

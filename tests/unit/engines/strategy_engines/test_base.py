@@ -15,13 +15,23 @@ Tests cover:
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List
-from unittest.mock import Mock
+from unittest.mock import Mock, Mock as _Mock
 
 import pytest
 
 from app.domain.models.market_data import Quote
 from app.engines.strategy_engines.base import BaseStrategyEngine
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
+
+
+class _NumericNS:
+    def __getattr__(self, name):
+        return 0.05
+
+
+_EMPTY_CFG = _Mock()
+_EMPTY_CFG.trading = _NumericNS()
+_EMPTY_CFG.get_strategy_config = lambda *a, **k: None
 
 # ===== Concrete Implementation for Testing =====
 

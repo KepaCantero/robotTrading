@@ -17,9 +17,14 @@ logger = logging.getLogger(__name__)
 # REQUIRED: sklearn is REQUIRED - NO FALLBACKS
 from sklearn.preprocessing import StandardScaler
 
-# Optional: hmmlearn with fallback
-# Use importlib to check availability without triggering an unused import
+# Optional: hmmlearn with fallback — import REAL a nivel de módulo:
+# los tests parchean `hmm_regime_detector.hmm.GaussianHMM` y el import
+# perezoso rompía el seam (44 tests, 2-11)
 HMM_AVAILABLE = importlib.util.find_spec("hmmlearn") is not None
+if HMM_AVAILABLE:
+    from hmmlearn import hmm  # pylint: disable=import-error
+else:
+    hmm = None  # type: ignore[assignment]
 
 if HMM_AVAILABLE:
     logger.info("hmmlearn is available - using Hidden Markov Models for regime detection")
@@ -76,10 +81,8 @@ def _create_gaussian_hmm(n_components=2, covariance_type="full", n_iter=100, **k
 
     Uses hmmlearn when available, otherwise falls back to HMMFallback.
     """
-    if HMM_AVAILABLE:
-        from hmmlearn import hmm as _hmm  # pylint: disable=import-error
-
-        return _hmm.GaussianHMM(
+    if HMM_AVAILABLE and hmm is not None:
+        return hmm.GaussianHMM(
             n_components=n_components,
             covariance_type=covariance_type,
             n_iter=n_iter,
@@ -154,7 +157,12 @@ class HMMRegimeDetector:
             returns = np.diff(prices) / prices[:-1]
             volatility = self._calculate_rolling_volatility(returns)
 
-            # Crear matriz de observaciones
+            # NaN/inf rompían column_stack en el FIT igual que en detect
+            # (arrays ragged → GaussianHMM nunca entrenaba, 2-11)
+            returns = np.asarray(returns, dtype=float)
+            volatility = np.asarray(volatility, dtype=float)
+            mask = np.isfinite(returns) & np.isfinite(volatility)
+            returns, volatility = returns[mask], volatility[mask]
             observations = np.column_stack(
                 [returns[-self.window_size :], volatility[-self.window_size :]]
             )
@@ -207,6 +215,23 @@ class HMMRegimeDetector:
             recent_returns = returns[-self.window_size :]
             recent_volatility = volatility[-self.window_size :]
 
+            # NaN/inf y longitudes desiguales rompían column_stack (arrays
+            # ragged → ValueError → régimen 'unknown' SIEMPRE, 2-11): limpiar
+            # y emparejar ANTES de apilar
+            recent_volatility = np.asarray(recent_volatility, dtype=float)
+            recent_returns = np.asarray(recent_returns, dtype=float)
+            n = min(len(recent_returns), len(recent_volatility))
+            recent_returns = recent_returns[-n:]
+            recent_volatility = recent_volatility[-n:]
+            mask = np.isfinite(recent_returns) & np.isfinite(recent_volatility)
+            recent_returns, recent_volatility = recent_returns[mask], recent_volatility[mask]
+            if len(recent_returns) < 2:
+                return {
+                    "regime": "unknown",
+                    "probability": 0.0,
+                    "regime_probabilities": {},
+                    "confidence": 0.0,
+                }
             observations = np.column_stack([recent_returns, recent_volatility])
 
             if self.scaler:
@@ -224,11 +249,15 @@ class HMMRegimeDetector:
             states = self.model.predict(observations)
             current_state = states[-1]
 
-            # Calcular probabilidades
-            log_probs = self.model.score_samples(observations[-1:])
-            # Ensure log_probs is array-like before indexing
-            log_probs = np.atleast_1d(log_probs)
-            probs = np.exp(log_probs[0])
+            # hmmlearn.score_samples devuelve (logprob, posteriors) — se
+            # trataba la TUPLA como array (ragged → ValueError → 'unknown'
+            # SIEMPRE; el bug real tras 44 tests, 2-11)
+            log_prob, _posteriors = self.model.score_samples(observations[-1:])
+            # prob del estado actual vía predict_proba (posteriors reales)
+            posteriors = np.asarray(_posteriors, dtype=float).ravel()
+            probs = posteriors if posteriors.size == len(self.regime_labels) else None
+            if probs is None:
+                probs = np.exp(np.atleast_1d(log_prob))
 
             # Normalizar probabilidades
             probs = probs / probs.sum() if probs.sum() > 0 else probs
@@ -271,6 +300,9 @@ class HMMRegimeDetector:
             volatility = np.zeros(len(returns))
             for i in range(window, len(returns)):
                 volatility[i] = np.std(returns[i - window : i])
+            volatility[:window] = (
+                volatility[window] if len(returns) > window else float(np.std(returns))
+            )
             # Llenar primeros valores con el primer valor calculado
             volatility[:window] = volatility[window] if len(returns) > window else np.std(returns)
 

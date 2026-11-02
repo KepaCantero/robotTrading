@@ -265,7 +265,9 @@ class TestDetectClustering:
 
         # Mock parameters
         mock_params = MagicMock()
-        mock_params.get = Mock(side_effect=lambda x: {"alpha[1]": 0.3, "beta[1]": 0.65}.get(x, 0))
+        mock_params.get = Mock(
+            side_effect=lambda k, d=None: {"alpha[1]": 0.3, "beta[1]": 0.65}.get(k, d)
+        )
         mock_params.to_dict.return_value = {"alpha[1]": 0.3, "beta[1]": 0.65}
         mock_fit_result.params = mock_params
 
@@ -286,7 +288,9 @@ class TestDetectClustering:
 
         # High persistence: alpha + beta > 0.9
         mock_params = MagicMock()
-        mock_params.get = Mock(side_effect=lambda x: {"alpha[1]": 0.4, "beta[1]": 0.55}.get(x, 0))
+        mock_params.get = Mock(
+            side_effect=lambda k, d=None: {"alpha[1]": 0.4, "beta[1]": 0.55}.get(k, d)
+        )
         mock_params.to_dict.return_value = {"alpha[1]": 0.4, "beta[1]": 0.55}
         mock_fit_result.params = mock_params
 
@@ -307,7 +311,9 @@ class TestDetectClustering:
 
         # Low persistence: alpha + beta < 0.9
         mock_params = MagicMock()
-        mock_params.get = Mock(side_effect=lambda x: {"alpha[1]": 0.2, "beta[1]": 0.3}.get(x, 0))
+        mock_params.get = Mock(
+            side_effect=lambda k, d=None: {"alpha[1]": 0.2, "beta[1]": 0.3}.get(k, d)
+        )
         mock_params.to_dict.return_value = {"alpha[1]": 0.2, "beta[1]": 0.3}
         mock_fit_result.params = mock_params
 
@@ -330,7 +336,9 @@ class TestDetectClustering:
 
         # Persistence = 0.95, confidence should be min(1.0, 0.95) = 0.95
         mock_params = MagicMock()
-        mock_params.get = Mock(side_effect=lambda x: {"alpha[1]": 0.45, "beta[1]": 0.5}.get(x, 0))
+        mock_params.get = Mock(
+            side_effect=lambda k, d=None: {"alpha[1]": 0.45, "beta[1]": 0.5}.get(k, d)
+        )
         mock_params.to_dict.return_value = {"alpha[1]": 0.45, "beta[1]": 0.5}
         mock_fit_result.params = mock_params
 
@@ -347,7 +355,8 @@ class TestDetectClustering:
         """Test clustering detection when exception occurs."""
         mock_model = MagicMock()
         mock_fit_result = MagicMock()
-        mock_fit_result.params.side_effect = ValueError("Test error")
+        # el código llama params.get(...) — el error debe salir de AHÍ
+        mock_fit_result.params.get.side_effect = ValueError("Test error")
         mock_model.fit.return_value = mock_fit_result
         mock_arch_model.return_value = mock_model
 
@@ -491,7 +500,9 @@ class TestIntegration:
 
         # Mock parameters
         mock_params = MagicMock()
-        mock_params.get = Mock(side_effect=lambda x: {"alpha[1]": 0.3, "beta[1]": 0.6}.get(x, 0))
+        mock_params.get = Mock(
+            side_effect=lambda k, d=None: {"alpha[1]": 0.3, "beta[1]": 0.6}.get(k, d)
+        )
         mock_params.to_dict.return_value = {"alpha[1]": 0.3, "beta[1]": 0.6}
         mock_fit_result.params = mock_params
 
@@ -580,7 +591,9 @@ class TestModelParameters:
         mock_fit_result = MagicMock()
 
         mock_params = MagicMock()
-        mock_params.get = Mock(side_effect=lambda x: {"alpha[1]": 0.3, "beta[1]": 0.6}.get(x, 0))
+        mock_params.get = Mock(
+            side_effect=lambda k, d=None: {"alpha[1]": 0.3, "beta[1]": 0.6}.get(k, d)
+        )
         expected_dict = {"alpha[1]": 0.3, "beta[1]": 0.6}
         mock_params.to_dict.return_value = expected_dict
         mock_fit_result.params = mock_params
@@ -605,7 +618,9 @@ class TestModelParameters:
         expected_persistence = alpha + beta
 
         mock_params = MagicMock()
-        mock_params.get = Mock(side_effect=lambda x: {"alpha[1]": alpha, "beta[1]": beta}.get(x, 0))
+        mock_params.get = Mock(
+            side_effect=lambda k, d=None: {"alpha[1]": alpha, "beta[1]": beta}.get(k, d)
+        )
         mock_params.to_dict.return_value = {"alpha[1]": alpha, "beta[1]": beta}
         mock_fit_result.params = mock_params
 

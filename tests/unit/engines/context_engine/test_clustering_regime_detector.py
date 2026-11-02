@@ -233,7 +233,7 @@ class TestDetect:
         """Test basic regime detection."""
         mock_model = MagicMock()
         mock_model.predict.return_value = np.array([1])  # Predict cluster 1 (sideways)
-        mock_model.cluster_centers_ = np.array([[0, 0], [1, 1], [2, 2]])
+        mock_model.cluster_centers_ = np.array([np.zeros(7), np.ones(7), 2 * np.ones(7)])
         mock_kmeans.return_value = mock_model
 
         result = detector.detect(sample_prices)
@@ -245,7 +245,7 @@ class TestDetect:
         assert result["regime"] == "sideways"
         assert result["cluster"] == 1
 
-    @patch("app.engines.context_engine.regime_detectors.clustering_regime_detectors.DBSCAN")
+    @patch("app.engines.context_engine.regime_detectors.clustering_regime_detector.DBSCAN")
     def test_detect_outlier(self, mock_dbscan, dbscan_detector, sample_prices):
         """Test detection of outliers with DBSCAN."""
         mock_model = MagicMock()
@@ -394,7 +394,7 @@ class TestIntegration:
 
         mock_model = MagicMock()
         mock_model.predict.return_value = np.array([2])  # Bull regime
-        mock_model.cluster_centers_ = np.array([[0, 0], [1, 1], [2, 2]])
+        mock_model.cluster_centers_ = np.array([np.zeros(7), np.ones(7), 2 * np.ones(7)])
         mock_kmeans.return_value = mock_model
 
         # Initialize
@@ -419,7 +419,7 @@ class TestIntegration:
 
         mock_model = MagicMock()
         mock_model.predict.return_value = np.array([1])
-        mock_model.cluster_centers_ = np.array([[0, 0], [1, 1], [2, 2]])
+        mock_model.cluster_centers_ = np.array([np.zeros(7), np.ones(7), 2 * np.ones(7)])
         mock_kmeans.return_value = mock_model
 
         detector = ClusteringRegimeDetector()
